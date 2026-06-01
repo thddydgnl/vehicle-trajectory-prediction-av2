@@ -347,6 +347,20 @@ trajectory-project/
     logs/
 ```
 
+`data/raw/av2_motion_forecasting/` is optional on Mac and should only hold a
+tiny local sample if needed. The primary full AV2 Motion Forecasting dataset is
+stored on Windows:
+
+```text
+C:\Users\thddy\data\av2\motion-forecasting
+```
+
+Primary Windows processed data path:
+
+```text
+C:\Users\thddy\data\vehicle_trajectory_project\processed
+```
+
 # 4. 단계별 구현 계획
 
 ## Phase 0. Repository Setup
@@ -1091,11 +1105,21 @@ configs/preprocess_small.yaml
 
 ### raw data 위치
 
+Primary Windows location:
+
+```text
+C:\Users\thddy\data\av2\motion-forecasting
+```
+
+Optional Mac sample location:
+
 ```text
 data/raw/av2_motion_forecasting/
 ```
 
-Codex는 실제 local directory를 inspect한 뒤 파일 구조를 판단해야 한다. AV2 file layout을 확인하지 않고 확정적으로 가정하지 않는다.
+Codex는 실제 실행할 machine의 local directory를 inspect한 뒤 파일 구조를 판단해야 한다.
+AV2 file layout을 확인하지 않고 확정적으로 가정하지 않는다. Mac 용량을 보호하기
+위해 full AV2 preprocessing은 Windows-local raw data를 대상으로 실행할 수 있다.
 
 ### target selection 옵션
 
@@ -1150,10 +1174,32 @@ python -m src.datasets.preprocess_av2 \
   --seed 42
 ```
 
+Windows full/small AV2 run pattern:
+
+```powershell
+Set-Location C:\Users\thddy\Documents\code\vehicle_trajectory_project
+conda run -n vehicle_traj python -m src.datasets.preprocess_av2 `
+  --raw_dir C:\Users\thddy\data\av2\motion-forecasting `
+  --out_dir C:\Users\thddy\data\vehicle_trajectory_project\processed `
+  --num_scenarios 100 `
+  --target_types VEHICLE PEDESTRIAN `
+  --obs_len 50 `
+  --pred_len 30 `
+  --target_mode focal `
+  --seed 42
+```
+
 ### validation CLI
 
 ```bash
 python -m src.datasets.validate_processed --npz data/processed/train_small.npz
+```
+
+For Windows-local AV2 processed data:
+
+```powershell
+conda run -n vehicle_traj python -m src.datasets.validate_processed `
+  --npz C:\Users\thddy\data\vehicle_trajectory_project\processed\train_small.npz
 ```
 
 검증 항목:
@@ -1177,7 +1223,12 @@ python -m src.datasets.preprocess_av2 \
 python -m src.datasets.validate_processed --npz data/processed/train_small.npz
 ```
 
-AV2 raw data가 없으면 성공으로 보고하지 않는다. synthetic data pipeline만 사용 가능하다고 명확히 보고한다.
+If using Windows-local AV2 data, the equivalent completion commands must run on
+Windows over SSH with the Windows paths above.
+
+AV2 raw data가 없으면 성공으로 보고하지 않는다. Phase 11 전이면 synthetic data
+pipeline으로 계속 진행하고, Phase 11 이상이면 Windows-local AV2 download/verification을
+먼저 완료해야 한다고 명확히 보고한다.
 
 ---
 
@@ -1740,7 +1791,7 @@ Task 14 final experiments
 Task 15 final report summary
 ```
 
-중요한 전략은 AV2 preprocessing을 너무 먼저 하지 않는 것이다. AV2 data structure에서 막히면 전체 프로젝트가 멈출 수 있으므로, synthetic data로 model, metric, training, visualization pipeline을 먼저 완성하고 그 다음 AV2 parser를 붙이는 방식이 안정적이다.
+중요한 전략은 AV2 preprocessing을 너무 먼저 하지 않는 것이다. AV2 data structure에서 막히면 전체 프로젝트가 멈출 수 있으므로, synthetic data로 model, metric, training, visualization pipeline을 먼저 완성하고 그 다음 AV2 parser를 붙이는 방식이 안정적이다. Full AV2 raw data는 Mac 용량을 쓰지 않도록 Windows에 직접 저장하고, 필요한 경우 Windows에서 raw-to-processed conversion까지 실행한다.
 
 # 7. 구현 성공 기준
 
@@ -1799,7 +1850,8 @@ AV2 real data
 | 리스크 | 위험도 | 대응 전략 |
 |---|---:|---|
 | AV2 데이터 구조가 복잡함 | 높음 | 처음 100개 scenario로 parser 검증 후 확장 |
-| Mac에서 Diffusion 학습이 느림 | 높음 | PCA latent diffusion, 작은 subset, Colab GPU 사용 |
+| Mac에서 Diffusion 학습이 느림 | 높음 | Windows RTX 3080에서 GPU 학습, PCA latent diffusion, 작은 subset 사용 |
+| Mac 저장공간 부족 | 높음 | Full AV2 raw/processed data는 Windows에 저장하고 Mac에는 샘플/결과만 회수 |
 | Transformer가 LSTM보다 성능이 안 좋을 수 있음 | 중 | 성능만 보지 말고 오류 유형과 시각화 분석 포함 |
 | Diffusion sampling 결과가 불안정함 | 중상 | direct 60D와 PCA 12D를 모두 시도하고 minADE로 평가 |
 | 데이터 누락/mask 처리 오류 | 높음 | 전처리 검증 script와 assert 함수 작성 |

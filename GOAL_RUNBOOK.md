@@ -75,7 +75,7 @@ code edits
 docs
 tests
 synthetic data generation
-AV2 preprocessing
+small sample-data validation
 evaluation
 visualization
 analysis
@@ -83,9 +83,12 @@ report writing
 git commit/push
 ```
 
-Windows is used only for model training:
+Windows is used for AV2 data storage, data-local AV2 preprocessing when needed,
+and GPU model training:
 
 ```text
+AV2 raw data download/storage
+AV2 raw -> processed conversion when the raw data stays on Windows
 python -m src.training.train ...
 ```
 
@@ -136,6 +139,7 @@ Never commit:
 ```text
 data/raw/
 data/processed/*.npz
+Windows AV2 raw/processed data directories
 outputs/checkpoints/
 outputs/predictions/
 outputs/logs/
@@ -162,7 +166,8 @@ Diffusion training is slow
 Use fallback paths:
 
 ```text
-AV2 missing -> continue with synthetic data
+AV2 missing before Phase 11 -> continue with synthetic data
+AV2 missing at Phase 11+ -> download or verify Windows-local AV2 data first
 Windows unreachable -> finish Mac-only phases and record training as pending
 Windows PyTorch is CPU-only -> set up vehicle_traj CUDA environment before long training
 GitHub remote missing -> local commit and request remote URL

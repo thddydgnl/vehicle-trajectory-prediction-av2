@@ -1,4 +1,4 @@
-# Vehicle Trajectory Project Windows GPU Training-Only Workflow
+# Vehicle Trajectory Project Windows AV2 Data and GPU Training Workflow
 
 작성일: 2026-06-01
 
@@ -6,14 +6,14 @@
 
 ```text
 차량·보행자 미래 궤적 예측 프로젝트에서 Mac을 주 작업 환경으로 유지하고,
-Windows 컴퓨터는 GPU가 필요한 모델 학습만 실행하는 원격 학습 노드로 사용한다.
+Windows 컴퓨터는 AV2 원본/학습 데이터 저장소와 GPU 실행 노드로 사용한다.
 ```
 
 핵심 원칙:
 
 ```text
-Mac: 코드 작성, 문서, 테스트, synthetic/AV2 전처리, 평가, 시각화, 리포트 생성
-Windows: LSTM, Transformer, Diffusion 같은 모델 학습만 실행
+Mac: 코드 작성, 문서, 테스트, synthetic/sample 검증, 평가, 시각화, 리포트, Git
+Windows: AV2 raw/processed 데이터 보관, 데이터가 Windows에 있을 때 AV2 전처리, GPU 학습
 ```
 
 현재 확인된 접속 방식:
@@ -37,9 +37,9 @@ Goal 진행 시 Codex가 지켜야 하는 첫 규칙:
 1. GOAL_RUNBOOK.md를 먼저 읽는다.
 2. PROJECT_STATUS.md를 읽고 현재 Phase/Task를 확인한다.
 3. codex_vehicle_trajectory_project_plan.md를 읽고 Phase 요구사항을 확인한다.
-4. Windows는 학습 단계에서만 사용한다.
-5. Windows 접속 전 Mac 테스트와 data validation을 먼저 끝낸다.
-6. Windows 학습 후 checkpoint/log/metric을 Mac으로 회수한다.
+4. Windows는 AV2 데이터 보관, AV2 data-local preprocessing, GPU 학습에만 사용한다.
+5. Windows 접속 전 Mac 테스트와 가능한 data validation을 먼저 끝낸다.
+6. Windows 작업 후 checkpoint/log/metric과 필요한 lightweight 결과만 Mac으로 회수한다.
 7. 최종 평가, 그림, 표, 보고서는 Mac에서 만든다.
 ```
 
@@ -72,11 +72,11 @@ Use goal mode for the vehicle trajectory prediction project.
 Read GOAL_RUNBOOK.md first.
 Read PROJECT_STATUS.md before selecting the next Phase.
 Read codex_vehicle_trajectory_project_plan.md for the phase specification.
-Use windows_gpu_training_only_workflow.md for Windows GPU training.
-Use WINDOWS_ENV_SETUP.md before any long Windows training run.
+Use windows_gpu_training_only_workflow.md for Windows AV2 data and GPU training.
+Use WINDOWS_ENV_SETUP.md before any AV2 download or long Windows training run.
 Use github_portfolio_workflow.md for commit/push and portfolio rules.
 Keep Mac as the source-of-truth environment.
-Use Windows only for model training.
+Use Windows only for AV2 data storage, data-local preprocessing, and GPU training.
 Start with the next incomplete Phase only.
 After each phase, report changed files, commands, validation results,
 Git commit/push status, remaining risks, and the next recommended phase.
@@ -87,15 +87,19 @@ Goal turn algorithm:
 ```text
 1. Identify the current requested Phase/Task.
 2. If the task is Mac-only, do all work on Mac and do not contact Windows.
-3. If the task includes model training, finish Mac implementation/tests first.
-4. Validate train/val processed data on Mac.
-5. Sync only source/config/processed training data to Windows.
-6. Run Windows environment/CUDA preflight.
-7. Run exactly the intended training command on Windows.
-8. Pull checkpoint/log/metric back to Mac.
-9. Run evaluate/visualization/analysis on Mac.
-10. Commit and push verified code/results according to github_portfolio_workflow.md.
-11. Write Phase Result.
+3. If the task needs real AV2 data, verify the Windows data paths first.
+4. If the task includes AV2 preprocessing, finish Mac implementation/tests first,
+   then run the committed preprocessing code on Windows against Windows-local data.
+5. If the task includes model training, finish Mac implementation/tests first.
+6. Validate train/val processed data on the machine that stores it; for Windows
+   AV2 data, run validation over SSH or copy a tiny sample back to Mac.
+7. Sync source/config only; avoid moving raw AV2 or large processed files to Mac.
+8. Run Windows environment/CUDA preflight.
+9. Run exactly the intended preprocessing or training command on Windows.
+10. Pull checkpoint/log/metric/lightweight result files back to Mac.
+11. Run evaluate/visualization/analysis on Mac when the required inputs are available.
+12. Commit and push verified code/results according to github_portfolio_workflow.md.
+13. Write Phase Result.
 ```
 
 Resume rule:
@@ -113,6 +117,10 @@ Mac or were explicitly verified on Windows.
 Windows에서 실행해도 되는 작업:
 
 ```text
+AV2 raw data download with s5cmd
+AV2 raw data inventory and integrity checks
+python -m src.datasets.preprocess_av2 ... when raw AV2 stays on Windows
+python -m src.datasets.validate_processed ... for Windows-local processed data
 python -m src.training.train ...
 ```
 
@@ -121,16 +129,15 @@ Windows에서 실행하지 않는 작업:
 ```text
 1. Codex 코드 수정
 2. 프로젝트 문서 수정
-3. AV2 raw data parsing / preprocessing
-4. synthetic data 생성
-5. metric evaluation
-6. trajectory visualization
-7. PCA/K-means/error analysis
-8. final report summary 생성
-9. raw AV2 data 보관 또는 수정
+3. synthetic data 생성, unless explicitly needed for a tiny Windows GPU smoke
+4. metric evaluation for final reported numbers
+5. trajectory visualization
+6. PCA/K-means/error analysis
+7. final report summary 생성
+8. raw AV2 data 수정
 ```
 
-Windows는 학습 가속용 worker일 뿐이며, 프로젝트의 source of truth는 Mac 폴더다.
+Windows는 data/training worker이며, 프로젝트 코드와 판단의 source of truth는 Mac 폴더다.
 
 ## 2. Machine Role Split
 
@@ -141,13 +148,13 @@ Mac 역할:
 2. 코드, 설정, 테스트, 문서 수정
 3. requirements/pyproject/Makefile 관리
 4. synthetic smoke data 생성
-5. AV2 raw data 검사와 전처리
-6. processed .npz 생성 및 검증
+5. AV2 전처리 코드 작성 및 작은 샘플 검증
+6. processed .npz schema/validation logic 관리
 7. unit test와 smoke test 실행
 8. Linear baseline 평가
-9. Windows 학습용 source/data/config bundle 준비
-10. Windows 원격 학습 실행
-11. checkpoint, train log, validation metric 회수
+9. Windows 실행용 source/config bundle 준비
+10. Windows 원격 preprocessing/training 실행
+11. checkpoint, train log, validation metric, lightweight 결과 회수
 12. Mac에서 최종 evaluate/visualization/analysis/report 실행
 ```
 
@@ -155,11 +162,13 @@ Windows 역할:
 
 ```text
 1. Python/PyTorch GPU 환경 제공
-2. Mac에서 보낸 source/config/processed data를 받아 동일 코드로 학습
-3. outputs/checkpoints/*.pt 저장
-4. outputs/logs/*.csv 저장
-5. outputs/metrics/*_val_metrics.json 저장
-6. 학습 stdout/stderr 로그 저장
+2. AV2 raw data를 Windows local disk에 저장
+3. AV2 processed train/val/test data를 Windows local disk에 저장
+4. Mac에서 보낸 source/config를 받아 동일 코드로 preprocessing/training 실행
+5. outputs/checkpoints/*.pt 저장
+6. outputs/logs/*.csv 저장
+7. outputs/metrics/*_val_metrics.json 저장
+8. 학습 stdout/stderr 로그 저장
 ```
 
 금지:
@@ -167,7 +176,7 @@ Windows 역할:
 ```text
 Windows에서 코드를 직접 고치지 않는다.
 Windows에서 raw AV2 data를 수정하지 않는다.
-Windows에서 전처리 결과를 임의로 새로 만들지 않는다.
+Windows에서 Mac에 커밋되지 않은 코드로 전처리 결과를 만들지 않는다.
 Windows 학습 결과를 실제 회수/검증하지 않고 성공했다고 보고하지 않는다.
 Mac과 Windows의 코드 버전이 다른 상태에서 학습 결과를 최종 결과로 쓰지 않는다.
 ```
@@ -192,10 +201,22 @@ Windows project root 권장값:
 C:\Users\thddy\Documents\code\vehicle_trajectory_project
 ```
 
+Windows AV2 raw data:
+
+```text
+C:\Users\thddy\data\av2\motion-forecasting
+```
+
+Windows processed training data:
+
+```text
+C:\Users\thddy\data\vehicle_trajectory_project\processed
+```
+
 Windows training output:
 
 ```text
-C:\Users\thddy\Documents\code\vehicle_trajectory_project\outputs
+C:\Users\thddy\runs\vehicle_trajectory_project
 ```
 
 Remote identity:
@@ -221,7 +242,6 @@ Phase 3  Dataset/DataLoader
 Phase 4  Metrics
 Phase 5  Linear baseline evaluation
 Phase 10 PCA codec fitting and PCA analysis
-Phase 11 AV2 preprocessing
 Phase 12 Visualization
 Phase 13 PCA/K-means/error analysis
 Phase 14 Final evaluation matrix
@@ -241,11 +261,16 @@ Hybrid phases:
 
 ```text
 Phase 6  Common training pipeline
+Phase 11 AV2 preprocessing
 ```
 
 Phase 6 code is written and tested on Mac. Windows only runs a tiny training
 command after Mac tests pass, to verify the training loop works on the GPU
 machine.
+
+Phase 11 preprocessing code is written and tested on Mac. Because raw AV2 is
+stored on Windows to protect Mac disk space, the full raw-to-processed conversion
+may run on Windows with committed Mac-authored code.
 
 ## 5. Mac Preflight
 
@@ -261,8 +286,8 @@ python -m src.datasets.validate_processed --npz data/processed/val_smoke.npz
 If AV2 processed data is used:
 
 ```bash
-python -m src.datasets.validate_processed --npz data/processed/train_small.npz
-python -m src.datasets.validate_processed --npz data/processed/val_small.npz
+trajwinssh song@100.87.219.58 'powershell -NoProfile -ExecutionPolicy Bypass -Command "Set-Location C:\Users\thddy\Documents\code\vehicle_trajectory_project; conda run -n vehicle_traj python -m src.datasets.validate_processed --npz C:\Users\thddy\data\vehicle_trajectory_project\processed\train_small.npz"'
+trajwinssh song@100.87.219.58 'powershell -NoProfile -ExecutionPolicy Bypass -Command "Set-Location C:\Users\thddy\Documents\code\vehicle_trajectory_project; conda run -n vehicle_traj python -m src.datasets.validate_processed --npz C:\Users\thddy\data\vehicle_trajectory_project\processed\val_small.npz"'
 ```
 
 Required Mac-side checks:
@@ -271,11 +296,88 @@ Required Mac-side checks:
 1. tests pass
 2. training config exists
 3. train/val .npz exists
-4. npz validation passes
+4. npz validation passes on the machine holding the data
 5. no future-coordinate leakage in input feature code
 6. scaler/PCA, if any, was fit on train split only
 7. training command is written down before launching Windows
 ```
+
+## 5A. Windows AV2 Data Download
+
+Primary AV2 Motion Forecasting storage path:
+
+```text
+C:\Users\thddy\data\av2\motion-forecasting
+```
+
+Recommended disk budget:
+
+```text
+Minimum: 100 GB free
+Comfortable: 150 GB+ free
+Current verified C: free space on 2026-06-01: about 174 GB
+```
+
+Install `s5cmd` on Windows if missing:
+
+```powershell
+conda install s5cmd -c conda-forge -y
+```
+
+If conda metadata solving is slow, use the official GitHub release binary:
+
+```powershell
+$bin = "C:\Users\thddy\bin\s5cmd"
+New-Item -ItemType Directory -Force $bin | Out-Null
+$zip = "$env:TEMP\s5cmd_2.3.0_Windows-64bit.zip"
+Invoke-WebRequest `
+  -Uri "https://github.com/peak/s5cmd/releases/download/v2.3.0/s5cmd_2.3.0_Windows-64bit.zip" `
+  -OutFile $zip
+Expand-Archive -Force $zip -DestinationPath $bin
+& "$bin\s5cmd.exe" version
+```
+
+Create directories:
+
+```powershell
+New-Item -ItemType Directory -Force C:\Users\thddy\data\av2\motion-forecasting | Out-Null
+New-Item -ItemType Directory -Force C:\Users\thddy\data\vehicle_trajectory_project\processed | Out-Null
+New-Item -ItemType Directory -Force C:\Users\thddy\runs\vehicle_trajectory_project | Out-Null
+```
+
+List official public S3 objects before copying:
+
+```powershell
+s5cmd --no-sign-request ls "s3://argoverse/datasets/av2/motion-forecasting/"
+```
+
+Download AV2 Motion Forecasting directly to Windows:
+
+```powershell
+s5cmd --no-sign-request cp `
+  "s3://argoverse/datasets/av2/motion-forecasting/*" `
+  "C:\Users\thddy\data\av2\motion-forecasting\"
+```
+
+Safe remote execution rule:
+
+```text
+Do not run the full AV2 download as a long foreground SSH command.
+First test one small object, then run long downloads from an interactive Windows
+terminal or a validated detached Windows script that writes logs to disk.
+Do not leave Codex waiting on a multi-hour SSH session.
+If SSH starts timing out, stop s5cmd first and verify OpenSSH/Tailscale before
+restarting any download.
+```
+
+Verified stop commands:
+
+```bash
+ssh song@100.87.219.58 "cmd /c schtasks /End /TN VehicleTrajectoryAV2Download & schtasks /Delete /TN VehicleTrajectoryAV2Download /F & taskkill /IM s5cmd.exe /F"
+ssh song@100.87.219.58 "cmd /c tasklist /FI \"IMAGENAME eq s5cmd.exe\""
+```
+
+Keep this data out of Git. Do not copy the full dataset to Mac by default.
 
 ## 6. SSH/Tailscale Preflight
 
@@ -398,7 +500,7 @@ Follow WINDOWS_ENV_SETUP.md before Phase 7/8/9 training.
 Preferred sync direction:
 
 ```text
-Mac source/data/config -> Windows training worker -> Mac checkpoint/log pullback
+Mac source/config -> Windows data/training worker -> Mac lightweight result pullback
 ```
 
 Allowed to sync to Windows:
@@ -429,6 +531,7 @@ Do not sync to Windows by default:
 
 ```text
 data/raw/
+large AV2 processed files when already present on Windows
 outputs/figures/
 outputs/predictions/
 outputs/tables/
@@ -440,7 +543,8 @@ Rationale:
 
 ```text
 Windows only needs enough to train. Raw data, final analysis, and figures stay
-on Mac so data ownership and result interpretation remain centralized.
+out of Git; large AV2 raw/processed data stays on Windows to protect Mac disk
+space, while result interpretation remains centralized on Mac.
 ```
 
 ## 9. Preparing Windows Project Directory
@@ -461,6 +565,8 @@ rsync -avz --delete \
   --exclude '__pycache__/' \
   --exclude '.pytest_cache/' \
   --exclude 'data/raw/' \
+  --exclude 'data/processed/*.npz' \
+  --exclude 'data/processed/*.pkl' \
   --exclude 'outputs/figures/' \
   --exclude 'outputs/predictions/' \
   --exclude 'outputs/tables/' \
@@ -480,6 +586,8 @@ tar \
   --exclude='__pycache__' \
   --exclude='.pytest_cache' \
   --exclude='data/raw' \
+  --exclude='data/processed/*.npz' \
+  --exclude='data/processed/*.pkl' \
   --exclude='outputs/figures' \
   --exclude='outputs/predictions' \
   --exclude='outputs/tables' \
@@ -517,6 +625,16 @@ conda run -n vehicle_traj python -m src.training.train `
   --val_data data\processed\val_smoke.npz
 ```
 
+For Windows-local AV2 data:
+
+```powershell
+conda run -n vehicle_traj python -m src.training.train `
+  --config configs\<model>_av2.yaml `
+  --data C:\Users\thddy\data\vehicle_trajectory_project\processed\train_small.npz `
+  --val_data C:\Users\thddy\data\vehicle_trajectory_project\processed\val_small.npz `
+  --output_dir C:\Users\thddy\runs\vehicle_trajectory_project\<run_name>
+```
+
 Tiny GPU smoke after Phase 6:
 
 ```bash
@@ -544,8 +662,8 @@ trajwinssh song@100.87.219.58 'powershell -NoProfile -ExecutionPolicy Bypass -Co
 For AV2 small data, replace smoke paths:
 
 ```text
-data\processed\train_small.npz
-data\processed\val_small.npz
+C:\Users\thddy\data\vehicle_trajectory_project\processed\train_small.npz
+C:\Users\thddy\data\vehicle_trajectory_project\processed\val_small.npz
 ```
 
 ## 12. Long Run Logging
@@ -555,7 +673,7 @@ For longer training, use a timestamped run directory:
 ```powershell
 Set-Location C:\Users\thddy\Documents\code\vehicle_trajectory_project
 $run = Get-Date -Format "yyyyMMdd_HHmmss"
-$logDir = "outputs\remote_runs\$run"
+$logDir = "C:\Users\thddy\runs\vehicle_trajectory_project\$run"
 New-Item -ItemType Directory -Force $logDir | Out-Null
 $env:PYTHONPATH="C:\Users\thddy\Documents\code\vehicle_trajectory_project;$env:PYTHONPATH"
 conda run -n vehicle_traj python -m src.training.train `
@@ -683,6 +801,7 @@ SSH timeout
 Tailscale unavailable
 stale SSH control socket
 Windows sleeping/offline
+long-running foreground SSH download tying up the remote shell
 ```
 
 Windows environment failure:
@@ -703,6 +822,15 @@ wrong project root
 old code version
 train/val .npz missing
 path quoting failure
+```
+
+Remote execution failure:
+
+```text
+long s5cmd process was started through foreground SSH
+detached process inherited SSH stdio and kept the session open
+large directory listing or download output made the command appear stuck
+Scheduled Task was not verified before assuming the download was detached
 ```
 
 Training-code failure:
@@ -803,6 +931,6 @@ After Windows training:
 ## 18. Final Rule
 
 ```text
-Windows에서 하는 일은 학습뿐이다.
-프로젝트 판단, 평가, 그림, 표, 보고서는 모두 Mac에서 만든다.
+Windows에서 하는 일은 AV2 데이터 보관, 데이터가 Windows에 있을 때의 전처리,
+그리고 GPU 학습뿐이다. 프로젝트 판단, 평가, 그림, 표, 보고서는 모두 Mac에서 만든다.
 ```

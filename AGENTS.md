@@ -30,10 +30,11 @@ Commit and push verified Phase work according to github_portfolio_workflow.md.
 ## Mac / Windows Split
 
 ```text
-Mac: source of truth for code, tests, preprocessing, evaluation, visualization,
-analysis, reporting, git commits, and pushes.
+Mac: source of truth for code, docs, tests, synthetic/sample-data checks,
+evaluation, visualization, analysis, reporting, git commits, and pushes.
 
-Windows: model training only.
+Windows: AV2 raw/processed data storage, data-local AV2 preprocessing when the
+dataset is too large for Mac, and GPU model training.
 ```
 
 Before using Windows, verify:
@@ -51,6 +52,18 @@ song\song
 
 For GPU training, use the `vehicle_traj` conda environment from
 `WINDOWS_ENV_SETUP.md`. Do not run long training with a CPU-only PyTorch build.
+
+For real AV2 experiments, prefer Windows-local data paths:
+
+```text
+Raw AV2: C:\Users\thddy\data\av2\motion-forecasting
+Processed: C:\Users\thddy\data\vehicle_trajectory_project\processed
+Runs: C:\Users\thddy\runs\vehicle_trajectory_project
+```
+
+Do not edit code or documentation on Windows. If AV2 preprocessing runs on
+Windows, it must use committed Mac-authored source code and the exact command
+must be recorded in `PROJECT_STATUS.md` or the phase result.
 
 ## Git Discipline
 

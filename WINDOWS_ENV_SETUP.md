@@ -1,9 +1,9 @@
-# Windows GPU Training Environment Setup
+# Windows GPU Training and AV2 Data Environment Setup
 
 작성일: 2026-06-01
 
-이 문서는 Windows 컴퓨터를 차량 궤적 예측 프로젝트의 GPU 학습 노드로 쓰기 위한
-환경 설정 체크리스트다.
+이 문서는 Windows 컴퓨터를 차량 궤적 예측 프로젝트의 AV2 데이터 저장소와 GPU
+학습 노드로 쓰기 위한 환경 설정 체크리스트다.
 
 ## 1. Current Verified State
 
@@ -24,6 +24,14 @@ Windows home path:
 
 ```text
 C:\Users\thddy
+```
+
+Windows AV2/data paths:
+
+```text
+Raw AV2: C:\Users\thddy\data\av2\motion-forecasting
+Processed: C:\Users\thddy\data\vehicle_trajectory_project\processed
+Runs: C:\Users\thddy\runs\vehicle_trajectory_project
 ```
 
 Python / GPU preflight:
@@ -48,6 +56,7 @@ Conclusion:
 ```text
 Windows SSH and NVIDIA GPU are available.
 Windows is not yet ready for GPU training because the active PyTorch install is CPU-only.
+s5cmd is required for direct AV2 download on Windows.
 ```
 
 ## 2. Required Fix
@@ -168,7 +177,51 @@ Do not run long training until:
 torch.cuda.is_available() == True
 ```
 
-## 6. Failure Classification
+## 6. AV2 Download Tooling
+
+Install `s5cmd` on Windows if it is missing:
+
+```powershell
+conda install s5cmd -c conda-forge -y
+```
+
+If conda is slow, install the official release binary instead:
+
+```powershell
+$bin = "C:\Users\thddy\bin\s5cmd"
+New-Item -ItemType Directory -Force $bin | Out-Null
+$zip = "$env:TEMP\s5cmd_2.3.0_Windows-64bit.zip"
+Invoke-WebRequest `
+  -Uri "https://github.com/peak/s5cmd/releases/download/v2.3.0/s5cmd_2.3.0_Windows-64bit.zip" `
+  -OutFile $zip
+Expand-Archive -Force $zip -DestinationPath $bin
+& "$bin\s5cmd.exe" version
+```
+
+Create the Windows data directories:
+
+```powershell
+New-Item -ItemType Directory -Force C:\Users\thddy\data\av2\motion-forecasting | Out-Null
+New-Item -ItemType Directory -Force C:\Users\thddy\data\vehicle_trajectory_project\processed | Out-Null
+New-Item -ItemType Directory -Force C:\Users\thddy\runs\vehicle_trajectory_project | Out-Null
+```
+
+List and download AV2 Motion Forecasting:
+
+```powershell
+s5cmd --no-sign-request ls "s3://argoverse/datasets/av2/motion-forecasting/"
+s5cmd --no-sign-request cp `
+  "s3://argoverse/datasets/av2/motion-forecasting/*" `
+  "C:\Users\thddy\data\av2\motion-forecasting\"
+```
+
+Do not copy the full AV2 dataset to Mac unless explicitly requested.
+
+Do not run the full AV2 download as a multi-hour foreground SSH command. Use an
+interactive Windows terminal or a detached script whose log file is verified
+before leaving it unattended.
+
+## 7. Failure Classification
 
 Classify as Windows environment failure:
 
@@ -178,6 +231,8 @@ torch version ends with +cpu
 torch.cuda.is_available() is False
 nvidia-smi works but PyTorch cannot see CUDA
 conda environment activation fails
+s5cmd missing or cannot access the public AV2 S3 path
+long-running s5cmd foreground SSH session makes SSH appear unresponsive
 ```
 
 Do not change model code to fix these issues. Fix the Windows environment first.

@@ -14,6 +14,9 @@ GitHub remote has been configured and pushed.
 Windows SSH over Tailscale has been verified.
 Windows NVIDIA GPU is visible, but default PyTorch is CPU-only.
 Windows conda currently has only the base environment; vehicle_traj does not exist yet.
+Windows AV2 data path has been created.
+s5cmd v2.3.0 has been installed on Windows from the official GitHub release binary.
+The first AV2 download attempt was stopped; no s5cmd process or scheduled download task is running.
 ```
 
 Verified Windows access:
@@ -79,12 +82,19 @@ torch.cuda.is_available() == False
 conda envs: base only
 pytest: 5 passed
 get_device: mps
+s5cmd: v2.3.0-991c9fb at C:\Users\thddy\bin\s5cmd\s5cmd.exe
+Windows AV2 partial state: annotation parquet files downloaded; test split partially created; train/val not downloaded; INCOMPLETE_DOWNLOAD.txt marker written
+Stop verification: taskkill terminated s5cmd.exe PID 27984; later tasklist found no s5cmd.exe; VehicleTrajectoryAV2Download task not present
+Tailscale ping after stop: pong from song in 11ms
+OpenSSH event log: publickey accepted/disconnected cleanly; no server-side OpenSSH error observed
 ```
 
 ## Open External Requirements
 
 ```text
 AV2 raw data is not present yet.
+Full AV2 download is not complete. Do not treat the current Windows AV2 folder as a complete dataset.
+For the next AV2 download attempt, do not use a long foreground SSH command; use the safe remote execution rule in windows_gpu_training_only_workflow.md.
 Windows vehicle_traj CUDA PyTorch environment must be created before long model training.
 ```
 

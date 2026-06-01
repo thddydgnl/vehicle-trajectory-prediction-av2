@@ -29,7 +29,7 @@ Codex goal 진행 중 GitHub 작업 규칙:
 4. 사용자가 push를 원한다고 했으므로 Phase 완료 커밋은 GitHub에 push한다.
 5. 실패한 실험 결과를 성공처럼 커밋하지 않는다.
 6. raw data, processed .npz, checkpoints, logs는 Git에 올리지 않는다.
-7. Windows 학습 Phase는 Mac commit/push -> Windows 학습 -> Mac 평가 -> 결과 commit/push 순서로 진행한다.
+7. Windows AV2/학습 Phase는 Mac commit/push -> Windows data/preprocess/train -> Mac 평가 -> 결과 commit/push 순서로 진행한다.
 ```
 
 Goal turn algorithm에 추가할 Git 단계:
@@ -38,7 +38,7 @@ Goal turn algorithm에 추가할 Git 단계:
 1. Read GOAL_RUNBOOK.md.
 2. Read PROJECT_STATUS.md.
 3. Read codex_vehicle_trajectory_project_plan.md.
-4. Read windows_gpu_training_only_workflow.md if Windows training may be needed.
+4. Read windows_gpu_training_only_workflow.md if Windows AV2 data or training may be needed.
 5. Read this GitHub portfolio workflow.
 6. Run git status --short.
 7. Implement only the current Phase/Task.
@@ -292,8 +292,8 @@ For Windows-training phases:
 1. Mac: implement model/trainer/evaluator code.
 2. Mac: run unit tests and synthetic smoke where possible.
 3. Mac: commit and push the code that Windows will train.
-4. Mac -> Windows: sync source/config/processed data.
-5. Windows: run training only.
+4. Mac -> Windows: sync source/config; use Windows-local AV2 processed data when available.
+5. Windows: run approved AV2 preprocessing and/or training commands only.
 6. Windows -> Mac: pull checkpoints/logs/metrics.
 7. Mac: run evaluation and visualization.
 8. Mac: commit and push result tables/report updates.

@@ -7,8 +7,9 @@ the same data format and metrics.
 
 ## Current Status
 
-Phase 0 is repository setup. Model, dataset generation, evaluation, and
-visualization code are intentionally not implemented yet.
+Phase 0 repository setup is complete. Phase 1 is the next implementation step.
+Model, dataset generation, evaluation, and visualization code are intentionally
+not implemented yet.
 
 ## Planned Scope
 
@@ -43,11 +44,17 @@ python -c "from src.utils.device import get_device; print(get_device())"
 - `GOAL_RUNBOOK.md`: goal-mode operating entry point
 - `PROJECT_STATUS.md`: persistent project progress ledger
 - `codex_vehicle_trajectory_project_plan.md`: phase-by-phase implementation plan
-- `windows_gpu_training_only_workflow.md`: Windows GPU training-only workflow
-- `WINDOWS_ENV_SETUP.md`: Windows CUDA/PyTorch setup checklist
+- `windows_gpu_training_only_workflow.md`: Windows AV2 data and GPU training workflow
+- `WINDOWS_ENV_SETUP.md`: Windows CUDA/PyTorch and AV2 download setup checklist
 - `github_portfolio_workflow.md`: commit/push and portfolio policy
 
 ## Data Policy
 
 Raw AV2 data, processed `.npz` files, checkpoints, logs, and private credentials
 are not committed to Git.
+
+The full AV2 Motion Forecasting dataset is stored on Windows by default:
+
+```text
+C:\Users\thddy\data\av2\motion-forecasting
+```
