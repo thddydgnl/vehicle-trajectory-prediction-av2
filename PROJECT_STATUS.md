@@ -38,7 +38,7 @@ Phase 1  Synthetic Smoke Dataset                  complete
 Phase 2  Geometry and Coordinate Transform        complete
 Phase 3  Dataset and DataLoader                   complete
 Phase 4  Metrics                                  complete
-Phase 5  Linear Baseline                          pending
+Phase 5  Linear Baseline                          complete
 Phase 6  Common Training Pipeline                 pending
 Phase 7  LSTM Encoder-Decoder                     pending
 Phase 8  Transformer Encoder                      pending
@@ -54,9 +54,9 @@ Phase 15 Final Report Assets                      pending
 ## Next Recommended Task
 
 ```text
-Start Phase 5 only.
-Create the linear extrapolation baseline and evaluation CLI.
-Do not implement trainable models yet.
+Start Phase 6 only.
+Create the common training pipeline using a tiny placeholder model for smoke validation.
+Do not implement the real Phase 7 LSTM architecture yet.
 ```
 
 ## Latest Verified Commands
@@ -72,6 +72,7 @@ python -m src.datasets.synthetic --out_dir data/processed --num_samples 1000
 pytest tests/test_synthetic_data.py -q
 pytest tests/test_geometry.py -q
 pytest tests/test_metrics.py -q
+python -m src.evaluation.evaluate --model linear --data data/processed/val_smoke.npz --config configs/linear.yaml --out_dir outputs
 pytest -q
 ```
 
@@ -100,6 +101,7 @@ Phase 2 subagent review: no coordinate transform issues found
 Phase 3 dataset/dataloader: synthetic generation passed, tests/test_synthetic_data.py passed 7 tests, full pytest passed 18 tests
 Phase 4 metrics: tests/test_metrics.py passed 14 tests, full pytest passed 32 tests
 Phase 4 subagent review: mask shape/all-false mask findings were fixed before commit
+Phase 5 linear baseline: evaluation CLI produced ADE, FDE, Miss Rate, Latency, and Parameters on val_smoke; full pytest passed 33 tests
 ```
 
 ## Open External Requirements

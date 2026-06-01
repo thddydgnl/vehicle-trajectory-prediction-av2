@@ -1,0 +1,9 @@
+model:
+  name: linear
+  pred_len: 30
+  dt: 0.1
+
+evaluation:
+  batch_size: 128
+  num_workers: 0
+  miss_threshold: 2.0
