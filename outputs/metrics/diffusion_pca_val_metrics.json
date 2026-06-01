@@ -1,0 +1,42 @@
+{
+  "ADE": 4.524773597717285,
+  "FDE": 9.453787803649902,
+  "best_epoch": 1,
+  "epochs_ran": 1,
+  "metadata": {
+    "config_path": "configs/diffusion_pca.yaml",
+    "device": "cpu",
+    "model": {
+      "architecture": "diffusion_pca",
+      "beta_end": 0.02,
+      "beta_start": 0.0001,
+      "codec_path": "outputs/checkpoints/pca_codec.pkl",
+      "cond_dim": 64,
+      "diffusion_steps": 20,
+      "hidden_dim": 128,
+      "input_dim": 6,
+      "latent_dim": 12,
+      "name": "diffusion_pca",
+      "num_samples": 4,
+      "pred_len": 30,
+      "sampling_steps": 10
+    },
+    "seed": 42,
+    "train_data": "data/processed/train_smoke.npz",
+    "training": {
+      "batch_size": 64,
+      "device": "cpu",
+      "early_stopping_patience": 10,
+      "epochs": 50,
+      "gradient_clip": 1.0,
+      "learning_rate": 0.0003,
+      "loss": "noise_mse",
+      "num_workers": 0,
+      "out_dir": "outputs",
+      "seed": 42,
+      "weight_decay": 0.0001
+    },
+    "val_data": "data/processed/val_smoke.npz"
+  },
+  "model": "diffusion_pca"
+}

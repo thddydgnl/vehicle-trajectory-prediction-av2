@@ -43,7 +43,7 @@ Phase 6  Common Training Pipeline                 complete
 Phase 7  LSTM Encoder-Decoder                     complete
 Phase 8  Transformer Encoder                      complete
 Phase 9  Direct Diffusion Model                   complete
-Phase 10 PCA Latent Diffusion                     pending
+Phase 10 PCA Latent Diffusion                     complete
 Phase 11 Argoverse 2 Preprocessing                pending
 Phase 12 Visualization                            pending
 Phase 13 PCA and K-means Analysis                 pending
@@ -54,9 +54,9 @@ Phase 15 Final Report Assets                      pending
 ## Next Recommended Task
 
 ```text
-Start Phase 10 only.
-Create the PCA latent trajectory codec and smoke path using synthetic data.
-Do not implement AV2 preprocessing yet.
+Phase 7 through Phase 10 are complete.
+Stop this goal here. Do not start Phase 11 until the user explicitly asks.
+Next future task will be Phase 11 Argoverse 2 Preprocessing with real AV2 data.
 ```
 
 ## Latest Verified Commands
@@ -82,6 +82,9 @@ python -m src.evaluation.evaluate --model transformer --checkpoint outputs/check
 pytest tests/test_diffusion_step.py -q
 python -m src.training.train --config configs/diffusion_direct.yaml --max_epochs 1 --data data/processed/train_smoke.npz --val_data data/processed/val_smoke.npz
 python -m src.evaluation.evaluate --model diffusion_direct --checkpoint outputs/checkpoints/best_diffusion_direct.pt --data data/processed/val_smoke.npz --out_dir outputs --batch_size 64
+pytest tests/test_pca_latent.py -q
+python -m src.analysis.pca_analysis --train_data data/processed/train_smoke.npz --out_dir outputs
+python -m src.training.train --config configs/diffusion_pca.yaml --max_epochs 1 --data data/processed/train_smoke.npz --val_data data/processed/val_smoke.npz
 python - <<'PY'
 import torch
 ckpt = torch.load('outputs/checkpoints/best_lstm_smoke.pt', map_location='cpu')
@@ -125,6 +128,7 @@ Phase 6 subagent review: mask-aware FDE/endpoint, valid-step loss aggregation, a
 Phase 7 LSTM: tests/test_models_shape.py passed 2 tests; 1-epoch synthetic smoke training completed on CPU; LSTM checkpoint evaluation produced ADE, FDE, Miss Rate, Latency, and Parameters; full pytest passed 43 tests
 Phase 8 Transformer: tests/test_models_shape.py passed 4 tests; 1-epoch synthetic smoke training completed on CPU; Transformer checkpoint evaluation produced ADE, FDE, Miss Rate, Latency, and Parameters; full pytest passed 45 tests
 Phase 9 direct diffusion: tests/test_diffusion_step.py passed 5 tests; 1-epoch synthetic smoke training completed on CPU; diffusion checkpoint evaluation produced ADE/FDE and minADE/minFDE with 4 samples; full pytest passed 50 tests
+Phase 10 PCA latent diffusion: tests/test_pca_latent.py passed 3 tests; PCA codec fit on train_smoke and wrote ignored outputs/checkpoints/pca_codec.pkl; PCA explained variance figure generated; diffusion_pca 1-epoch synthetic smoke training completed on CPU; full pytest passed 53 tests
 ```
 
 ## Open External Requirements

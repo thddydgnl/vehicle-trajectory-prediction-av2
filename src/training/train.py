@@ -9,6 +9,7 @@ import torch
 from src.datasets.av2_dataset import TrajectoryDataset, create_dataloader
 from src.models.diffusion import GaussianDiffusionTrajectory
 from src.models.lstm import LSTMForecast
+from src.models.pca_latent import PCALatentDiffusionTrajectory
 from src.models.transformer import TransformerForecast
 from src.training.trainer import Trainer, TrainerConfig
 from src.utils.config import load_yaml_config
@@ -82,6 +83,20 @@ def _build_model(config: dict[str, Any], data_path: Path) -> torch.nn.Module:
             input_dim=int(model_config.get("input_dim", input_dim)),
             pred_len=pred_len,
             trajectory_dim=int(model_config.get("trajectory_dim", pred_len * 2)),
+            cond_dim=int(model_config.get("cond_dim", 128)),
+            hidden_dim=int(model_config.get("hidden_dim", 256)),
+            diffusion_steps=int(model_config.get("diffusion_steps", 100)),
+            sampling_steps=int(model_config.get("sampling_steps", 50)),
+            beta_start=float(model_config.get("beta_start", 0.0001)),
+            beta_end=float(model_config.get("beta_end", 0.02)),
+            num_samples=int(model_config.get("num_samples", 6)),
+        )
+    if architecture == "diffusion_pca":
+        return PCALatentDiffusionTrajectory(
+            input_dim=int(model_config.get("input_dim", input_dim)),
+            codec_path=str(model_config.get("codec_path", "outputs/checkpoints/pca_codec.pkl")),
+            pred_len=pred_len,
+            latent_dim=int(model_config.get("latent_dim", 12)),
             cond_dim=int(model_config.get("cond_dim", 128)),
             hidden_dim=int(model_config.get("hidden_dim", 256)),
             diffusion_steps=int(model_config.get("diffusion_steps", 100)),
