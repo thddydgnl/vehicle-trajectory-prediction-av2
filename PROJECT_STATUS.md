@@ -34,7 +34,7 @@ Output: Song / song\song
 
 ```text
 Phase 0  Repository Setup                         complete
-Phase 1  Synthetic Smoke Dataset                  pending
+Phase 1  Synthetic Smoke Dataset                  complete
 Phase 2  Geometry and Coordinate Transform        pending
 Phase 3  Dataset and DataLoader                   pending
 Phase 4  Metrics                                  pending
@@ -54,9 +54,9 @@ Phase 15 Final Report Assets                      pending
 ## Next Recommended Task
 
 ```text
-Start Phase 1 only.
-Create the synthetic smoke dataset generator and tests.
-Do not implement geometry, dataloader, metrics, or models yet.
+Start Phase 2 only.
+Create relative coordinate transform utilities and tests.
+Do not implement dataloader, metrics, or models yet.
 ```
 
 ## Latest Verified Commands
@@ -68,6 +68,9 @@ ssh song@100.87.219.58 'powershell -NoProfile -ExecutionPolicy Bypass -Command "
 ssh song@100.87.219.58 'powershell -NoProfile -ExecutionPolicy Bypass -Command "conda env list"'
 pytest -q
 python -c "from src.utils.device import get_device; print(get_device())"
+python -m src.datasets.synthetic --out_dir data/processed --num_samples 1000
+pytest tests/test_synthetic_data.py -q
+pytest -q
 ```
 
 Result:
@@ -88,6 +91,8 @@ Windows AV2 partial state: annotation parquet files downloaded; test split parti
 Stop verification: taskkill terminated s5cmd.exe PID 27984; later tasklist found no s5cmd.exe; VehicleTrajectoryAV2Download task not present
 Tailscale ping after stop: pong from song in 11ms
 OpenSSH event log: publickey accepted/disconnected cleanly; no server-side OpenSSH error observed
+Phase 1 synthetic generator: created ignored train_smoke.npz, val_smoke.npz, and test_smoke.npz
+Phase 1 tests: tests/test_synthetic_data.py passed, full pytest passed 10 tests
 ```
 
 ## Open External Requirements
