@@ -36,7 +36,7 @@ Output: Song / song\song
 Phase 0  Repository Setup                         complete
 Phase 1  Synthetic Smoke Dataset                  complete
 Phase 2  Geometry and Coordinate Transform        complete
-Phase 3  Dataset and DataLoader                   pending
+Phase 3  Dataset and DataLoader                   complete
 Phase 4  Metrics                                  pending
 Phase 5  Linear Baseline                          pending
 Phase 6  Common Training Pipeline                 pending
@@ -54,9 +54,9 @@ Phase 15 Final Report Assets                      pending
 ## Next Recommended Task
 
 ```text
-Start Phase 3 only.
-Create the processed trajectory Dataset/DataLoader using synthetic .npz files.
-Do not implement metrics or models yet.
+Start Phase 4 only.
+Create trajectory evaluation metrics and exact tensor tests.
+Do not implement models yet.
 ```
 
 ## Latest Verified Commands
@@ -96,6 +96,7 @@ Phase 1 synthetic generator: created ignored train_smoke.npz, val_smoke.npz, and
 Phase 1 tests: tests/test_synthetic_data.py passed, full pytest passed 10 tests
 Phase 2 geometry: relative/global transforms and wrap_angle tests passed; full pytest passed 16 tests
 Phase 2 subagent review: no coordinate transform issues found
+Phase 3 dataset/dataloader: synthetic generation passed, tests/test_synthetic_data.py passed 7 tests, full pytest passed 18 tests
 ```
 
 ## Open External Requirements

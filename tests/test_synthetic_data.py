@@ -1,7 +1,9 @@
 from pathlib import Path
 
 import numpy as np
+import torch
 
+from src.datasets.av2_dataset import TrajectoryDataset, create_dataloader
 from src.datasets.synthetic import FEATURE_DIM, PATTERNS, SyntheticConfig, save_synthetic_splits
 
 
@@ -83,3 +85,41 @@ def test_synthetic_includes_all_motion_patterns(tmp_path: Path) -> None:
         all_patterns.update(str(pattern) for pattern in split["pattern"].tolist())
 
     assert set(PATTERNS).issubset(all_patterns)
+
+
+def test_trajectory_dataset_returns_expected_item(tmp_path: Path) -> None:
+    paths = save_synthetic_splits(SyntheticConfig(out_dir=tmp_path, num_samples=60))
+    dataset = TrajectoryDataset(paths["train"])
+
+    item = dataset[0]
+
+    assert len(dataset) == 42
+    assert item["X"].shape == (50, FEATURE_DIM)
+    assert item["Y"].shape == (30, 2)
+    assert item["mask_x"].shape == (50,)
+    assert item["mask_y"].shape == (30,)
+    assert item["origin"].shape == (2,)
+    assert item["theta"].shape == ()
+
+    assert item["X"].dtype == torch.float32
+    assert item["Y"].dtype == torch.float32
+    assert item["mask_x"].dtype == torch.bool
+    assert item["mask_y"].dtype == torch.bool
+    assert item["object_type"].dtype == torch.long
+    assert isinstance(item["scenario_id"], str)
+    assert isinstance(item["track_id"], str)
+
+
+def test_create_dataloader_batches_synthetic_data(tmp_path: Path) -> None:
+    paths = save_synthetic_splits(SyntheticConfig(out_dir=tmp_path, num_samples=60))
+    dataloader = create_dataloader(paths["train"], batch_size=8, shuffle=False)
+
+    batch = next(iter(dataloader))
+
+    assert batch["X"].shape == (8, 50, FEATURE_DIM)
+    assert batch["Y"].shape == (8, 30, 2)
+    assert batch["mask_x"].shape == (8, 50)
+    assert batch["mask_y"].shape == (8, 30)
+    assert batch["object_type"].shape == (8,)
+    assert len(batch["scenario_id"]) == 8
+    assert len(batch["track_id"]) == 8
