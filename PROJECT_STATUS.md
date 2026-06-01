@@ -10,6 +10,7 @@ This file is the persistent progress ledger for Codex goal mode.
 Phase 0 repository setup is complete.
 Project folder now contains the base Python package, utilities, tests, config/data/output directories, and documentation.
 Git repository has been initialized on branch main.
+GitHub remote has been configured and pushed.
 Windows SSH over Tailscale has been verified.
 Windows NVIDIA GPU is visible, but default PyTorch is CPU-only.
 Windows conda currently has only the base environment; vehicle_traj does not exist yet.
@@ -83,9 +84,17 @@ get_device: mps
 ## Open External Requirements
 
 ```text
-GitHub remote URL is not configured yet.
 AV2 raw data is not present yet.
 Windows vehicle_traj CUDA PyTorch environment must be created before long model training.
+```
+
+## GitHub
+
+```text
+Repository: https://github.com/thddydgnl/vehicle-trajectory-prediction-av2
+Remote: origin
+Default branch: main
+Latest pushed branch: main
 ```
 
 ## Update Rule
