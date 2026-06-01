@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.venv/
+venv/
+
+# OS/editor
+.DS_Store
+.idea/
+.vscode/
+
+# Data
+data/raw/*
+!data/raw/.gitkeep
+data/processed/*.npz
+data/processed/*.pkl
+data/processed/*.joblib
+data/processed/scaler.pkl
+!data/processed/.gitkeep
+
+# Training outputs
+outputs/checkpoints/*
+outputs/predictions/*
+outputs/logs/*
+outputs/remote_runs/*
+windows_training_results/
+!outputs/checkpoints/.gitkeep
+!outputs/predictions/.gitkeep
+!outputs/logs/.gitkeep
+!outputs/metrics/.gitkeep
+!outputs/figures/.gitkeep
+!outputs/tables/.gitkeep
+
+# Large media
+*.mp4
+*.mov
+*.avi
+*.pdf
