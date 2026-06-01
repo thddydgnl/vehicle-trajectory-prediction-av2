@@ -30,9 +30,25 @@ def ade(pred: torch.Tensor, gt: torch.Tensor, mask: torch.Tensor | None = None) 
     return _masked_mean(_trajectory_errors(pred, gt), mask)
 
 
-def fde(pred: torch.Tensor, gt: torch.Tensor) -> torch.Tensor:
+def _final_valid_indices(mask: torch.Tensor) -> torch.Tensor:
+    if mask.ndim != 2:
+        raise ValueError(f"mask shape must be [B, T], got {mask.shape}")
+    valid_counts = mask.sum(dim=1)
+    if torch.any(valid_counts <= 0):
+        raise ValueError("each batch item must contain at least one valid trajectory step")
+    step_indices = torch.arange(mask.shape[1], device=mask.device).expand(mask.shape[0], -1)
+    return torch.where(mask, step_indices, torch.full_like(step_indices, -1)).max(dim=1).values
+
+
+def fde(pred: torch.Tensor, gt: torch.Tensor, mask: torch.Tensor | None = None) -> torch.Tensor:
     """Final displacement error averaged over the batch."""
     errors = _trajectory_errors(pred, gt)
+    if mask is not None:
+        if mask.shape != errors.shape:
+            raise ValueError(f"mask shape must be [B, T], got {mask.shape}, expected {errors.shape}")
+        final_indices = _final_valid_indices(mask.to(device=errors.device, dtype=torch.bool))
+        batch_indices = torch.arange(errors.shape[0], device=errors.device)
+        return errors[batch_indices, final_indices].mean()
     return errors[:, -1].mean()
 
 
@@ -76,9 +92,20 @@ def min_fde(pred_samples: torch.Tensor, gt: torch.Tensor) -> torch.Tensor:
     return final_errors.min(dim=1).values.mean()
 
 
-def miss_rate(pred: torch.Tensor, gt: torch.Tensor, threshold: float = 2.0) -> torch.Tensor:
+def miss_rate(
+    pred: torch.Tensor,
+    gt: torch.Tensor,
+    threshold: float = 2.0,
+    mask: torch.Tensor | None = None,
+) -> torch.Tensor:
     """Fraction of trajectories whose final displacement error exceeds threshold."""
     errors = _trajectory_errors(pred, gt)
+    if mask is not None:
+        if mask.shape != errors.shape:
+            raise ValueError(f"mask shape must be [B, T], got {mask.shape}, expected {errors.shape}")
+        final_indices = _final_valid_indices(mask.to(device=errors.device, dtype=torch.bool))
+        batch_indices = torch.arange(errors.shape[0], device=errors.device)
+        return (errors[batch_indices, final_indices] > threshold).to(dtype=pred.dtype).mean()
     return (errors[:, -1] > threshold).to(dtype=pred.dtype).mean()
 
 

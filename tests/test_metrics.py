@@ -26,6 +26,14 @@ def test_fde_matches_exact_value() -> None:
     assert torch.isclose(fde(pred, gt), torch.tensor(3.5))
 
 
+def test_fde_can_use_final_valid_masked_step() -> None:
+    pred = torch.tensor([[[3.0, 4.0], [100.0, 0.0]], [[0.0, 0.0], [0.0, 2.0]]])
+    gt = torch.zeros_like(pred)
+    mask = torch.tensor([[True, False], [True, True]])
+
+    assert torch.isclose(fde(pred, gt, mask), torch.tensor(3.5))
+
+
 def test_min_ade_chooses_best_sample_per_batch_item() -> None:
     gt = torch.zeros((2, 2, 2))
     pred_samples = torch.tensor(
@@ -70,6 +78,14 @@ def test_miss_rate_uses_final_displacement_threshold() -> None:
     )
 
     assert torch.isclose(miss_rate(pred, gt, threshold=2.0), torch.tensor(1.0 / 3.0))
+
+
+def test_miss_rate_can_use_final_valid_masked_step() -> None:
+    gt = torch.zeros((2, 2, 2))
+    pred = torch.tensor([[[3.0, 0.0], [0.0, 0.0]], [[1.0, 0.0], [4.0, 0.0]]])
+    mask = torch.tensor([[True, False], [True, True]])
+
+    assert torch.isclose(miss_rate(pred, gt, threshold=2.0, mask=mask), torch.tensor(1.0))
 
 
 def test_count_parameters_counts_only_trainable_parameters() -> None:

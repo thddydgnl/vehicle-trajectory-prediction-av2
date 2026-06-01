@@ -39,7 +39,7 @@ Phase 2  Geometry and Coordinate Transform        complete
 Phase 3  Dataset and DataLoader                   complete
 Phase 4  Metrics                                  complete
 Phase 5  Linear Baseline                          complete
-Phase 6  Common Training Pipeline                 pending
+Phase 6  Common Training Pipeline                 complete
 Phase 7  LSTM Encoder-Decoder                     pending
 Phase 8  Transformer Encoder                      pending
 Phase 9  Direct Diffusion Model                   pending
@@ -54,9 +54,9 @@ Phase 15 Final Report Assets                      pending
 ## Next Recommended Task
 
 ```text
-Start Phase 6 only.
-Create the common training pipeline using a tiny placeholder model for smoke validation.
-Do not implement the real Phase 7 LSTM architecture yet.
+Phase 1 through Phase 6 are complete.
+Stop this goal here. Do not start Phase 7 until the user explicitly asks.
+Next future task will be Phase 7 LSTM Encoder-Decoder.
 ```
 
 ## Latest Verified Commands
@@ -73,6 +73,15 @@ pytest tests/test_synthetic_data.py -q
 pytest tests/test_geometry.py -q
 pytest tests/test_metrics.py -q
 python -m src.evaluation.evaluate --model linear --data data/processed/val_smoke.npz --config configs/linear.yaml --out_dir outputs
+pytest tests/test_losses.py -q
+python -m src.training.train --config configs/lstm.yaml --max_epochs 1 --data data/processed/train_smoke.npz --val_data data/processed/val_smoke.npz
+python - <<'PY'
+import torch
+ckpt = torch.load('outputs/checkpoints/best_lstm_smoke.pt', map_location='cpu')
+print(sorted(ckpt.keys()))
+print(ckpt['metadata']['device'])
+print(ckpt['metadata']['model']['architecture'])
+PY
 pytest -q
 ```
 
@@ -102,6 +111,10 @@ Phase 3 dataset/dataloader: synthetic generation passed, tests/test_synthetic_da
 Phase 4 metrics: tests/test_metrics.py passed 14 tests, full pytest passed 32 tests
 Phase 4 subagent review: mask shape/all-false mask findings were fixed before commit
 Phase 5 linear baseline: evaluation CLI produced ADE, FDE, Miss Rate, Latency, and Parameters on val_smoke; full pytest passed 33 tests
+Phase 6 common training: tiny_regressor smoke training completed for 1 epoch on CPU; best/last checkpoint, train log, and val metrics were generated
+Phase 6 tests: tests/test_losses.py passed 5 tests, metrics/loss tests passed 22 tests, full pytest passed 41 tests
+Phase 6 checkpoint audit: best_lstm_smoke.pt includes model/optimizer state, trainer_config, and metadata with device=cpu and architecture=tiny_regressor
+Phase 6 subagent review: mask-aware FDE/endpoint, valid-step loss aggregation, and checkpoint metadata findings were fixed before commit
 ```
 
 ## Open External Requirements
