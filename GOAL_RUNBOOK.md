@@ -11,10 +11,10 @@ Every goal turn must start by reading:
 ```text
 1. AGENTS.md
 2. PROJECT_STATUS.md
-3. codex_vehicle_trajectory_project_plan.md
-4. windows_gpu_training_only_workflow.md
-5. WINDOWS_ENV_SETUP.md
-6. github_portfolio_workflow.md
+3. docs/codex_vehicle_trajectory_project_plan.md
+4. docs/windows_gpu_training_only_workflow.md
+5. docs/WINDOWS_ENV_SETUP.md
+6. docs/github_portfolio_workflow.md
 ```
 
 Then inspect the actual filesystem:
@@ -92,8 +92,8 @@ AV2 raw -> processed conversion when the raw data stays on Windows
 python -m src.training.train ...
 ```
 
-Before using Windows, follow `windows_gpu_training_only_workflow.md` and
-`WINDOWS_ENV_SETUP.md`.
+Before using Windows, follow `docs/windows_gpu_training_only_workflow.md` and
+`docs/WINDOWS_ENV_SETUP.md`.
 
 Verified Windows SSH:
 
@@ -110,7 +110,7 @@ song\song
 
 ## 5. GitHub Portfolio Policy
 
-Follow `github_portfolio_workflow.md`.
+Follow `docs/github_portfolio_workflow.md`.
 
 At the end of every completed Phase:
 

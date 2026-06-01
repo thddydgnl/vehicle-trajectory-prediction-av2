@@ -43,10 +43,12 @@ python -c "from src.utils.device import get_device; print(get_device())"
 
 - `GOAL_RUNBOOK.md`: goal-mode operating entry point
 - `PROJECT_STATUS.md`: persistent project progress ledger
-- `codex_vehicle_trajectory_project_plan.md`: phase-by-phase implementation plan
-- `windows_gpu_training_only_workflow.md`: Windows AV2 data and GPU training workflow
-- `WINDOWS_ENV_SETUP.md`: Windows CUDA/PyTorch and AV2 download setup checklist
-- `github_portfolio_workflow.md`: commit/push and portfolio policy
+- `docs/README.md`: document index
+- `docs/codex_vehicle_trajectory_project_plan.md`: phase-by-phase implementation plan
+- `docs/windows_gpu_training_only_workflow.md`: Windows AV2 data and GPU training workflow
+- `docs/WINDOWS_ENV_SETUP.md`: Windows CUDA/PyTorch and AV2 download setup checklist
+- `docs/github_portfolio_workflow.md`: commit/push and portfolio policy
+- `docs/prompts/phase_1_to_6_goal_prompt.md`: goal prompt for Mac-only Phase 1-6 work
 
 ## Data Policy
 

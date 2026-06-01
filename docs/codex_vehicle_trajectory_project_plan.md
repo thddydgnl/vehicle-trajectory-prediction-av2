@@ -19,11 +19,11 @@ urlcolor: blue
 # 0. 문서 사용 방법
 
 이 문서는 OpenAI Codex가 프로젝트를 단계별로 구현할 수 있도록 만든 실행 계획서이다.  
-프로젝트 루트에는 이 파일을 `codex_vehicle_trajectory_project_plan.md`로 저장하고, 필요하면 아래 섹션을 분리해 `AGENTS.md`와 `CODEX_TASKS.md`로 저장한다.
+프로젝트 루트에는 이 파일을 `docs/codex_vehicle_trajectory_project_plan.md`로 저장하고, 필요하면 아래 섹션을 분리해 `AGENTS.md`와 `CODEX_TASKS.md`로 저장한다.
 
 권장 사용 방식은 다음과 같다.
 
-1. 프로젝트 저장소 루트에 `codex_vehicle_trajectory_project_plan.md`를 저장한다.
+1. 프로젝트 저장소 루트에 `docs/codex_vehicle_trajectory_project_plan.md`를 저장한다.
 2. Codex에게 이 문서를 먼저 읽게 한다.
 3. 한 번에 전체 구현을 맡기지 않고, Phase 또는 Task 단위로 하나씩 진행한다.
 4. 각 단계가 끝날 때마다 테스트와 smoke run을 실행한다.
@@ -34,7 +34,7 @@ Codex에게 처음 줄 프롬프트는 다음과 같다.
 ```text
 Read GOAL_RUNBOOK.md first.
 Read PROJECT_STATUS.md before selecting the next phase.
-Read codex_vehicle_trajectory_project_plan.md for the phase specification.
+Read docs/codex_vehicle_trajectory_project_plan.md for the phase specification.
 Do not implement the whole project at once.
 Start with Phase 0 only.
 After implementation, run the required tests and report:
@@ -243,7 +243,7 @@ Codex는 최종적으로 다음 구조를 만들거나 유지한다.
 ```text
 trajectory-project/
   AGENTS.md
-  codex_vehicle_trajectory_project_plan.md
+  docs/codex_vehicle_trajectory_project_plan.md
   CODEX_TASKS.md
   README.md
   requirements.txt
@@ -1486,7 +1486,7 @@ Codex에게는 아래 Task를 하나씩만 지시한다.
 ## Task 0. Initialize Repository
 
 ```text
-Read codex_vehicle_trajectory_project_plan.md.
+Read docs/codex_vehicle_trajectory_project_plan.md.
 Start Phase 0 only.
 Create the repository skeleton, utility modules, requirements.txt,
 pyproject.toml, Makefile, and minimal pytest setup.
@@ -1502,7 +1502,7 @@ Report changed files, commands run, test results, and next task.
 ## Task 1. Create Synthetic Smoke Dataset
 
 ```text
-Read codex_vehicle_trajectory_project_plan.md.
+Read docs/codex_vehicle_trajectory_project_plan.md.
 Implement Phase 1 only.
 Create a synthetic trajectory generator that saves train_smoke.npz,
 val_smoke.npz, and test_smoke.npz with the required data format.
@@ -1525,7 +1525,7 @@ pytest tests/test_synthetic_data.py -q
 ## Task 2. Implement Coordinate Geometry
 
 ```text
-Read codex_vehicle_trajectory_project_plan.md.
+Read docs/codex_vehicle_trajectory_project_plan.md.
 Implement Phase 2 only.
 Create geometry utilities for rotation_matrix, to_relative_coords,
 to_global_coords, and wrap_angle.
@@ -1538,7 +1538,7 @@ pytest tests/test_geometry.py -q
 ## Task 3. Implement Dataset Loader
 
 ```text
-Read codex_vehicle_trajectory_project_plan.md.
+Read docs/codex_vehicle_trajectory_project_plan.md.
 Implement Phase 3 only.
 Create TrajectoryDataset and create_dataloader for processed .npz files.
 Use synthetic smoke data for tests.
@@ -1551,7 +1551,7 @@ pytest tests/test_synthetic_data.py -q
 ## Task 4. Implement Metrics
 
 ```text
-Read codex_vehicle_trajectory_project_plan.md.
+Read docs/codex_vehicle_trajectory_project_plan.md.
 Implement Phase 4 only.
 Create ADE, FDE, minADE, minFDE, Miss Rate, and parameter count metrics.
 Add exact-value unit tests using small tensors.
@@ -1563,7 +1563,7 @@ pytest tests/test_metrics.py -q
 ## Task 5. Implement Linear Baseline
 
 ```text
-Read codex_vehicle_trajectory_project_plan.md.
+Read docs/codex_vehicle_trajectory_project_plan.md.
 Implement Phase 5 only.
 Create LinearExtrapolation and evaluation CLI for the linear model.
 Use synthetic smoke validation data.
@@ -1581,7 +1581,7 @@ Report ADE, FDE, Miss Rate, and Latency.
 ## Task 6. Implement Common Training Pipeline
 
 ```text
-Read codex_vehicle_trajectory_project_plan.md.
+Read docs/codex_vehicle_trajectory_project_plan.md.
 Implement Phase 6 only.
 Create the common training loop, loss functions, checkpoint saving,
 logging, early stopping, and config loading.
@@ -1594,7 +1594,7 @@ pytest -q
 ## Task 7. Implement LSTM Model
 
 ```text
-Read codex_vehicle_trajectory_project_plan.md.
+Read docs/codex_vehicle_trajectory_project_plan.md.
 Implement Phase 7 only.
 Create LSTMForecast with encoder-decoder structure.
 Connect it to the common training pipeline.
@@ -1614,7 +1614,7 @@ python -m src.evaluation.evaluate --model lstm \
 ## Task 8. Implement Transformer Model
 
 ```text
-Read codex_vehicle_trajectory_project_plan.md.
+Read docs/codex_vehicle_trajectory_project_plan.md.
 Implement Phase 8 only.
 Create PositionalEncoding and TransformerForecast.
 Connect it to training and evaluation.
@@ -1634,7 +1634,7 @@ python -m src.evaluation.evaluate --model transformer \
 ## Task 9. Implement Direct Diffusion
 
 ```text
-Read codex_vehicle_trajectory_project_plan.md.
+Read docs/codex_vehicle_trajectory_project_plan.md.
 Implement Phase 9 only.
 Create conditional 60D trajectory diffusion.
 The model must encode X, flatten Y into 60D, add DDPM noise,
@@ -1656,7 +1656,7 @@ python -m src.evaluation.evaluate --model diffusion_direct \
 ## Task 10. Implement PCA Latent Diffusion
 
 ```text
-Read codex_vehicle_trajectory_project_plan.md.
+Read docs/codex_vehicle_trajectory_project_plan.md.
 Implement Phase 10 only.
 Create PCATrajectoryCodec.
 Fit PCA only on training future trajectories.
@@ -1674,7 +1674,7 @@ python -m src.training.train --config configs/diffusion_pca.yaml --max_epochs 1 
 ## Task 11. Implement Visualization
 
 ```text
-Read codex_vehicle_trajectory_project_plan.md.
+Read docs/codex_vehicle_trajectory_project_plan.md.
 Implement Phase 12 only.
 Create plotting scripts for trajectory overlay, diffusion samples,
 ADE/FDE histogram, PCA plot, and K-means clusters.
@@ -1691,7 +1691,7 @@ python -m src.visualization.plot_trajectories \
 ## Task 12. Implement K-means and Error Analysis
 
 ```text
-Read codex_vehicle_trajectory_project_plan.md.
+Read docs/codex_vehicle_trajectory_project_plan.md.
 Implement Phase 13 only.
 Create PCA and K-means analysis over future trajectories.
 Create cluster-wise metric tables for all available model predictions.
@@ -1709,7 +1709,7 @@ python -m src.analysis.kmeans_analysis \
 ## Task 13. Implement AV2 Preprocessing
 
 ```text
-Read codex_vehicle_trajectory_project_plan.md.
+Read docs/codex_vehicle_trajectory_project_plan.md.
 Implement Phase 11 only.
 Inspect the available raw Argoverse 2 data directory before assuming exact filenames.
 Create AV2 preprocessing script that outputs the required .npz format.
@@ -1734,7 +1734,7 @@ If raw AV2 data is unavailable, report that clearly and do not fake success.
 ## Task 14. Run Final Experiments
 
 ```text
-Read codex_vehicle_trajectory_project_plan.md.
+Read docs/codex_vehicle_trajectory_project_plan.md.
 Run final experiments using the available processed dataset.
 Required models:
 - linear
@@ -1760,7 +1760,7 @@ Report:
 ## Task 15. Generate Final Report Summary
 
 ```text
-Read codex_vehicle_trajectory_project_plan.md.
+Read docs/codex_vehicle_trajectory_project_plan.md.
 Create outputs/report_summary.md.
 The report must include problem definition, dataset, preprocessing,
 models, metrics, results table, trajectory visualizations, error analysis,

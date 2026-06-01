@@ -36,7 +36,7 @@ Goal 진행 시 Codex가 지켜야 하는 첫 규칙:
 ```text
 1. GOAL_RUNBOOK.md를 먼저 읽는다.
 2. PROJECT_STATUS.md를 읽고 현재 Phase/Task를 확인한다.
-3. codex_vehicle_trajectory_project_plan.md를 읽고 Phase 요구사항을 확인한다.
+3. docs/codex_vehicle_trajectory_project_plan.md를 읽고 Phase 요구사항을 확인한다.
 4. Windows는 AV2 데이터 보관, AV2 data-local preprocessing, GPU 학습에만 사용한다.
 5. Windows 접속 전 Mac 테스트와 가능한 data validation을 먼저 끝낸다.
 6. Windows 작업 후 checkpoint/log/metric과 필요한 lightweight 결과만 Mac으로 회수한다.
@@ -57,10 +57,10 @@ Read order:
 ```text
 1. /Users/song-yonghwi/Documents/vehicle_trajectory_project/GOAL_RUNBOOK.md
 2. /Users/song-yonghwi/Documents/vehicle_trajectory_project/PROJECT_STATUS.md
-3. /Users/song-yonghwi/Documents/vehicle_trajectory_project/codex_vehicle_trajectory_project_plan.md
-4. /Users/song-yonghwi/Documents/vehicle_trajectory_project/windows_gpu_training_only_workflow.md
-5. /Users/song-yonghwi/Documents/vehicle_trajectory_project/WINDOWS_ENV_SETUP.md
-6. /Users/song-yonghwi/Documents/vehicle_trajectory_project/github_portfolio_workflow.md
+3. /Users/song-yonghwi/Documents/vehicle_trajectory_project/docs/codex_vehicle_trajectory_project_plan.md
+4. /Users/song-yonghwi/Documents/vehicle_trajectory_project/docs/windows_gpu_training_only_workflow.md
+5. /Users/song-yonghwi/Documents/vehicle_trajectory_project/docs/WINDOWS_ENV_SETUP.md
+6. /Users/song-yonghwi/Documents/vehicle_trajectory_project/docs/github_portfolio_workflow.md
 7. 현재 구현된 README.md, AGENTS.md, CODEX_TASKS.md가 있으면 함께 확인
 8. 마지막 Phase Result 또는 outputs/report_summary.md가 있으면 진행 상태 확인
 ```
@@ -71,10 +71,10 @@ Goal start prompt 예시:
 Use goal mode for the vehicle trajectory prediction project.
 Read GOAL_RUNBOOK.md first.
 Read PROJECT_STATUS.md before selecting the next Phase.
-Read codex_vehicle_trajectory_project_plan.md for the phase specification.
-Use windows_gpu_training_only_workflow.md for Windows AV2 data and GPU training.
-Use WINDOWS_ENV_SETUP.md before any AV2 download or long Windows training run.
-Use github_portfolio_workflow.md for commit/push and portfolio rules.
+Read docs/codex_vehicle_trajectory_project_plan.md for the phase specification.
+Use docs/windows_gpu_training_only_workflow.md for Windows AV2 data and GPU training.
+Use docs/WINDOWS_ENV_SETUP.md before any AV2 download or long Windows training run.
+Use docs/github_portfolio_workflow.md for commit/push and portfolio rules.
 Keep Mac as the source-of-truth environment.
 Use Windows only for AV2 data storage, data-local preprocessing, and GPU training.
 Start with the next incomplete Phase only.
@@ -98,7 +98,7 @@ Goal turn algorithm:
 9. Run exactly the intended preprocessing or training command on Windows.
 10. Pull checkpoint/log/metric/lightweight result files back to Mac.
 11. Run evaluate/visualization/analysis on Mac when the required inputs are available.
-12. Commit and push verified code/results according to github_portfolio_workflow.md.
+12. Commit and push verified code/results according to docs/github_portfolio_workflow.md.
 13. Write Phase Result.
 ```
 
@@ -472,7 +472,7 @@ Current verified issue:
 Default Windows Python is 3.13.5 and current torch is 2.10.0+cpu.
 GPU exists, but default PyTorch cannot use CUDA.
 Before long training, create and verify the vehicle_traj conda environment in
-WINDOWS_ENV_SETUP.md.
+docs/WINDOWS_ENV_SETUP.md.
 ```
 
 Run once per Windows session:
@@ -492,7 +492,7 @@ If CUDA is unavailable:
 ```text
 Classify as Windows environment failure, not model failure.
 Do not run long training on Windows CPU unless explicitly requested.
-Follow WINDOWS_ENV_SETUP.md before Phase 7/8/9 training.
+Follow docs/WINDOWS_ENV_SETUP.md before Phase 7/8/9 training.
 ```
 
 ## 8. Sync Policy
@@ -516,10 +516,10 @@ README.md
 AGENTS.md
 GOAL_RUNBOOK.md
 PROJECT_STATUS.md
-codex_vehicle_trajectory_project_plan.md
-windows_gpu_training_only_workflow.md
-WINDOWS_ENV_SETUP.md
-github_portfolio_workflow.md
+docs/codex_vehicle_trajectory_project_plan.md
+docs/windows_gpu_training_only_workflow.md
+docs/WINDOWS_ENV_SETUP.md
+docs/github_portfolio_workflow.md
 CODEX_TASKS.md
 data/processed/*.npz
 data/processed/*.pkl

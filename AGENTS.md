@@ -9,10 +9,10 @@ At the start of every goal-mode turn, read:
 ```text
 1. GOAL_RUNBOOK.md
 2. PROJECT_STATUS.md
-3. codex_vehicle_trajectory_project_plan.md
-4. windows_gpu_training_only_workflow.md
-5. WINDOWS_ENV_SETUP.md
-6. github_portfolio_workflow.md
+3. docs/codex_vehicle_trajectory_project_plan.md
+4. docs/windows_gpu_training_only_workflow.md
+5. docs/WINDOWS_ENV_SETUP.md
+6. docs/github_portfolio_workflow.md
 ```
 
 ## Work Rules
@@ -24,7 +24,7 @@ Use synthetic data when AV2 raw data is unavailable.
 Do not fake metrics, figures, checkpoints, or report results.
 Do not commit raw data, processed .npz files, checkpoints, logs, or secrets.
 Update PROJECT_STATUS.md after each completed Phase.
-Commit and push verified Phase work according to github_portfolio_workflow.md.
+Commit and push verified Phase work according to docs/github_portfolio_workflow.md.
 ```
 
 ## Mac / Windows Split
@@ -51,7 +51,7 @@ song\song
 ```
 
 For GPU training, use the `vehicle_traj` conda environment from
-`WINDOWS_ENV_SETUP.md`. Do not run long training with a CPU-only PyTorch build.
+`docs/WINDOWS_ENV_SETUP.md`. Do not run long training with a CPU-only PyTorch build.
 
 For real AV2 experiments, prefer Windows-local data paths:
 

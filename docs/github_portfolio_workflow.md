@@ -37,8 +37,8 @@ Goal turn algorithm에 추가할 Git 단계:
 ```text
 1. Read GOAL_RUNBOOK.md.
 2. Read PROJECT_STATUS.md.
-3. Read codex_vehicle_trajectory_project_plan.md.
-4. Read windows_gpu_training_only_workflow.md if Windows AV2 data or training may be needed.
+3. Read docs/codex_vehicle_trajectory_project_plan.md.
+4. Read docs/windows_gpu_training_only_workflow.md if Windows AV2 data or training may be needed.
 5. Read this GitHub portfolio workflow.
 6. Run git status --short.
 7. Implement only the current Phase/Task.
@@ -162,7 +162,7 @@ tests/
 scripts/
 README.md
 AGENTS.md
-codex_vehicle_trajectory_project_plan.md
+docs/codex_vehicle_trajectory_project_plan.md
 CODEX_TASKS.md
 requirements.txt
 pyproject.toml

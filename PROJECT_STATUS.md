@@ -11,6 +11,7 @@ Phase 0 repository setup is complete.
 Project folder now contains the base Python package, utilities, tests, config/data/output directories, and documentation.
 Git repository has been initialized on branch main.
 GitHub remote has been configured and pushed.
+Long-form workflow documents have been moved under docs/.
 Windows SSH over Tailscale has been verified.
 Windows NVIDIA GPU is visible, but default PyTorch is CPU-only.
 Windows conda currently has only the base environment; vehicle_traj does not exist yet.
@@ -94,7 +95,7 @@ OpenSSH event log: publickey accepted/disconnected cleanly; no server-side OpenS
 ```text
 AV2 raw data is not present yet.
 Full AV2 download is not complete. Do not treat the current Windows AV2 folder as a complete dataset.
-For the next AV2 download attempt, do not use a long foreground SSH command; use the safe remote execution rule in windows_gpu_training_only_workflow.md.
+For the next AV2 download attempt, do not use a long foreground SSH command; use the safe remote execution rule in docs/windows_gpu_training_only_workflow.md.
 Windows vehicle_traj CUDA PyTorch environment must be created before long model training.
 ```
 
