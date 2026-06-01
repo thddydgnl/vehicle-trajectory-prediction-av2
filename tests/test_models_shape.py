@@ -1,6 +1,7 @@
 import torch
 
 from src.models.lstm import LSTMForecast
+from src.models.transformer import PositionalEncoding, TransformerForecast
 
 
 def test_lstm_forecast_output_shape() -> None:
@@ -21,3 +22,30 @@ def test_lstm_forecast_teacher_forcing_shape() -> None:
     pred = model(x, teacher_y=teacher_y, teacher_forcing_ratio=1.0)
 
     assert pred.shape == (2, 30, 2)
+
+
+def test_positional_encoding_preserves_shape() -> None:
+    module = PositionalEncoding(d_model=16)
+    x = torch.zeros(3, 50, 16)
+
+    encoded = module(x)
+
+    assert encoded.shape == x.shape
+    assert not torch.allclose(encoded, x)
+
+
+def test_transformer_forecast_output_shape() -> None:
+    model = TransformerForecast(
+        input_dim=6,
+        pred_len=30,
+        d_model=32,
+        nhead=4,
+        num_layers=1,
+        dim_feedforward=64,
+        dropout=0.0,
+    )
+    x = torch.randn(4, 50, 6)
+
+    pred = model(x)
+
+    assert pred.shape == (4, 30, 2)

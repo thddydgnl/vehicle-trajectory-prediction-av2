@@ -1,0 +1,2 @@
+model,checkpoint,data,num_samples,ADE,FDE,Miss Rate,Latency,Parameters
+transformer,outputs/checkpoints/best_transformer.pt,data/processed/val_smoke.npz,150,8.337967872619629,17.609703063964844,1.0,0.011163357499996588,406332

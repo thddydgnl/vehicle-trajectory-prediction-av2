@@ -41,7 +41,7 @@ Phase 4  Metrics                                  complete
 Phase 5  Linear Baseline                          complete
 Phase 6  Common Training Pipeline                 complete
 Phase 7  LSTM Encoder-Decoder                     complete
-Phase 8  Transformer Encoder                      pending
+Phase 8  Transformer Encoder                      complete
 Phase 9  Direct Diffusion Model                   pending
 Phase 10 PCA Latent Diffusion                     pending
 Phase 11 Argoverse 2 Preprocessing                pending
@@ -54,9 +54,9 @@ Phase 15 Final Report Assets                      pending
 ## Next Recommended Task
 
 ```text
-Start Phase 8 only.
-Create the Transformer encoder trajectory model and validate it with synthetic smoke data.
-Do not implement diffusion or AV2 preprocessing yet.
+Start Phase 9 only.
+Create the direct diffusion trajectory model and validate it with synthetic smoke data.
+Do not implement AV2 preprocessing yet.
 ```
 
 ## Latest Verified Commands
@@ -77,6 +77,8 @@ pytest tests/test_losses.py -q
 python -m src.training.train --config configs/lstm.yaml --max_epochs 1 --data data/processed/train_smoke.npz --val_data data/processed/val_smoke.npz
 pytest tests/test_models_shape.py -q
 python -m src.evaluation.evaluate --model lstm --checkpoint outputs/checkpoints/best_lstm.pt --data data/processed/val_smoke.npz --out_dir outputs
+python -m src.training.train --config configs/transformer.yaml --max_epochs 1 --data data/processed/train_smoke.npz --val_data data/processed/val_smoke.npz
+python -m src.evaluation.evaluate --model transformer --checkpoint outputs/checkpoints/best_transformer.pt --data data/processed/val_smoke.npz --out_dir outputs
 python - <<'PY'
 import torch
 ckpt = torch.load('outputs/checkpoints/best_lstm_smoke.pt', map_location='cpu')
@@ -118,6 +120,7 @@ Phase 6 tests: tests/test_losses.py passed 5 tests, metrics/loss tests passed 22
 Phase 6 checkpoint audit: best_lstm_smoke.pt includes model/optimizer state, trainer_config, and metadata with device=cpu and architecture=tiny_regressor
 Phase 6 subagent review: mask-aware FDE/endpoint, valid-step loss aggregation, and checkpoint metadata findings were fixed before commit
 Phase 7 LSTM: tests/test_models_shape.py passed 2 tests; 1-epoch synthetic smoke training completed on CPU; LSTM checkpoint evaluation produced ADE, FDE, Miss Rate, Latency, and Parameters; full pytest passed 43 tests
+Phase 8 Transformer: tests/test_models_shape.py passed 4 tests; 1-epoch synthetic smoke training completed on CPU; Transformer checkpoint evaluation produced ADE, FDE, Miss Rate, Latency, and Parameters; full pytest passed 45 tests
 ```
 
 ## Open External Requirements

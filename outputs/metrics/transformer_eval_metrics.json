@@ -1,0 +1,11 @@
+{
+  "ADE": 8.337967872619629,
+  "FDE": 17.609703063964844,
+  "Latency": 0.011163357499996588,
+  "Miss Rate": 1.0,
+  "Parameters": 406332,
+  "checkpoint": "outputs/checkpoints/best_transformer.pt",
+  "data": "data/processed/val_smoke.npz",
+  "model": "transformer",
+  "num_samples": 150
+}

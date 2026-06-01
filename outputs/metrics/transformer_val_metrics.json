@@ -1,0 +1,38 @@
+{
+  "ADE": 8.337967872619629,
+  "FDE": 17.609703063964844,
+  "best_epoch": 1,
+  "epochs_ran": 1,
+  "metadata": {
+    "config_path": "configs/transformer.yaml",
+    "device": "cpu",
+    "model": {
+      "architecture": "transformer",
+      "d_model": 128,
+      "dim_feedforward": 256,
+      "dropout": 0.1,
+      "input_dim": 6,
+      "name": "transformer",
+      "nhead": 4,
+      "num_layers": 3,
+      "pred_len": 30
+    },
+    "seed": 42,
+    "train_data": "data/processed/train_smoke.npz",
+    "training": {
+      "batch_size": 32,
+      "device": "cpu",
+      "early_stopping_patience": 10,
+      "epochs": 50,
+      "gradient_clip": 1.0,
+      "learning_rate": 0.0003,
+      "loss": "smooth_l1",
+      "num_workers": 0,
+      "out_dir": "outputs",
+      "seed": 42,
+      "weight_decay": 0.0001
+    },
+    "val_data": "data/processed/val_smoke.npz"
+  },
+  "model": "transformer"
+}

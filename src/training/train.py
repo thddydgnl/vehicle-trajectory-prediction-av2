@@ -8,6 +8,7 @@ import torch
 
 from src.datasets.av2_dataset import TrajectoryDataset, create_dataloader
 from src.models.lstm import LSTMForecast
+from src.models.transformer import TransformerForecast
 from src.training.trainer import Trainer, TrainerConfig
 from src.utils.config import load_yaml_config
 from src.utils.device import get_device
@@ -63,6 +64,16 @@ def _build_model(config: dict[str, Any], data_path: Path) -> torch.nn.Module:
             pred_len=pred_len,
             hidden_dim=hidden_dim,
             num_layers=int(model_config.get("num_layers", 2)),
+            dropout=float(model_config.get("dropout", 0.1)),
+        )
+    if architecture == "transformer":
+        return TransformerForecast(
+            input_dim=int(model_config.get("input_dim", input_dim)),
+            pred_len=pred_len,
+            d_model=int(model_config.get("d_model", 128)),
+            nhead=int(model_config.get("nhead", 4)),
+            num_layers=int(model_config.get("num_layers", 3)),
+            dim_feedforward=int(model_config.get("dim_feedforward", 256)),
             dropout=float(model_config.get("dropout", 0.1)),
         )
     raise ValueError(f"Unsupported architecture: {architecture}")

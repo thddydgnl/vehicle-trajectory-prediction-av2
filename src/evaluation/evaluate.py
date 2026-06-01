@@ -13,6 +13,7 @@ from src.datasets.av2_dataset import create_dataloader
 from src.evaluation.metrics import ade, count_parameters, fde, miss_rate
 from src.models.linear import LinearExtrapolation
 from src.models.lstm import LSTMForecast
+from src.models.transformer import TransformerForecast
 from src.utils.config import load_yaml_config
 from src.utils.device import get_device
 from src.utils.io import save_json
@@ -120,6 +121,26 @@ def _build_lstm_from_checkpoint(checkpoint: dict[str, Any]) -> LSTMForecast:
     )
 
 
+def _build_transformer_from_checkpoint(checkpoint: dict[str, Any]) -> TransformerForecast:
+    metadata = checkpoint.get("metadata", {})
+    if not isinstance(metadata, dict):
+        raise ValueError("checkpoint metadata must be a mapping")
+    model_config = metadata.get("model", {})
+    if not isinstance(model_config, dict):
+        raise ValueError("checkpoint metadata.model must be a mapping")
+    if str(model_config.get("architecture")) != "transformer":
+        raise ValueError("checkpoint does not describe a Transformer model")
+    return TransformerForecast(
+        input_dim=int(model_config.get("input_dim", 6)),
+        pred_len=int(model_config.get("pred_len", 30)),
+        d_model=int(model_config.get("d_model", 128)),
+        nhead=int(model_config.get("nhead", 4)),
+        num_layers=int(model_config.get("num_layers", 3)),
+        dim_feedforward=int(model_config.get("dim_feedforward", 256)),
+        dropout=float(model_config.get("dropout", 0.1)),
+    )
+
+
 def evaluate_lstm(
     data_path: Path,
     checkpoint_path: Path,
@@ -168,9 +189,57 @@ def evaluate_lstm(
     return metrics
 
 
+def evaluate_transformer(
+    data_path: Path,
+    checkpoint_path: Path,
+    out_dir: Path,
+    batch_size: int = 128,
+    device: torch.device | None = None,
+) -> dict[str, float | int | str]:
+    device = device or get_device()
+    checkpoint = torch.load(checkpoint_path, map_location=device)
+    model = _build_transformer_from_checkpoint(checkpoint).to(device)
+    model.load_state_dict(checkpoint["model_state_dict"])
+    model.eval()
+    dataloader = create_dataloader(data_path, batch_size=batch_size, shuffle=False)
+
+    predictions: list[torch.Tensor] = []
+    targets: list[torch.Tensor] = []
+    masks: list[torch.Tensor] = []
+    start = time.perf_counter()
+    with torch.no_grad():
+        for batch in dataloader:
+            pred = model(batch["X"].to(device))
+            predictions.append(pred.cpu())
+            targets.append(batch["Y"].cpu())
+            masks.append(batch["mask_y"].cpu())
+    elapsed = time.perf_counter() - start
+
+    pred_tensor = torch.cat(predictions, dim=0)
+    gt_tensor = torch.cat(targets, dim=0)
+    mask_tensor = torch.cat(masks, dim=0)
+    metrics: dict[str, float | int | str] = {
+        "model": "transformer",
+        "checkpoint": str(checkpoint_path),
+        "data": str(data_path),
+        "num_samples": int(pred_tensor.shape[0]),
+        "ADE": float(ade(pred_tensor, gt_tensor, mask_tensor).item()),
+        "FDE": float(fde(pred_tensor, gt_tensor, mask_tensor).item()),
+        "Miss Rate": float(miss_rate(pred_tensor, gt_tensor, mask=mask_tensor).item()),
+        "Latency": float(elapsed / max(int(pred_tensor.shape[0]), 1)),
+        "Parameters": count_parameters(model),
+    }
+
+    metrics_dir = ensure_dir(out_dir / "metrics")
+    tables_dir = ensure_dir(out_dir / "tables")
+    save_json(metrics, metrics_dir / "transformer_eval_metrics.json")
+    _save_metrics_csv(metrics, tables_dir / "transformer_eval_metrics.csv")
+    return metrics
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Evaluate trajectory forecasting models.")
-    parser.add_argument("--model", choices=["linear", "lstm"], required=True)
+    parser.add_argument("--model", choices=["linear", "lstm", "transformer"], required=True)
     parser.add_argument("--data", type=Path, required=True)
     parser.add_argument("--config", type=Path, default=None)
     parser.add_argument("--checkpoint", type=Path, default=None)
@@ -189,6 +258,10 @@ def main() -> None:
         if args.checkpoint is None:
             raise ValueError("--checkpoint is required for lstm evaluation")
         metrics = evaluate_lstm(args.data, args.checkpoint, args.out_dir, batch_size=args.batch_size)
+    elif args.model == "transformer":
+        if args.checkpoint is None:
+            raise ValueError("--checkpoint is required for transformer evaluation")
+        metrics = evaluate_transformer(args.data, args.checkpoint, args.out_dir, batch_size=args.batch_size)
     else:
         raise ValueError(f"Unsupported model: {args.model}")
     for key, value in metrics.items():
