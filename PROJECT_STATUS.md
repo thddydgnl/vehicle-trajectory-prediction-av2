@@ -35,7 +35,7 @@ Output: Song / song\song
 ```text
 Phase 0  Repository Setup                         complete
 Phase 1  Synthetic Smoke Dataset                  complete
-Phase 2  Geometry and Coordinate Transform        pending
+Phase 2  Geometry and Coordinate Transform        complete
 Phase 3  Dataset and DataLoader                   pending
 Phase 4  Metrics                                  pending
 Phase 5  Linear Baseline                          pending
@@ -54,9 +54,9 @@ Phase 15 Final Report Assets                      pending
 ## Next Recommended Task
 
 ```text
-Start Phase 2 only.
-Create relative coordinate transform utilities and tests.
-Do not implement dataloader, metrics, or models yet.
+Start Phase 3 only.
+Create the processed trajectory Dataset/DataLoader using synthetic .npz files.
+Do not implement metrics or models yet.
 ```
 
 ## Latest Verified Commands
@@ -70,6 +70,7 @@ pytest -q
 python -c "from src.utils.device import get_device; print(get_device())"
 python -m src.datasets.synthetic --out_dir data/processed --num_samples 1000
 pytest tests/test_synthetic_data.py -q
+pytest tests/test_geometry.py -q
 pytest -q
 ```
 
@@ -93,6 +94,8 @@ Tailscale ping after stop: pong from song in 11ms
 OpenSSH event log: publickey accepted/disconnected cleanly; no server-side OpenSSH error observed
 Phase 1 synthetic generator: created ignored train_smoke.npz, val_smoke.npz, and test_smoke.npz
 Phase 1 tests: tests/test_synthetic_data.py passed, full pytest passed 10 tests
+Phase 2 geometry: relative/global transforms and wrap_angle tests passed; full pytest passed 16 tests
+Phase 2 subagent review: no coordinate transform issues found
 ```
 
 ## Open External Requirements
