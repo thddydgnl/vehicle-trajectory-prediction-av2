@@ -42,7 +42,7 @@ Phase 5  Linear Baseline                          complete
 Phase 6  Common Training Pipeline                 complete
 Phase 7  LSTM Encoder-Decoder                     complete
 Phase 8  Transformer Encoder                      complete
-Phase 9  Direct Diffusion Model                   pending
+Phase 9  Direct Diffusion Model                   complete
 Phase 10 PCA Latent Diffusion                     pending
 Phase 11 Argoverse 2 Preprocessing                pending
 Phase 12 Visualization                            pending
@@ -54,8 +54,8 @@ Phase 15 Final Report Assets                      pending
 ## Next Recommended Task
 
 ```text
-Start Phase 9 only.
-Create the direct diffusion trajectory model and validate it with synthetic smoke data.
+Start Phase 10 only.
+Create the PCA latent trajectory codec and smoke path using synthetic data.
 Do not implement AV2 preprocessing yet.
 ```
 
@@ -79,6 +79,9 @@ pytest tests/test_models_shape.py -q
 python -m src.evaluation.evaluate --model lstm --checkpoint outputs/checkpoints/best_lstm.pt --data data/processed/val_smoke.npz --out_dir outputs
 python -m src.training.train --config configs/transformer.yaml --max_epochs 1 --data data/processed/train_smoke.npz --val_data data/processed/val_smoke.npz
 python -m src.evaluation.evaluate --model transformer --checkpoint outputs/checkpoints/best_transformer.pt --data data/processed/val_smoke.npz --out_dir outputs
+pytest tests/test_diffusion_step.py -q
+python -m src.training.train --config configs/diffusion_direct.yaml --max_epochs 1 --data data/processed/train_smoke.npz --val_data data/processed/val_smoke.npz
+python -m src.evaluation.evaluate --model diffusion_direct --checkpoint outputs/checkpoints/best_diffusion_direct.pt --data data/processed/val_smoke.npz --out_dir outputs --batch_size 64
 python - <<'PY'
 import torch
 ckpt = torch.load('outputs/checkpoints/best_lstm_smoke.pt', map_location='cpu')
@@ -121,6 +124,7 @@ Phase 6 checkpoint audit: best_lstm_smoke.pt includes model/optimizer state, tra
 Phase 6 subagent review: mask-aware FDE/endpoint, valid-step loss aggregation, and checkpoint metadata findings were fixed before commit
 Phase 7 LSTM: tests/test_models_shape.py passed 2 tests; 1-epoch synthetic smoke training completed on CPU; LSTM checkpoint evaluation produced ADE, FDE, Miss Rate, Latency, and Parameters; full pytest passed 43 tests
 Phase 8 Transformer: tests/test_models_shape.py passed 4 tests; 1-epoch synthetic smoke training completed on CPU; Transformer checkpoint evaluation produced ADE, FDE, Miss Rate, Latency, and Parameters; full pytest passed 45 tests
+Phase 9 direct diffusion: tests/test_diffusion_step.py passed 5 tests; 1-epoch synthetic smoke training completed on CPU; diffusion checkpoint evaluation produced ADE/FDE and minADE/minFDE with 4 samples; full pytest passed 50 tests
 ```
 
 ## Open External Requirements

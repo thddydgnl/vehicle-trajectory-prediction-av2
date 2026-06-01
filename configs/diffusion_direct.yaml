@@ -1,0 +1,26 @@
+model:
+  name: diffusion_direct
+  architecture: diffusion_direct
+  input_dim: 6
+  pred_len: 30
+  trajectory_dim: 60
+  cond_dim: 64
+  hidden_dim: 128
+  diffusion_steps: 20
+  sampling_steps: 10
+  beta_start: 0.0001
+  beta_end: 0.02
+  num_samples: 4
+
+training:
+  batch_size: 64
+  epochs: 50
+  learning_rate: 0.0003
+  weight_decay: 0.0001
+  loss: noise_mse
+  gradient_clip: 1.0
+  early_stopping_patience: 10
+  seed: 42
+  device: cpu
+  num_workers: 0
+  out_dir: outputs

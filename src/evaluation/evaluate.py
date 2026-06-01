@@ -10,7 +10,8 @@ from typing import Any
 import torch
 
 from src.datasets.av2_dataset import create_dataloader
-from src.evaluation.metrics import ade, count_parameters, fde, miss_rate
+from src.evaluation.metrics import ade, count_parameters, fde, min_ade, min_fde, miss_rate
+from src.models.diffusion import GaussianDiffusionTrajectory
 from src.models.linear import LinearExtrapolation
 from src.models.lstm import LSTMForecast
 from src.models.transformer import TransformerForecast
@@ -141,6 +142,29 @@ def _build_transformer_from_checkpoint(checkpoint: dict[str, Any]) -> Transforme
     )
 
 
+def _build_diffusion_from_checkpoint(checkpoint: dict[str, Any]) -> GaussianDiffusionTrajectory:
+    metadata = checkpoint.get("metadata", {})
+    if not isinstance(metadata, dict):
+        raise ValueError("checkpoint metadata must be a mapping")
+    model_config = metadata.get("model", {})
+    if not isinstance(model_config, dict):
+        raise ValueError("checkpoint metadata.model must be a mapping")
+    if str(model_config.get("architecture")) != "diffusion_direct":
+        raise ValueError("checkpoint does not describe a direct diffusion model")
+    return GaussianDiffusionTrajectory(
+        input_dim=int(model_config.get("input_dim", 6)),
+        pred_len=int(model_config.get("pred_len", 30)),
+        trajectory_dim=int(model_config.get("trajectory_dim", 60)),
+        cond_dim=int(model_config.get("cond_dim", 128)),
+        hidden_dim=int(model_config.get("hidden_dim", 256)),
+        diffusion_steps=int(model_config.get("diffusion_steps", 100)),
+        sampling_steps=int(model_config.get("sampling_steps", 50)),
+        beta_start=float(model_config.get("beta_start", 0.0001)),
+        beta_end=float(model_config.get("beta_end", 0.02)),
+        num_samples=int(model_config.get("num_samples", 6)),
+    )
+
+
 def evaluate_lstm(
     data_path: Path,
     checkpoint_path: Path,
@@ -237,9 +261,61 @@ def evaluate_transformer(
     return metrics
 
 
+def evaluate_diffusion_direct(
+    data_path: Path,
+    checkpoint_path: Path,
+    out_dir: Path,
+    batch_size: int = 64,
+    device: torch.device | None = None,
+) -> dict[str, float | int | str]:
+    device = device or get_device()
+    checkpoint = torch.load(checkpoint_path, map_location=device)
+    model = _build_diffusion_from_checkpoint(checkpoint).to(device)
+    model.load_state_dict(checkpoint["model_state_dict"])
+    model.eval()
+    dataloader = create_dataloader(data_path, batch_size=batch_size, shuffle=False)
+
+    sample_batches: list[torch.Tensor] = []
+    targets: list[torch.Tensor] = []
+    masks: list[torch.Tensor] = []
+    start = time.perf_counter()
+    with torch.no_grad():
+        for batch in dataloader:
+            samples = model.sample(batch["X"].to(device))
+            sample_batches.append(samples.cpu())
+            targets.append(batch["Y"].cpu())
+            masks.append(batch["mask_y"].cpu())
+    elapsed = time.perf_counter() - start
+
+    samples_tensor = torch.cat(sample_batches, dim=0)
+    pred_tensor = samples_tensor[:, 0]
+    gt_tensor = torch.cat(targets, dim=0)
+    mask_tensor = torch.cat(masks, dim=0)
+    metrics: dict[str, float | int | str] = {
+        "model": "diffusion_direct",
+        "checkpoint": str(checkpoint_path),
+        "data": str(data_path),
+        "num_samples": int(pred_tensor.shape[0]),
+        "num_prediction_samples": int(samples_tensor.shape[1]),
+        "ADE": float(ade(pred_tensor, gt_tensor, mask_tensor).item()),
+        "FDE": float(fde(pred_tensor, gt_tensor, mask_tensor).item()),
+        "minADE": float(min_ade(samples_tensor, gt_tensor, mask_tensor).item()),
+        "minFDE": float(min_fde(samples_tensor, gt_tensor).item()),
+        "Miss Rate": float(miss_rate(pred_tensor, gt_tensor, mask=mask_tensor).item()),
+        "Latency": float(elapsed / max(int(pred_tensor.shape[0]), 1)),
+        "Parameters": count_parameters(model),
+    }
+
+    metrics_dir = ensure_dir(out_dir / "metrics")
+    tables_dir = ensure_dir(out_dir / "tables")
+    save_json(metrics, metrics_dir / "diffusion_direct_eval_metrics.json")
+    _save_metrics_csv(metrics, tables_dir / "diffusion_direct_eval_metrics.csv")
+    return metrics
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Evaluate trajectory forecasting models.")
-    parser.add_argument("--model", choices=["linear", "lstm", "transformer"], required=True)
+    parser.add_argument("--model", choices=["linear", "lstm", "transformer", "diffusion_direct"], required=True)
     parser.add_argument("--data", type=Path, required=True)
     parser.add_argument("--config", type=Path, default=None)
     parser.add_argument("--checkpoint", type=Path, default=None)
@@ -262,6 +338,10 @@ def main() -> None:
         if args.checkpoint is None:
             raise ValueError("--checkpoint is required for transformer evaluation")
         metrics = evaluate_transformer(args.data, args.checkpoint, args.out_dir, batch_size=args.batch_size)
+    elif args.model == "diffusion_direct":
+        if args.checkpoint is None:
+            raise ValueError("--checkpoint is required for diffusion_direct evaluation")
+        metrics = evaluate_diffusion_direct(args.data, args.checkpoint, args.out_dir, batch_size=args.batch_size)
     else:
         raise ValueError(f"Unsupported model: {args.model}")
     for key, value in metrics.items():

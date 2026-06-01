@@ -1,0 +1,14 @@
+{
+  "ADE": 9.969367027282715,
+  "FDE": 18.73948097229004,
+  "Latency": 0.007280087779993967,
+  "Miss Rate": 1.0,
+  "Parameters": 70588,
+  "checkpoint": "outputs/checkpoints/best_diffusion_direct.pt",
+  "data": "data/processed/val_smoke.npz",
+  "minADE": 9.763225555419922,
+  "minFDE": 17.444786071777344,
+  "model": "diffusion_direct",
+  "num_prediction_samples": 4,
+  "num_samples": 150
+}

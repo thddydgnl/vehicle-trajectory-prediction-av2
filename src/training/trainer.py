@@ -33,6 +33,8 @@ class TrainerConfig:
 
 
 def _select_loss(config: TrainerConfig) -> LossFn:
+    if config.loss == "noise_mse":
+        return trajectory_mse_loss
     if config.loss == "mse":
         return trajectory_mse_loss
     if config.loss == "smooth_l1":
@@ -125,8 +127,7 @@ class Trainer:
             mask_y = batch["mask_y"].to(self.device)
 
             self.optimizer.zero_grad(set_to_none=True)
-            pred = self.model(X)
-            loss = self.loss_fn(pred, Y, mask_y)
+            loss = self.model.training_loss(X, Y) if hasattr(self.model, "training_loss") else self.loss_fn(self.model(X), Y, mask_y)
             loss.backward()
             if self.config.gradient_clip is not None:
                 torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.config.gradient_clip)
@@ -149,8 +150,12 @@ class Trainer:
             X = batch["X"].to(self.device)
             Y = batch["Y"].to(self.device)
             mask_y = batch["mask_y"].to(self.device)
-            pred = self.model(X)
-            loss = self.loss_fn(pred, Y, mask_y)
+            if hasattr(self.model, "training_loss"):
+                loss = self.model.training_loss(X, Y)
+                pred = self.model(X)
+            else:
+                pred = self.model(X)
+                loss = self.loss_fn(pred, Y, mask_y)
 
             valid_steps = int(mask_y.sum().detach().cpu().item())
             total_loss += float(loss.detach().cpu().item()) * valid_steps

@@ -7,6 +7,7 @@ from typing import Any
 import torch
 
 from src.datasets.av2_dataset import TrajectoryDataset, create_dataloader
+from src.models.diffusion import GaussianDiffusionTrajectory
 from src.models.lstm import LSTMForecast
 from src.models.transformer import TransformerForecast
 from src.training.trainer import Trainer, TrainerConfig
@@ -75,6 +76,19 @@ def _build_model(config: dict[str, Any], data_path: Path) -> torch.nn.Module:
             num_layers=int(model_config.get("num_layers", 3)),
             dim_feedforward=int(model_config.get("dim_feedforward", 256)),
             dropout=float(model_config.get("dropout", 0.1)),
+        )
+    if architecture == "diffusion_direct":
+        return GaussianDiffusionTrajectory(
+            input_dim=int(model_config.get("input_dim", input_dim)),
+            pred_len=pred_len,
+            trajectory_dim=int(model_config.get("trajectory_dim", pred_len * 2)),
+            cond_dim=int(model_config.get("cond_dim", 128)),
+            hidden_dim=int(model_config.get("hidden_dim", 256)),
+            diffusion_steps=int(model_config.get("diffusion_steps", 100)),
+            sampling_steps=int(model_config.get("sampling_steps", 50)),
+            beta_start=float(model_config.get("beta_start", 0.0001)),
+            beta_end=float(model_config.get("beta_end", 0.02)),
+            num_samples=int(model_config.get("num_samples", 6)),
         )
     raise ValueError(f"Unsupported architecture: {architecture}")
 
