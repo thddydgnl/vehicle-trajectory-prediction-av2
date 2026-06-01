@@ -11,10 +11,6 @@
 - `WINDOWS_ENV_SETUP.md`: Windows environment and dataset setup notes
 - `github_portfolio_workflow.md`: GitHub commit/push and portfolio workflow
 
-## Prompts
-
-- `prompts/phase_1_to_6_goal_prompt.md`: Mac-only Phase 1-6 execution prompt
-
 ## Reference
 
 - `reference/`: ignored local PDFs and exported reference files

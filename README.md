@@ -48,7 +48,6 @@ python -c "from src.utils.device import get_device; print(get_device())"
 - `docs/windows_gpu_training_only_workflow.md`: Windows AV2 data and GPU training workflow
 - `docs/WINDOWS_ENV_SETUP.md`: Windows CUDA/PyTorch and AV2 download setup checklist
 - `docs/github_portfolio_workflow.md`: commit/push and portfolio policy
-- `docs/prompts/phase_1_to_6_goal_prompt.md`: goal prompt for Mac-only Phase 1-6 work
 
 ## Data Policy
 
