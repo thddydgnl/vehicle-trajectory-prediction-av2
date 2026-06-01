@@ -172,7 +172,71 @@ Diffusion slow -> run smoke/tiny config first
 Only stop for user input when a required external decision cannot be safely
 inferred, such as the actual GitHub remote URL or credentials.
 
-## 8. Required Phase Result Format
+## 8. Subagent Policy
+
+Use subagents selectively. They are most useful for high-risk phases where
+correctness, leakage prevention, shape contracts, or result integrity matter
+more than raw implementation speed.
+
+Recommended subagent phases:
+
+```text
+Phase 2  Geometry and Coordinate Transform
+Phase 4  Metrics
+Phase 6  Common Training Pipeline
+Phase 7  LSTM Encoder-Decoder
+Phase 8  Transformer Encoder
+Phase 9  Direct Diffusion Model
+Phase 11 Argoverse 2 Preprocessing
+Phase 13 PCA and K-means Analysis
+Phase 14 Final Experiment Matrix
+Phase 15 Final Report Assets
+```
+
+Subagents are optional for:
+
+```text
+Phase 1  Synthetic Smoke Dataset, unless tests fail or pattern quality is uncertain
+Phase 5  Linear Baseline
+simple README/docs updates
+small config-only edits
+```
+
+Default pattern:
+
+```text
+Main Codex:
+  implement code, run commands, integrate feedback, update docs/status, commit/push
+
+Subagent A:
+  review shape contracts, tests, metrics, leakage, edge cases
+
+Subagent B, only when needed:
+  review experiment/report consistency, README/portfolio clarity, result claims
+```
+
+Subagent rules:
+
+```text
+1. Subagents advise; the main agent owns final edits and validation.
+2. Do not let subagent work replace required tests.
+3. Do not delay small Mac-only phases just to spawn subagents.
+4. Re-trigger subagent review after repeated failures, AV2 schema uncertainty,
+   metric ambiguity, diffusion sampling issues, or final report/result claims.
+5. If subagent capacity is unavailable, continue with local tests and document
+   the missing review as a residual risk.
+```
+
+For Phase Result, mention subagent usage:
+
+```text
+### Subagents
+- Used: yes/no
+- Focus:
+- Findings:
+```
+
+## 9. Required Phase Result Format
 
 After each Phase:
 
@@ -205,6 +269,11 @@ After each Phase:
 - If yes, command:
 - Pulled back:
 
+### Subagents
+- Used:
+- Focus:
+- Findings:
+
 ### Remaining Risks
 - ...
 
@@ -212,7 +281,7 @@ After each Phase:
 - ...
 ```
 
-## 9. Resume Rule
+## 10. Resume Rule
 
 When resuming after context compaction or a long-running turn:
 
@@ -226,7 +295,7 @@ When resuming after context compaction or a long-running turn:
 
 Do not rely on memory alone.
 
-## 10. Final Done Criteria
+## 11. Final Done Criteria
 
 The goal is complete only when:
 

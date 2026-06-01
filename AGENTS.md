@@ -61,6 +61,38 @@ Do not revert unrelated user changes.
 If GitHub remote is missing, create local commits and report push as blocked.
 ```
 
+## Subagent Guidance
+
+Use subagents for high-risk phases:
+
+```text
+Phase 2 geometry
+Phase 4 metrics
+Phase 6 training pipeline
+Phase 7 LSTM
+Phase 8 Transformer
+Phase 9 diffusion
+Phase 11 AV2 preprocessing
+Phase 13 analysis
+Phase 14 final experiments
+Phase 15 final report
+```
+
+Subagents should focus on:
+
+```text
+shape contracts
+data leakage
+metric definitions
+mask handling
+checkpoint/evaluation consistency
+result claims versus saved files
+missing tests
+```
+
+Main Codex still owns implementation, validation, PROJECT_STATUS updates, and
+Git commit/push.
+
 ## Reporting
 
 Every completed Phase report must include:
@@ -71,6 +103,7 @@ commands run
 test results
 Git branch/commit/push status
 Windows usage, if any
+subagent usage, if any
 remaining risks
 next recommended task
 ```
