@@ -7,6 +7,7 @@ from typing import Any
 import torch
 
 from src.datasets.av2_dataset import TrajectoryDataset, create_dataloader
+from src.models.lstm import LSTMForecast
 from src.training.trainer import Trainer, TrainerConfig
 from src.utils.config import load_yaml_config
 from src.utils.device import get_device
@@ -49,12 +50,22 @@ def _build_model(config: dict[str, Any], data_path: Path) -> torch.nn.Module:
     pred_len = int(model_config.get("pred_len", 30))
     hidden_dim = int(model_config.get("hidden_dim", 64))
     architecture = str(model_config.get("architecture", "tiny_regressor"))
-    if architecture != "tiny_regressor":
-        raise ValueError(
-            f"Phase 6 only supports architecture=tiny_regressor; got {architecture}. "
-            "Real LSTM/Transformer models are implemented in later phases."
+    if architecture == "tiny_regressor":
+        return TinyTrajectoryRegressor(
+            obs_len=obs_len,
+            input_dim=input_dim,
+            pred_len=pred_len,
+            hidden_dim=hidden_dim,
         )
-    return TinyTrajectoryRegressor(obs_len=obs_len, input_dim=input_dim, pred_len=pred_len, hidden_dim=hidden_dim)
+    if architecture == "lstm":
+        return LSTMForecast(
+            input_dim=int(model_config.get("input_dim", input_dim)),
+            pred_len=pred_len,
+            hidden_dim=hidden_dim,
+            num_layers=int(model_config.get("num_layers", 2)),
+            dropout=float(model_config.get("dropout", 0.1)),
+        )
+    raise ValueError(f"Unsupported architecture: {architecture}")
 
 
 def train_from_config(config_path: Path, data_path: Path, val_data_path: Path, max_epochs: int | None = None) -> dict[str, float | int | str]:

@@ -1,0 +1,11 @@
+{
+  "ADE": 8.5144681930542,
+  "FDE": 17.355661392211914,
+  "Latency": 0.0018104788866670181,
+  "Miss Rate": 1.0,
+  "Parameters": 401666,
+  "checkpoint": "outputs/checkpoints/best_lstm.pt",
+  "data": "data/processed/val_smoke.npz",
+  "model": "lstm",
+  "num_samples": 150
+}
