@@ -37,7 +37,7 @@ Phase 0  Repository Setup                         complete
 Phase 1  Synthetic Smoke Dataset                  complete
 Phase 2  Geometry and Coordinate Transform        complete
 Phase 3  Dataset and DataLoader                   complete
-Phase 4  Metrics                                  pending
+Phase 4  Metrics                                  complete
 Phase 5  Linear Baseline                          pending
 Phase 6  Common Training Pipeline                 pending
 Phase 7  LSTM Encoder-Decoder                     pending
@@ -54,9 +54,9 @@ Phase 15 Final Report Assets                      pending
 ## Next Recommended Task
 
 ```text
-Start Phase 4 only.
-Create trajectory evaluation metrics and exact tensor tests.
-Do not implement models yet.
+Start Phase 5 only.
+Create the linear extrapolation baseline and evaluation CLI.
+Do not implement trainable models yet.
 ```
 
 ## Latest Verified Commands
@@ -71,6 +71,7 @@ python -c "from src.utils.device import get_device; print(get_device())"
 python -m src.datasets.synthetic --out_dir data/processed --num_samples 1000
 pytest tests/test_synthetic_data.py -q
 pytest tests/test_geometry.py -q
+pytest tests/test_metrics.py -q
 pytest -q
 ```
 
@@ -97,6 +98,8 @@ Phase 1 tests: tests/test_synthetic_data.py passed, full pytest passed 10 tests
 Phase 2 geometry: relative/global transforms and wrap_angle tests passed; full pytest passed 16 tests
 Phase 2 subagent review: no coordinate transform issues found
 Phase 3 dataset/dataloader: synthetic generation passed, tests/test_synthetic_data.py passed 7 tests, full pytest passed 18 tests
+Phase 4 metrics: tests/test_metrics.py passed 14 tests, full pytest passed 32 tests
+Phase 4 subagent review: mask shape/all-false mask findings were fixed before commit
 ```
 
 ## Open External Requirements
