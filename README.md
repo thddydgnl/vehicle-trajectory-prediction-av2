@@ -7,9 +7,8 @@ the same data format and metrics.
 
 ## Current Status
 
-Phase 0 repository setup is complete. Phase 1 is the next implementation step.
-Model, dataset generation, evaluation, and visualization code are intentionally
-not implemented yet.
+Phases 0 through 10 are complete on synthetic smoke data. The next major step
+is Phase 11 Argoverse 2 preprocessing with real AV2 data on the Windows host.
 
 ## Planned Scope
 
@@ -58,4 +57,11 @@ The full AV2 Motion Forecasting dataset is stored on Windows by default:
 
 ```text
 C:\Users\thddy\data\av2\motion-forecasting
+```
+
+Default Windows training host:
+
+```text
+Primary: HOME over LAN, ssh thddy@192.168.35.17
+Fallback: HOME over Tailscale, ssh thddy@100.99.63.23
 ```

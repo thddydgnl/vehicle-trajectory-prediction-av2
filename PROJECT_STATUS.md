@@ -12,22 +12,26 @@ Project folder now contains the base Python package, utilities, tests, config/da
 Git repository has been initialized on branch main.
 GitHub remote has been configured and pushed.
 Long-form workflow documents have been moved under docs/.
-Windows SSH over Tailscale has been verified.
-Windows NVIDIA GPU is visible, but default PyTorch is CPU-only.
-Windows conda currently has only the base environment; vehicle_traj does not exist yet.
-Windows AV2 data path has been created.
-s5cmd v2.3.0 has been installed on Windows from the official GitHub release binary.
-The first AV2 download attempt was stopped; no s5cmd process or scheduled download task is running.
+Primary Windows training host has changed to HOME.
+HOME SSH works over LAN and Tailscale.
+Use HOME LAN first for Windows work; use HOME Tailscale only as fallback.
+HOME NVIDIA GPU is visible, but the dedicated vehicle_traj CUDA environment has not been created yet.
+HOME conda and s5cmd are not installed or not on PATH yet.
+The previous song AV2 download attempt was stopped; do not treat the song AV2 folder as complete.
 ```
 
 Verified Windows access:
 
 ```text
 Mac Tailscale IP: 100.75.150.25
-Windows Tailscale IP: 100.87.219.58
-SSH user: song
-Command: ssh song@100.87.219.58 'hostname && whoami'
-Output: Song / song\song
+Primary Windows host: HOME
+HOME LAN IP: 192.168.35.17
+HOME Tailscale IP: 100.99.63.23
+SSH user: thddy
+Primary command: ssh thddy@192.168.35.17 'hostname && whoami'
+Fallback command: ssh thddy@100.99.63.23 'hostname && whoami'
+Output: HOME / home\thddy
+Legacy secondary Windows host: song, song@100.87.219.58
 ```
 
 ## Phase Progress
@@ -62,10 +66,10 @@ Next future task will be Phase 11 Argoverse 2 Preprocessing with real AV2 data.
 ## Latest Verified Commands
 
 ```text
-ssh song@100.87.219.58 'hostname && whoami'
-ssh song@100.87.219.58 'powershell -NoProfile -ExecutionPolicy Bypass -Command "python --version; where.exe python; nvidia-smi --query-gpu=name,driver_version,memory.total --format=csv,noheader"'
-ssh song@100.87.219.58 'powershell -NoProfile -ExecutionPolicy Bypass -Command "python -c \"import torch; print(torch.__version__); print(torch.cuda.is_available()); print(torch.cuda.get_device_name(0) if torch.cuda.is_available() else 0)\""'
-ssh song@100.87.219.58 'powershell -NoProfile -ExecutionPolicy Bypass -Command "conda env list"'
+ssh thddy@192.168.35.17 'hostname && whoami'
+ssh thddy@100.99.63.23 'hostname && whoami'
+ssh thddy@192.168.35.17 'powershell -NoProfile -Command "hostname; whoami; python --version; where.exe python; nvidia-smi --query-gpu=name,driver_version,memory.total --format=csv,noheader"'
+ssh thddy@192.168.35.17 'powershell -NoProfile -Command "conda --version; conda env list; if (Test-Path ''C:\Users\thddy\bin\s5cmd\s5cmd.exe'') { & ''C:\Users\thddy\bin\s5cmd\s5cmd.exe'' version } else { ''s5cmd-missing'' }"'
 pytest -q
 python -c "from src.utils.device import get_device; print(get_device())"
 python -m src.datasets.synthetic --out_dir data/processed --num_samples 1000
@@ -98,21 +102,21 @@ pytest -q
 Result:
 
 ```text
-Song
-song\song
-Python 3.13.5
-C:\Users\thddy\anaconda3\python.exe
-NVIDIA GeForce RTX 3080, 591.86, 10240 MiB
-torch 2.10.0+cpu
-torch.cuda.is_available() == False
-conda envs: base only
+HOME
+home\thddy
+HOME LAN SSH: verified
+HOME Tailscale SSH: verified
+Python 3.12.7
+C:\Users\thddy\AppData\Local\Programs\Python\Python312\python.exe
+NVIDIA GeForce RTX 2070 SUPER, 591.86, 8192 MiB
+HOME C drive free space: about 192 GB
+HOME conda: not found on PATH
+HOME s5cmd: missing at C:\Users\thddy\bin\s5cmd\s5cmd.exe
 pytest: 5 passed
 get_device: mps
-s5cmd: v2.3.0-991c9fb at C:\Users\thddy\bin\s5cmd\s5cmd.exe
-Windows AV2 partial state: annotation parquet files downloaded; test split partially created; train/val not downloaded; INCOMPLETE_DOWNLOAD.txt marker written
-Stop verification: taskkill terminated s5cmd.exe PID 27984; later tasklist found no s5cmd.exe; VehicleTrajectoryAV2Download task not present
-Tailscale ping after stop: pong from song in 11ms
-OpenSSH event log: publickey accepted/disconnected cleanly; no server-side OpenSSH error observed
+song s5cmd: v2.3.0-991c9fb at C:\Users\thddy\bin\s5cmd\s5cmd.exe
+song AV2 partial state: annotation parquet files downloaded; test split partially created; train/val not downloaded; INCOMPLETE_DOWNLOAD.txt marker written
+song stop verification: taskkill terminated s5cmd.exe PID 27984; later tasklist found no s5cmd.exe; VehicleTrajectoryAV2Download task not present
 Phase 1 synthetic generator: created ignored train_smoke.npz, val_smoke.npz, and test_smoke.npz
 Phase 1 tests: tests/test_synthetic_data.py passed, full pytest passed 10 tests
 Phase 2 geometry: relative/global transforms and wrap_angle tests passed; full pytest passed 16 tests
@@ -135,9 +139,11 @@ Phase 10 PCA latent diffusion: tests/test_pca_latent.py passed 3 tests; PCA code
 
 ```text
 AV2 raw data is not present yet.
-Full AV2 download is not complete. Do not treat the current Windows AV2 folder as a complete dataset.
+Full AV2 download is not complete. Do not treat any existing Windows AV2 folder as a complete dataset.
+HOME needs s5cmd before direct AV2 download.
+HOME needs conda or another managed Python environment before long GPU training.
+HOME vehicle_traj CUDA PyTorch environment must be created before long model training.
 For the next AV2 download attempt, do not use a long foreground SSH command; use the safe remote execution rule in docs/windows_gpu_training_only_workflow.md.
-Windows vehicle_traj CUDA PyTorch environment must be created before long model training.
 ```
 
 ## GitHub

@@ -10,14 +10,23 @@
 Verified from Mac:
 
 ```bash
-ssh song@100.87.219.58 'hostname && whoami'
+ssh thddy@192.168.35.17 'hostname && whoami'
+ssh thddy@100.99.63.23 'hostname && whoami'
 ```
 
 Output:
 
 ```text
-Song
-song\song
+HOME
+home\thddy
+```
+
+Connection priority:
+
+```text
+Primary: HOME LAN, thddy@192.168.35.17
+Fallback: HOME Tailscale, thddy@100.99.63.23
+Legacy secondary host: song, song@100.87.219.58
 ```
 
 Windows home path:
@@ -37,26 +46,28 @@ Runs: C:\Users\thddy\runs\vehicle_trajectory_project
 Python / GPU preflight:
 
 ```text
-Python 3.13.5
-C:\Users\thddy\anaconda3\python.exe
-NVIDIA GeForce RTX 3080
+Python 3.12.7
+C:\Users\thddy\AppData\Local\Programs\Python\Python312\python.exe
+NVIDIA GeForce RTX 2070 SUPER
 Driver 591.86
-GPU memory 10240 MiB
+GPU memory 8192 MiB
+C drive free space about 192 GB
 ```
 
 Current PyTorch state:
 
 ```text
-torch 2.10.0+cpu
-torch.cuda.is_available() == False
+HOME vehicle_traj environment not created yet.
+HOME conda is not installed or not on PATH yet.
+HOME s5cmd is missing at C:\Users\thddy\bin\s5cmd\s5cmd.exe.
 ```
 
 Conclusion:
 
 ```text
-Windows SSH and NVIDIA GPU are available.
-Windows is not yet ready for GPU training because the active PyTorch install is CPU-only.
-s5cmd is required for direct AV2 download on Windows.
+HOME SSH and NVIDIA GPU are available.
+HOME is not yet ready for long GPU training because vehicle_traj does not exist.
+s5cmd is required for direct AV2 download on HOME.
 ```
 
 ## 2. Required Fix
@@ -67,9 +78,10 @@ PyTorch build.
 Important:
 
 ```text
-Do not use the current default Python 3.13 environment for GPU training.
-Use Python 3.12 unless official PyTorch docs confirm the selected PyTorch build
-supports Python 3.13 on Windows.
+HOME default Python is 3.12.7, but long training should still use a dedicated
+vehicle_traj environment rather than the global Python install.
+Use Python 3.12 unless the project intentionally moves to another supported
+version.
 ```
 
 Reason:
@@ -87,6 +99,9 @@ https://pytorch.org/get-started/
 ```
 
 ## 3. Recommended Conda Environment
+
+If `conda` is missing on HOME, install Miniconda or Anaconda first, then reopen
+PowerShell so `conda` is on PATH.
 
 Run on Windows PowerShell:
 
@@ -142,13 +157,13 @@ Expected:
 Python 3.12.x
 torch version without +cpu
 True
-NVIDIA GeForce RTX 3080
+NVIDIA GeForce RTX 2070 SUPER
 ```
 
 Run from Mac:
 
 ```bash
-ssh song@100.87.219.58 'powershell -NoProfile -ExecutionPolicy Bypass -Command "conda activate vehicle_traj; python -c \"import torch; print(torch.__version__); print(torch.cuda.is_available())\""'
+ssh thddy@192.168.35.17 'powershell -NoProfile -ExecutionPolicy Bypass -Command "conda activate vehicle_traj; python -c \"import torch; print(torch.__version__); print(torch.cuda.is_available())\""'
 ```
 
 If `conda activate` does not work in non-interactive PowerShell, use:
@@ -168,7 +183,7 @@ conda run -n vehicle_traj python -c "import torch; print(torch.__version__); pri
 Once verified, Windows training commands should use the environment explicitly:
 
 ```bash
-ssh song@100.87.219.58 'powershell -NoProfile -ExecutionPolicy Bypass -Command "Set-Location C:\Users\thddy\Documents\code\vehicle_trajectory_project; conda run -n vehicle_traj python -m src.training.train --config configs/lstm.yaml --data data\processed\train_smoke.npz --val_data data\processed\val_smoke.npz"'
+ssh thddy@192.168.35.17 'powershell -NoProfile -ExecutionPolicy Bypass -Command "Set-Location C:\Users\thddy\Documents\code\vehicle_trajectory_project; conda run -n vehicle_traj python -m src.training.train --config configs/lstm.yaml --data data\processed\train_smoke.npz --val_data data\processed\val_smoke.npz"'
 ```
 
 Do not run long training until:
@@ -227,6 +242,7 @@ Classify as Windows environment failure:
 
 ```text
 default Python is 3.13 and PyTorch selector does not support it
+conda is missing or not on PATH
 torch version ends with +cpu
 torch.cuda.is_available() is False
 nvidia-smi works but PyTorch cannot see CUDA

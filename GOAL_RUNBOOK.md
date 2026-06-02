@@ -98,14 +98,22 @@ Before using Windows, follow `docs/windows_gpu_training_only_workflow.md` and
 Verified Windows SSH:
 
 ```bash
-ssh song@100.87.219.58 'hostname && whoami'
+ssh thddy@192.168.35.17 'hostname && whoami'
 ```
 
 Expected output:
 
 ```text
-Song
-song\song
+HOME
+home\thddy
+```
+
+Use Windows host priority:
+
+```text
+1. HOME LAN: thddy@192.168.35.17
+2. HOME Tailscale fallback: thddy@100.99.63.23
+3. song legacy fallback only if explicitly needed: song@100.87.219.58
 ```
 
 ## 5. GitHub Portfolio Policy

@@ -11,6 +11,14 @@
 - `WINDOWS_ENV_SETUP.md`: Windows environment and dataset setup notes
 - `github_portfolio_workflow.md`: GitHub commit/push and portfolio workflow
 
+## Windows Host
+
+```text
+Primary training host: HOME over LAN, thddy@192.168.35.17
+Fallback: HOME over Tailscale, thddy@100.99.63.23
+Legacy secondary host: song over Tailscale, song@100.87.219.58
+```
+
 ## Reference
 
 - `reference/`: ignored local PDFs and exported reference files

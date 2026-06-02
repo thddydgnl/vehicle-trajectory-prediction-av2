@@ -1850,7 +1850,7 @@ AV2 real data
 | 리스크 | 위험도 | 대응 전략 |
 |---|---:|---|
 | AV2 데이터 구조가 복잡함 | 높음 | 처음 100개 scenario로 parser 검증 후 확장 |
-| Mac에서 Diffusion 학습이 느림 | 높음 | Windows RTX 3080에서 GPU 학습, PCA latent diffusion, 작은 subset 사용 |
+| Mac에서 Diffusion 학습이 느림 | 높음 | HOME Windows GPU에서 학습, PCA latent diffusion, 작은 subset 사용 |
 | Mac 저장공간 부족 | 높음 | Full AV2 raw/processed data는 Windows에 저장하고 Mac에는 샘플/결과만 회수 |
 | Transformer가 LSTM보다 성능이 안 좋을 수 있음 | 중 | 성능만 보지 말고 오류 유형과 시각화 분석 포함 |
 | Diffusion sampling 결과가 불안정함 | 중상 | direct 60D와 PCA 12D를 모두 시도하고 minADE로 평가 |

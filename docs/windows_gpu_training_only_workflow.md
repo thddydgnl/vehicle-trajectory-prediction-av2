@@ -19,16 +19,20 @@ Windows: AV2 raw/processed 데이터 보관, 데이터가 Windows에 있을 때 
 현재 확인된 접속 방식:
 
 ```text
-확인일: 2026-06-01
+확인일: 2026-06-02
 Mac Tailscale client: /Applications/Tailscale.app
 Mac Tailscale node: macbookair
 Mac Tailscale IP: 100.75.150.25
-Windows Tailscale node: song
-Windows Tailscale IP: 100.87.219.58
-SSH user: song
-Verified command: ssh song@100.87.219.58 'hostname && whoami'
-Verified output: Song / song\song
-Connection mode: Tailscale direct connection, no SOCKS ProxyCommand
+Windows training host: HOME
+Windows LAN IP: 192.168.35.17
+Windows Tailscale node: home
+Windows Tailscale IP: 100.99.63.23
+SSH user: thddy
+Verified command: ssh thddy@192.168.35.17 'hostname && whoami'
+Verified output: HOME / home\thddy
+Connection priority: LAN first, Tailscale fallback
+Fallback command: ssh thddy@100.99.63.23 'hostname && whoami'
+Legacy secondary host: song, song@100.87.219.58
 ```
 
 Goal 진행 시 Codex가 지켜야 하는 첫 규칙:
@@ -222,10 +226,12 @@ C:\Users\thddy\runs\vehicle_trajectory_project
 Remote identity:
 
 ```text
-SSH login: song@100.87.219.58
+Primary SSH login: thddy@192.168.35.17
+Fallback SSH login: thddy@100.99.63.23
 Mac Tailscale address: 100.75.150.25
-Windows Tailscale address: 100.87.219.58
-LAN address: do not assume; verify on Windows with ipconfig before use
+Windows LAN address: 192.168.35.17
+Windows Tailscale address: 100.99.63.23
+Legacy secondary host: song@100.87.219.58
 ```
 
 Windows 사용자명이나 경로가 달라지면 이 섹션을 먼저 수정한다.
@@ -286,8 +292,8 @@ python -m src.datasets.validate_processed --npz data/processed/val_smoke.npz
 If AV2 processed data is used:
 
 ```bash
-trajwinssh song@100.87.219.58 'powershell -NoProfile -ExecutionPolicy Bypass -Command "Set-Location C:\Users\thddy\Documents\code\vehicle_trajectory_project; conda run -n vehicle_traj python -m src.datasets.validate_processed --npz C:\Users\thddy\data\vehicle_trajectory_project\processed\train_small.npz"'
-trajwinssh song@100.87.219.58 'powershell -NoProfile -ExecutionPolicy Bypass -Command "Set-Location C:\Users\thddy\Documents\code\vehicle_trajectory_project; conda run -n vehicle_traj python -m src.datasets.validate_processed --npz C:\Users\thddy\data\vehicle_trajectory_project\processed\val_small.npz"'
+trajwinssh thddy@192.168.35.17 'powershell -NoProfile -ExecutionPolicy Bypass -Command "Set-Location C:\Users\thddy\Documents\code\vehicle_trajectory_project; conda run -n vehicle_traj python -m src.datasets.validate_processed --npz C:\Users\thddy\data\vehicle_trajectory_project\processed\train_small.npz"'
+trajwinssh thddy@192.168.35.17 'powershell -NoProfile -ExecutionPolicy Bypass -Command "Set-Location C:\Users\thddy\Documents\code\vehicle_trajectory_project; conda run -n vehicle_traj python -m src.datasets.validate_processed --npz C:\Users\thddy\data\vehicle_trajectory_project\processed\val_small.npz"'
 ```
 
 Required Mac-side checks:
@@ -315,7 +321,7 @@ Recommended disk budget:
 ```text
 Minimum: 100 GB free
 Comfortable: 150 GB+ free
-Current verified C: free space on 2026-06-01: about 174 GB
+Current verified HOME C: free space on 2026-06-02: about 192 GB
 ```
 
 Install `s5cmd` on Windows if missing:
@@ -373,16 +379,39 @@ restarting any download.
 Verified stop commands:
 
 ```bash
-ssh song@100.87.219.58 "cmd /c schtasks /End /TN VehicleTrajectoryAV2Download & schtasks /Delete /TN VehicleTrajectoryAV2Download /F & taskkill /IM s5cmd.exe /F"
-ssh song@100.87.219.58 "cmd /c tasklist /FI \"IMAGENAME eq s5cmd.exe\""
+ssh thddy@192.168.35.17 "cmd /c schtasks /End /TN VehicleTrajectoryAV2Download & schtasks /Delete /TN VehicleTrajectoryAV2Download /F & taskkill /IM s5cmd.exe /F"
+ssh thddy@192.168.35.17 "cmd /c tasklist /FI \"IMAGENAME eq s5cmd.exe\""
 ```
 
 Keep this data out of Git. Do not copy the full dataset to Mac by default.
 
-## 6. SSH/Tailscale Preflight
+## 6. SSH/LAN/Tailscale Preflight
 
-Use the normal macOS Tailscale app. Do not use userspace `tailscaled` or a
-SOCKS proxy by default.
+Use LAN first while Mac and HOME are on the same Wi-Fi. Use Tailscale only as
+fallback or when outside the home network. Do not use userspace `tailscaled` or
+a SOCKS proxy by default.
+
+Primary connectivity check:
+
+```bash
+nc -vz -G 8 192.168.35.17 22
+trajwinssh thddy@192.168.35.17 'hostname'
+trajwinssh thddy@192.168.35.17 'hostname && whoami'
+```
+
+Expected verified output:
+
+```text
+HOME
+home\thddy
+```
+
+Tailscale fallback target:
+
+```bash
+nc -vz -G 8 100.99.63.23 22
+trajwinssh thddy@100.99.63.23 'hostname && whoami'
+```
 
 Tailscale app path:
 
@@ -421,26 +450,23 @@ trajwinscp() {
 }
 ```
 
-Connectivity check:
+Do not use the old `song` host unless HOME is unavailable and the user explicitly
+asks to fall back to the secondary Windows machine.
+
+Legacy `song` target:
 
 ```bash
-nc -vz -G 8 100.87.219.58 22
-trajwinssh song@100.87.219.58 'hostname'
-trajwinssh song@100.87.219.58 'hostname && whoami'
+ssh song@100.87.219.58 'hostname && whoami'
 ```
 
-Expected verified output:
+If the HOME LAN address changes, verify the current Windows LAN IP with Windows
+`ipconfig`, then update this document and `PROJECT_STATUS.md`.
+
+LAN address pattern:
 
 ```text
-Song
-song\song
-```
-
-If LAN is available and stable, first verify the current Windows LAN IP with
-Windows `ipconfig`, then use that address explicitly:
-
-```bash
-ssh song@<CURRENT_WINDOWS_LAN_IP> 'hostname && whoami'
+Mac current LAN: 192.168.35.42
+HOME current LAN: 192.168.35.17
 ```
 
 After Windows reboot or tunnel reconnect, bypass stale SSH multiplexing once:
@@ -451,7 +477,7 @@ ssh \
   -o ServerAliveInterval=30 \
   -o ServerAliveCountMax=6 \
   -o ControlMaster=no \
-  song@100.87.219.58 'hostname && whoami'
+  thddy@192.168.35.17 'hostname && whoami'
 ```
 
 Legacy userspace fallback:
@@ -469,8 +495,10 @@ infrastructure/policy failure and do not use it for project runs.
 Current verified issue:
 
 ```text
-Default Windows Python is 3.13.5 and current torch is 2.10.0+cpu.
-GPU exists, but default PyTorch cannot use CUDA.
+HOME default Python is 3.12.7.
+HOME GPU is NVIDIA GeForce RTX 2070 SUPER, 8192 MiB.
+HOME conda is not installed or not on PATH.
+HOME s5cmd is not installed at C:\Users\thddy\bin\s5cmd\s5cmd.exe.
 Before long training, create and verify the vehicle_traj conda environment in
 docs/WINDOWS_ENV_SETUP.md.
 ```
@@ -478,13 +506,13 @@ docs/WINDOWS_ENV_SETUP.md.
 Run once per Windows session:
 
 ```bash
-trajwinssh song@100.87.219.58 'powershell -NoProfile -ExecutionPolicy Bypass -Command "python --version; where.exe python; nvidia-smi"'
+trajwinssh thddy@192.168.35.17 'powershell -NoProfile -ExecutionPolicy Bypass -Command "python --version; where.exe python; nvidia-smi"'
 ```
 
 PyTorch CUDA check:
 
 ```bash
-trajwinssh song@100.87.219.58 'powershell -NoProfile -ExecutionPolicy Bypass -Command "conda run -n vehicle_traj python -c \"import torch; print(torch.__version__); print(torch.cuda.is_available()); print(torch.cuda.get_device_name(0) if torch.cuda.is_available() else 0)\""'
+trajwinssh thddy@192.168.35.17 'powershell -NoProfile -ExecutionPolicy Bypass -Command "conda run -n vehicle_traj python -c \"import torch; print(torch.__version__); print(torch.cuda.is_available()); print(torch.cuda.get_device_name(0) if torch.cuda.is_available() else 0)\""'
 ```
 
 If CUDA is unavailable:
@@ -552,7 +580,7 @@ space, while result interpretation remains centralized on Mac.
 Create the Windows project root once:
 
 ```bash
-trajwinssh song@100.87.219.58 'powershell -NoProfile -ExecutionPolicy Bypass -Command "New-Item -ItemType Directory -Force C:\Users\thddy\Documents\code\vehicle_trajectory_project | Out-Null"'
+trajwinssh thddy@192.168.35.17 'powershell -NoProfile -ExecutionPolicy Bypass -Command "New-Item -ItemType Directory -Force C:\Users\thddy\Documents\code\vehicle_trajectory_project | Out-Null"'
 ```
 
 Recommended sync method for small/medium project state:
@@ -572,7 +600,7 @@ rsync -avz --delete \
   --exclude 'outputs/tables/' \
   --exclude 'windows_training_results/' \
   -e "ssh -o ServerAliveInterval=30 -o ServerAliveCountMax=6" \
-  ./ song@100.87.219.58:'C:/Users/thddy/Documents/code/vehicle_trajectory_project/'
+  ./ thddy@192.168.35.17:'C:/Users/thddy/Documents/code/vehicle_trajectory_project/'
 ```
 
 If `rsync` over SSH is unavailable on Windows, create a tarball on Mac and copy
@@ -595,9 +623,9 @@ tar \
   -czf /tmp/vehicle_trajectory_project_training_bundle.tgz .
 
 trajwinscp /tmp/vehicle_trajectory_project_training_bundle.tgz \
-  song@100.87.219.58:'C:\Users\thddy\Documents\code\vehicle_trajectory_project_training_bundle.tgz'
+  thddy@192.168.35.17:'C:\Users\thddy\Documents\code\vehicle_trajectory_project_training_bundle.tgz'
 
-trajwinssh song@100.87.219.58 'powershell -NoProfile -ExecutionPolicy Bypass -Command "Set-Location C:\Users\thddy\Documents\code; Remove-Item -Recurse -Force vehicle_trajectory_project_sync_tmp -ErrorAction SilentlyContinue; New-Item -ItemType Directory vehicle_trajectory_project_sync_tmp | Out-Null; tar -xzf vehicle_trajectory_project_training_bundle.tgz -C vehicle_trajectory_project_sync_tmp; robocopy vehicle_trajectory_project_sync_tmp vehicle_trajectory_project /MIR /XD data\raw outputs\figures outputs\predictions outputs\tables windows_training_results; if ($LASTEXITCODE -le 7) { exit 0 } else { exit $LASTEXITCODE }"'
+trajwinssh thddy@192.168.35.17 'powershell -NoProfile -ExecutionPolicy Bypass -Command "Set-Location C:\Users\thddy\Documents\code; Remove-Item -Recurse -Force vehicle_trajectory_project_sync_tmp -ErrorAction SilentlyContinue; New-Item -ItemType Directory vehicle_trajectory_project_sync_tmp | Out-Null; tar -xzf vehicle_trajectory_project_training_bundle.tgz -C vehicle_trajectory_project_sync_tmp; robocopy vehicle_trajectory_project_sync_tmp vehicle_trajectory_project /MIR /XD data\raw outputs\figures outputs\predictions outputs\tables windows_training_results; if ($LASTEXITCODE -le 7) { exit 0 } else { exit $LASTEXITCODE }"'
 ```
 
 ## 10. Windows Dependency Setup
@@ -605,7 +633,7 @@ trajwinssh song@100.87.219.58 'powershell -NoProfile -ExecutionPolicy Bypass -Co
 Run after initial sync or requirements change:
 
 ```bash
-trajwinssh song@100.87.219.58 'powershell -NoProfile -ExecutionPolicy Bypass -Command "Set-Location C:\Users\thddy\Documents\code\vehicle_trajectory_project; conda run -n vehicle_traj python -m pip install -U pip; conda run -n vehicle_traj python -m pip install -r requirements.txt"'
+trajwinssh thddy@192.168.35.17 'powershell -NoProfile -ExecutionPolicy Bypass -Command "Set-Location C:\Users\thddy\Documents\code\vehicle_trajectory_project; conda run -n vehicle_traj python -m pip install -U pip; conda run -n vehicle_traj python -m pip install -r requirements.txt"'
 ```
 
 If CUDA-specific PyTorch is needed, install the correct wheel on Windows
@@ -638,25 +666,25 @@ conda run -n vehicle_traj python -m src.training.train `
 Tiny GPU smoke after Phase 6:
 
 ```bash
-trajwinssh song@100.87.219.58 'powershell -NoProfile -ExecutionPolicy Bypass -Command "Set-Location C:\Users\thddy\Documents\code\vehicle_trajectory_project; $env:PYTHONPATH=\"C:\Users\thddy\Documents\code\vehicle_trajectory_project;$env:PYTHONPATH\"; conda run -n vehicle_traj python -m src.training.train --config configs/lstm.yaml --max_epochs 1 --data data\processed\train_smoke.npz --val_data data\processed\val_smoke.npz"'
+trajwinssh thddy@192.168.35.17 'powershell -NoProfile -ExecutionPolicy Bypass -Command "Set-Location C:\Users\thddy\Documents\code\vehicle_trajectory_project; $env:PYTHONPATH=\"C:\Users\thddy\Documents\code\vehicle_trajectory_project;$env:PYTHONPATH\"; conda run -n vehicle_traj python -m src.training.train --config configs/lstm.yaml --max_epochs 1 --data data\processed\train_smoke.npz --val_data data\processed\val_smoke.npz"'
 ```
 
 LSTM training:
 
 ```bash
-trajwinssh song@100.87.219.58 'powershell -NoProfile -ExecutionPolicy Bypass -Command "Set-Location C:\Users\thddy\Documents\code\vehicle_trajectory_project; $env:PYTHONPATH=\"C:\Users\thddy\Documents\code\vehicle_trajectory_project;$env:PYTHONPATH\"; conda run -n vehicle_traj python -m src.training.train --config configs/lstm.yaml --data data\processed\train_smoke.npz --val_data data\processed\val_smoke.npz"'
+trajwinssh thddy@192.168.35.17 'powershell -NoProfile -ExecutionPolicy Bypass -Command "Set-Location C:\Users\thddy\Documents\code\vehicle_trajectory_project; $env:PYTHONPATH=\"C:\Users\thddy\Documents\code\vehicle_trajectory_project;$env:PYTHONPATH\"; conda run -n vehicle_traj python -m src.training.train --config configs/lstm.yaml --data data\processed\train_smoke.npz --val_data data\processed\val_smoke.npz"'
 ```
 
 Transformer training:
 
 ```bash
-trajwinssh song@100.87.219.58 'powershell -NoProfile -ExecutionPolicy Bypass -Command "Set-Location C:\Users\thddy\Documents\code\vehicle_trajectory_project; $env:PYTHONPATH=\"C:\Users\thddy\Documents\code\vehicle_trajectory_project;$env:PYTHONPATH\"; conda run -n vehicle_traj python -m src.training.train --config configs/transformer.yaml --data data\processed\train_smoke.npz --val_data data\processed\val_smoke.npz"'
+trajwinssh thddy@192.168.35.17 'powershell -NoProfile -ExecutionPolicy Bypass -Command "Set-Location C:\Users\thddy\Documents\code\vehicle_trajectory_project; $env:PYTHONPATH=\"C:\Users\thddy\Documents\code\vehicle_trajectory_project;$env:PYTHONPATH\"; conda run -n vehicle_traj python -m src.training.train --config configs/transformer.yaml --data data\processed\train_smoke.npz --val_data data\processed\val_smoke.npz"'
 ```
 
 Direct diffusion training:
 
 ```bash
-trajwinssh song@100.87.219.58 'powershell -NoProfile -ExecutionPolicy Bypass -Command "Set-Location C:\Users\thddy\Documents\code\vehicle_trajectory_project; $env:PYTHONPATH=\"C:\Users\thddy\Documents\code\vehicle_trajectory_project;$env:PYTHONPATH\"; conda run -n vehicle_traj python -m src.training.train --config configs/diffusion_direct.yaml --data data\processed\train_smoke.npz --val_data data\processed\val_smoke.npz"'
+trajwinssh thddy@192.168.35.17 'powershell -NoProfile -ExecutionPolicy Bypass -Command "Set-Location C:\Users\thddy\Documents\code\vehicle_trajectory_project; $env:PYTHONPATH=\"C:\Users\thddy\Documents\code\vehicle_trajectory_project;$env:PYTHONPATH\"; conda run -n vehicle_traj python -m src.training.train --config configs/diffusion_direct.yaml --data data\processed\train_smoke.npz --val_data data\processed\val_smoke.npz"'
 ```
 
 For AV2 small data, replace smoke paths:
@@ -726,15 +754,15 @@ Example pullback:
 mkdir -p /Users/song-yonghwi/Documents/vehicle_trajectory_project/windows_training_results
 
 trajwinscp -r \
-  song@100.87.219.58:'C:\Users\thddy\Documents\code\vehicle_trajectory_project\outputs\checkpoints' \
+  thddy@192.168.35.17:'C:\Users\thddy\Documents\code\vehicle_trajectory_project\outputs\checkpoints' \
   /Users/song-yonghwi/Documents/vehicle_trajectory_project/windows_training_results/
 
 trajwinscp -r \
-  song@100.87.219.58:'C:\Users\thddy\Documents\code\vehicle_trajectory_project\outputs\logs' \
+  thddy@192.168.35.17:'C:\Users\thddy\Documents\code\vehicle_trajectory_project\outputs\logs' \
   /Users/song-yonghwi/Documents/vehicle_trajectory_project/windows_training_results/
 
 trajwinscp -r \
-  song@100.87.219.58:'C:\Users\thddy\Documents\code\vehicle_trajectory_project\outputs\metrics' \
+  thddy@192.168.35.17:'C:\Users\thddy\Documents\code\vehicle_trajectory_project\outputs\metrics' \
   /Users/song-yonghwi/Documents/vehicle_trajectory_project/windows_training_results/
 ```
 

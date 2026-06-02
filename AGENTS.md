@@ -40,14 +40,14 @@ dataset is too large for Mac, and GPU model training.
 Before using Windows, verify:
 
 ```bash
-ssh song@100.87.219.58 'hostname && whoami'
+ssh thddy@192.168.35.17 'hostname && whoami'
 ```
 
 Expected:
 
 ```text
-Song
-song\song
+HOME
+home\thddy
 ```
 
 For GPU training, use the `vehicle_traj` conda environment from
@@ -59,6 +59,14 @@ For real AV2 experiments, prefer Windows-local data paths:
 Raw AV2: C:\Users\thddy\data\av2\motion-forecasting
 Processed: C:\Users\thddy\data\vehicle_trajectory_project\processed
 Runs: C:\Users\thddy\runs\vehicle_trajectory_project
+```
+
+Preferred Windows training host:
+
+```text
+Primary: HOME over LAN, thddy@192.168.35.17
+Fallback: HOME over Tailscale, thddy@100.99.63.23
+Legacy/secondary: song over Tailscale, song@100.87.219.58
 ```
 
 Do not edit code or documentation on Windows. If AV2 preprocessing runs on
