@@ -176,6 +176,7 @@ Use fallback paths:
 ```text
 AV2 missing before Phase 11 -> continue with synthetic data
 AV2 missing at Phase 11+ -> download or verify Windows-local AV2 data first
+HOME AV2 data before Phase 11 -> require D:\data\av2\motion-forecasting\DATA_READY_FOR_PHASE11.txt
 Windows unreachable -> finish Mac-only phases and record training as pending
 Windows PyTorch is CPU-only -> set up vehicle_traj CUDA environment before long training
 GitHub remote missing -> local commit and request remote URL

@@ -56,7 +56,13 @@ are not committed to Git.
 The full AV2 Motion Forecasting dataset is stored on Windows by default:
 
 ```text
-C:\Users\thddy\data\av2\motion-forecasting
+D:\data\av2\motion-forecasting
+```
+
+For real AV2 preprocessing, verify this marker first:
+
+```text
+D:\data\av2\motion-forecasting\DATA_READY_FOR_PHASE11.txt
 ```
 
 Default Windows training host:

@@ -208,19 +208,25 @@ C:\Users\thddy\Documents\code\vehicle_trajectory_project
 Windows AV2 raw data:
 
 ```text
-C:\Users\thddy\data\av2\motion-forecasting
+D:\data\av2\motion-forecasting
+```
+
+Windows AV2 Phase 11 ready marker:
+
+```text
+D:\data\av2\motion-forecasting\DATA_READY_FOR_PHASE11.txt
 ```
 
 Windows processed training data:
 
 ```text
-C:\Users\thddy\data\vehicle_trajectory_project\processed
+D:\data\vehicle_trajectory_project\processed
 ```
 
 Windows training output:
 
 ```text
-C:\Users\thddy\runs\vehicle_trajectory_project
+D:\runs\vehicle_trajectory_project
 ```
 
 Remote identity:
@@ -292,8 +298,8 @@ python -m src.datasets.validate_processed --npz data/processed/val_smoke.npz
 If AV2 processed data is used:
 
 ```bash
-trajwinssh thddy@192.168.35.17 'powershell -NoProfile -ExecutionPolicy Bypass -Command "Set-Location C:\Users\thddy\Documents\code\vehicle_trajectory_project; conda run -n vehicle_traj python -m src.datasets.validate_processed --npz C:\Users\thddy\data\vehicle_trajectory_project\processed\train_small.npz"'
-trajwinssh thddy@192.168.35.17 'powershell -NoProfile -ExecutionPolicy Bypass -Command "Set-Location C:\Users\thddy\Documents\code\vehicle_trajectory_project; conda run -n vehicle_traj python -m src.datasets.validate_processed --npz C:\Users\thddy\data\vehicle_trajectory_project\processed\val_small.npz"'
+trajwinssh thddy@192.168.35.17 'powershell -NoProfile -ExecutionPolicy Bypass -Command "Set-Location C:\Users\thddy\Documents\code\vehicle_trajectory_project; conda run -n vehicle_traj python -m src.datasets.validate_processed --npz D:\data\vehicle_trajectory_project\processed\train_small.npz"'
+trajwinssh thddy@192.168.35.17 'powershell -NoProfile -ExecutionPolicy Bypass -Command "Set-Location C:\Users\thddy\Documents\code\vehicle_trajectory_project; conda run -n vehicle_traj python -m src.datasets.validate_processed --npz D:\data\vehicle_trajectory_project\processed\val_small.npz"'
 ```
 
 Required Mac-side checks:
@@ -313,7 +319,7 @@ Required Mac-side checks:
 Primary AV2 Motion Forecasting storage path:
 
 ```text
-C:\Users\thddy\data\av2\motion-forecasting
+D:\data\av2\motion-forecasting
 ```
 
 Recommended disk budget:
@@ -322,6 +328,8 @@ Recommended disk budget:
 Minimum: 100 GB free
 Comfortable: 150 GB+ free
 Current verified HOME C: free space on 2026-06-02: about 192 GB
+Current verified HOME D: free space before AV2 extraction on 2026-06-02:
+about 839.6 GB
 ```
 
 Install `s5cmd` on Windows if missing:
@@ -346,9 +354,9 @@ Expand-Archive -Force $zip -DestinationPath $bin
 Create directories:
 
 ```powershell
-New-Item -ItemType Directory -Force C:\Users\thddy\data\av2\motion-forecasting | Out-Null
-New-Item -ItemType Directory -Force C:\Users\thddy\data\vehicle_trajectory_project\processed | Out-Null
-New-Item -ItemType Directory -Force C:\Users\thddy\runs\vehicle_trajectory_project | Out-Null
+New-Item -ItemType Directory -Force D:\data\av2\motion-forecasting | Out-Null
+New-Item -ItemType Directory -Force D:\data\vehicle_trajectory_project\processed | Out-Null
+New-Item -ItemType Directory -Force D:\runs\vehicle_trajectory_project | Out-Null
 ```
 
 List official public S3 objects before copying:
@@ -362,7 +370,41 @@ Download AV2 Motion Forecasting directly to Windows:
 ```powershell
 s5cmd --no-sign-request cp `
   "s3://argoverse/datasets/av2/motion-forecasting/*" `
-  "C:\Users\thddy\data\av2\motion-forecasting\"
+  "D:\data\av2\motion-forecasting\"
+```
+
+If the files were downloaded as archives under `D:\data`, normalize them into
+the project raw directory before Phase 11:
+
+```powershell
+$raw = "D:\data\av2\motion-forecasting"
+New-Item -ItemType Directory -Force $raw, "$raw\archives", "D:\data\av2\logs" | Out-Null
+Copy-Item -Force D:\data\av2_mf_*_test_annotations.parquet $raw
+tar -xf D:\data\train.tar -C $raw
+tar -xf D:\data\val.tar -C $raw
+tar -xf D:\data\test.tar -C $raw
+Move-Item -Force D:\data\train.tar "$raw\archives\train.tar"
+Move-Item -Force D:\data\val.tar "$raw\archives\val.tar"
+Move-Item -Force D:\data\test.tar "$raw\archives\test.tar"
+Set-Content "$raw\DATA_READY_FOR_PHASE11.txt" "AV2 Motion Forecasting data organized for Phase 11"
+```
+
+For long extraction, use a detached PowerShell script and logs instead of a
+foreground SSH session. The current HOME organizer convention is:
+
+```text
+Script: D:\data\av2\organize_phase11_av2.ps1
+Scheduled task: VehicleTrajectoryAV2Organize
+Latest log pointer: D:\data\av2\logs\latest_phase11_data_organize_log.txt
+In progress marker: D:\data\av2\motion-forecasting\EXTRACTION_IN_PROGRESS.txt
+Failure marker: D:\data\av2\motion-forecasting\EXTRACTION_FAILED.txt
+Ready marker: D:\data\av2\motion-forecasting\DATA_READY_FOR_PHASE11.txt
+```
+
+Before Phase 11, verify:
+
+```bash
+trajwinssh thddy@192.168.35.17 'powershell -NoProfile -Command "Test-Path D:\data\av2\motion-forecasting\DATA_READY_FOR_PHASE11.txt; Get-Content D:\data\av2\motion-forecasting\DATA_READY_FOR_PHASE11.txt"'
 ```
 
 Safe remote execution rule:
@@ -658,9 +700,9 @@ For Windows-local AV2 data:
 ```powershell
 conda run -n vehicle_traj python -m src.training.train `
   --config configs\<model>_av2.yaml `
-  --data C:\Users\thddy\data\vehicle_trajectory_project\processed\train_small.npz `
-  --val_data C:\Users\thddy\data\vehicle_trajectory_project\processed\val_small.npz `
-  --output_dir C:\Users\thddy\runs\vehicle_trajectory_project\<run_name>
+  --data D:\data\vehicle_trajectory_project\processed\train_small.npz `
+  --val_data D:\data\vehicle_trajectory_project\processed\val_small.npz `
+  --output_dir D:\runs\vehicle_trajectory_project\<run_name>
 ```
 
 Tiny GPU smoke after Phase 6:
@@ -690,8 +732,8 @@ trajwinssh thddy@192.168.35.17 'powershell -NoProfile -ExecutionPolicy Bypass -C
 For AV2 small data, replace smoke paths:
 
 ```text
-C:\Users\thddy\data\vehicle_trajectory_project\processed\train_small.npz
-C:\Users\thddy\data\vehicle_trajectory_project\processed\val_small.npz
+D:\data\vehicle_trajectory_project\processed\train_small.npz
+D:\data\vehicle_trajectory_project\processed\val_small.npz
 ```
 
 ## 12. Long Run Logging
@@ -701,7 +743,7 @@ For longer training, use a timestamped run directory:
 ```powershell
 Set-Location C:\Users\thddy\Documents\code\vehicle_trajectory_project
 $run = Get-Date -Format "yyyyMMdd_HHmmss"
-$logDir = "C:\Users\thddy\runs\vehicle_trajectory_project\$run"
+$logDir = "D:\runs\vehicle_trajectory_project\$run"
 New-Item -ItemType Directory -Force $logDir | Out-Null
 $env:PYTHONPATH="C:\Users\thddy\Documents\code\vehicle_trajectory_project;$env:PYTHONPATH"
 conda run -n vehicle_traj python -m src.training.train `

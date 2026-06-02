@@ -38,9 +38,9 @@ C:\Users\thddy
 Windows AV2/data paths:
 
 ```text
-Raw AV2: C:\Users\thddy\data\av2\motion-forecasting
-Processed: C:\Users\thddy\data\vehicle_trajectory_project\processed
-Runs: C:\Users\thddy\runs\vehicle_trajectory_project
+Raw AV2: D:\data\av2\motion-forecasting
+Processed: D:\data\vehicle_trajectory_project\processed
+Runs: D:\runs\vehicle_trajectory_project
 ```
 
 Python / GPU preflight:
@@ -52,6 +52,7 @@ NVIDIA GeForce RTX 2070 SUPER
 Driver 591.86
 GPU memory 8192 MiB
 C drive free space about 192 GB
+D drive free space before AV2 extraction about 839.6 GB
 ```
 
 Current PyTorch state:
@@ -67,7 +68,8 @@ Conclusion:
 ```text
 HOME SSH and NVIDIA GPU are available.
 HOME is not yet ready for long GPU training because vehicle_traj does not exist.
-s5cmd is required for direct AV2 download on HOME.
+s5cmd is required for future direct AV2 download or resync on HOME.
+The current AV2 archives were downloaded manually under D:\data.
 ```
 
 ## 2. Required Fix
@@ -216,9 +218,9 @@ Expand-Archive -Force $zip -DestinationPath $bin
 Create the Windows data directories:
 
 ```powershell
-New-Item -ItemType Directory -Force C:\Users\thddy\data\av2\motion-forecasting | Out-Null
-New-Item -ItemType Directory -Force C:\Users\thddy\data\vehicle_trajectory_project\processed | Out-Null
-New-Item -ItemType Directory -Force C:\Users\thddy\runs\vehicle_trajectory_project | Out-Null
+New-Item -ItemType Directory -Force D:\data\av2\motion-forecasting | Out-Null
+New-Item -ItemType Directory -Force D:\data\vehicle_trajectory_project\processed | Out-Null
+New-Item -ItemType Directory -Force D:\runs\vehicle_trajectory_project | Out-Null
 ```
 
 List and download AV2 Motion Forecasting:
@@ -227,8 +229,35 @@ List and download AV2 Motion Forecasting:
 s5cmd --no-sign-request ls "s3://argoverse/datasets/av2/motion-forecasting/"
 s5cmd --no-sign-request cp `
   "s3://argoverse/datasets/av2/motion-forecasting/*" `
-  "C:\Users\thddy\data\av2\motion-forecasting\"
+  "D:\data\av2\motion-forecasting\"
 ```
+
+If the official objects are downloaded as tar archives under `D:\data`, organize
+them before Phase 11:
+
+```text
+D:\data\train.tar
+D:\data\val.tar
+D:\data\test.tar
+D:\data\av2_mf_focal_test_annotations.parquet
+D:\data\av2_mf_multi_test_annotations.parquet
+```
+
+Standard organized layout:
+
+```text
+D:\data\av2\motion-forecasting\train\
+D:\data\av2\motion-forecasting\val\
+D:\data\av2\motion-forecasting\test\
+D:\data\av2\motion-forecasting\av2_mf_focal_test_annotations.parquet
+D:\data\av2\motion-forecasting\av2_mf_multi_test_annotations.parquet
+D:\data\av2\motion-forecasting\archives\train.tar
+D:\data\av2\motion-forecasting\archives\val.tar
+D:\data\av2\motion-forecasting\archives\test.tar
+D:\data\av2\motion-forecasting\DATA_READY_FOR_PHASE11.txt
+```
+
+Do not start Phase 11 until `DATA_READY_FOR_PHASE11.txt` exists.
 
 Do not copy the full AV2 dataset to Mac unless explicitly requested.
 

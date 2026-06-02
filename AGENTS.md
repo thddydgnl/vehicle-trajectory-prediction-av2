@@ -56,9 +56,23 @@ For GPU training, use the `vehicle_traj` conda environment from
 For real AV2 experiments, prefer Windows-local data paths:
 
 ```text
-Raw AV2: C:\Users\thddy\data\av2\motion-forecasting
-Processed: C:\Users\thddy\data\vehicle_trajectory_project\processed
-Runs: C:\Users\thddy\runs\vehicle_trajectory_project
+Raw AV2: D:\data\av2\motion-forecasting
+Processed: D:\data\vehicle_trajectory_project\processed
+Runs: D:\runs\vehicle_trajectory_project
+```
+
+Before Phase 11 with real AV2 data, verify:
+
+```text
+D:\data\av2\motion-forecasting\DATA_READY_FOR_PHASE11.txt
+```
+
+If the marker is missing, inspect:
+
+```text
+D:\data\av2\motion-forecasting\EXTRACTION_IN_PROGRESS.txt
+D:\data\av2\motion-forecasting\EXTRACTION_FAILED.txt
+D:\data\av2\logs\latest_phase11_data_organize_log.txt
 ```
 
 Preferred Windows training host:

@@ -352,13 +352,19 @@ tiny local sample if needed. The primary full AV2 Motion Forecasting dataset is
 stored on Windows:
 
 ```text
-C:\Users\thddy\data\av2\motion-forecasting
+D:\data\av2\motion-forecasting
 ```
 
 Primary Windows processed data path:
 
 ```text
-C:\Users\thddy\data\vehicle_trajectory_project\processed
+D:\data\vehicle_trajectory_project\processed
+```
+
+Before real AV2 preprocessing, Codex must verify:
+
+```text
+D:\data\av2\motion-forecasting\DATA_READY_FOR_PHASE11.txt
 ```
 
 # 4. 단계별 구현 계획
@@ -1108,7 +1114,7 @@ configs/preprocess_small.yaml
 Primary Windows location:
 
 ```text
-C:\Users\thddy\data\av2\motion-forecasting
+D:\data\av2\motion-forecasting
 ```
 
 Optional Mac sample location:
@@ -1178,9 +1184,10 @@ Windows full/small AV2 run pattern:
 
 ```powershell
 Set-Location C:\Users\thddy\Documents\code\vehicle_trajectory_project
+Get-Content D:\data\av2\motion-forecasting\DATA_READY_FOR_PHASE11.txt
 conda run -n vehicle_traj python -m src.datasets.preprocess_av2 `
-  --raw_dir C:\Users\thddy\data\av2\motion-forecasting `
-  --out_dir C:\Users\thddy\data\vehicle_trajectory_project\processed `
+  --raw_dir D:\data\av2\motion-forecasting `
+  --out_dir D:\data\vehicle_trajectory_project\processed `
   --num_scenarios 100 `
   --target_types VEHICLE PEDESTRIAN `
   --obs_len 50 `
@@ -1199,7 +1206,7 @@ For Windows-local AV2 processed data:
 
 ```powershell
 conda run -n vehicle_traj python -m src.datasets.validate_processed `
-  --npz C:\Users\thddy\data\vehicle_trajectory_project\processed\train_small.npz
+  --npz D:\data\vehicle_trajectory_project\processed\train_small.npz
 ```
 
 검증 항목:
