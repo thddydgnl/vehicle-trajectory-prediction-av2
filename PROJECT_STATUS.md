@@ -25,7 +25,12 @@ D:\data\av2\motion-forecasting\DATA_READY_FOR_PHASE11.txt exists.
 HOME D:\data was re-verified on 2026-06-03 over LAN SSH.
 Legacy song@100.87.219.58 is not the AV2 data host; it currently exposes only C: over SSH.
 HOME Windows data/training folder layout is ready for Phase 11 preprocessing and later GPU training.
-Phase 11 can start next, but HOME vehicle_traj CUDA environment still must be created before long GPU training.
+Phase 11 preprocessing code has been implemented, tested on Mac, committed, and pushed.
+HOME Windows code root has been cloned from GitHub and updated to commit 143dd6b.
+HOME small AV2 preprocessing completed successfully on 2026-06-03.
+D:\data\vehicle_trajectory_project\processed\small\train_small.npz and val_small.npz passed schema validation.
+Full AV2 preprocessing is technically unblocked, but should be run as a background Windows job after reviewing Phase 12 small-data visualizations or immediately before real training.
+HOME vehicle_traj CUDA environment still must be created before long GPU training.
 ```
 
 Verified Windows access:
@@ -57,7 +62,7 @@ Phase 7  LSTM Encoder-Decoder                     complete
 Phase 8  Transformer Encoder                      complete
 Phase 9  Direct Diffusion Model                   complete
 Phase 10 PCA Latent Diffusion                     complete
-Phase 11 Argoverse 2 Preprocessing                pending
+Phase 11 Argoverse 2 Preprocessing                complete
 Phase 12 Visualization                            pending
 Phase 13 PCA and K-means Analysis                 pending
 Phase 14 Final Experiment Matrix                  pending
@@ -67,11 +72,13 @@ Phase 15 Final Report Assets                      pending
 ## Next Recommended Task
 
 ```text
-Phase 7 through Phase 10 are complete.
-Phase 11 remains pending.
-HOME AV2 raw data is ready at D:\data\av2\motion-forecasting.
-Start Phase 11 Argoverse 2 Preprocessing next.
-For Windows-local preprocessing, write and test the preprocessing code on Mac first, then run committed source on HOME against the Windows raw path.
+Phase 11 is complete.
+Start Phase 12 Visualization next.
+Use the Windows-generated small AV2 files for the first real-data visualization smoke check:
+D:\data\vehicle_trajectory_project\processed\small\train_small.npz
+D:\data\vehicle_trajectory_project\processed\small\val_small.npz
+Do not start full AV2 preprocessing in a foreground SSH session.
+If full preprocessing is needed before model training, run it as a Windows background job and validate train_full.npz/val_full.npz before training.
 ```
 
 ## Latest Verified Commands
@@ -118,6 +125,12 @@ print(ckpt['metadata']['device'])
 print(ckpt['metadata']['model']['architecture'])
 PY
 pytest -q
+pytest tests/test_preprocess_av2.py -q
+ssh thddy@192.168.35.17 'cmd /c "if not exist C:\Users\thddy\Documents\code\vehicle_trajectory_project\.git git clone https://github.com/thddydgnl/vehicle-trajectory-prediction-av2.git C:\Users\thddy\Documents\code\vehicle_trajectory_project && cd /d C:\Users\thddy\Documents\code\vehicle_trajectory_project && git checkout main && git pull --ff-only origin main && git rev-parse --short HEAD"'
+ssh thddy@192.168.35.17 'cmd /c "cd /d C:\Users\thddy\Documents\code\vehicle_trajectory_project && python -m pip install numpy pandas pyarrow joblib tqdm pyyaml"'
+ssh thddy@192.168.35.17 'cmd /c "cd /d C:\Users\thddy\Documents\code\vehicle_trajectory_project && python -m src.datasets.preprocess_av2 --config configs\preprocess_small.yaml"'
+ssh thddy@192.168.35.17 'cmd /c "cd /d C:\Users\thddy\Documents\code\vehicle_trajectory_project && python -m src.datasets.validate_processed --npz D:\data\vehicle_trajectory_project\processed\small\train_small.npz"'
+ssh thddy@192.168.35.17 'cmd /c "cd /d C:\Users\thddy\Documents\code\vehicle_trajectory_project && python -m src.datasets.validate_processed --npz D:\data\vehicle_trajectory_project\processed\small\val_small.npz"'
 ```
 
 Result:
@@ -172,17 +185,26 @@ Phase 7 LSTM: tests/test_models_shape.py passed 2 tests; 1-epoch synthetic smoke
 Phase 8 Transformer: tests/test_models_shape.py passed 4 tests; 1-epoch synthetic smoke training completed on CPU; Transformer checkpoint evaluation produced ADE, FDE, Miss Rate, Latency, and Parameters; full pytest passed 45 tests
 Phase 9 direct diffusion: tests/test_diffusion_step.py passed 5 tests; 1-epoch synthetic smoke training completed on CPU; diffusion checkpoint evaluation produced ADE/FDE and minADE/minFDE with 4 samples; full pytest passed 50 tests
 Phase 10 PCA latent diffusion: tests/test_pca_latent.py passed 3 tests; PCA codec fit on train_smoke and wrote ignored outputs/checkpoints/pca_codec.pkl; PCA explained variance figure generated; diffusion_pca 1-epoch synthetic smoke training completed on CPU; full pytest passed 53 tests
+Phase 11 AV2 preprocessing implementation: tests/test_preprocess_av2.py passed 5 tests; full pytest passed 58 tests
+Phase 11 subagent review: config loading, fixed future horizon, observed flag handling, and masked payload validation findings were fixed before Windows execution
+Phase 11 GitHub source sync: Mac pushed commit 143dd6b; HOME cloned/pulled main at 143dd6b
+Phase 11 Windows dependency check: numpy, pandas, pyarrow, joblib, tqdm, and pyyaml available on HOME global Python 3.12 after installing pyarrow
+Phase 11 Windows small preprocessing: generated D:\data\vehicle_trajectory_project\processed\small\train_small.npz and val_small.npz
+Phase 11 schema validation: train_small.npz passed with 95 samples / 95 scenarios; val_small.npz passed with 95 samples / 95 scenarios
+Phase 11 output sizes: train_small.npz about 131,957 bytes; val_small.npz about 132,217 bytes; scaler.pkl about 445 bytes; metadata directory created
+Phase 11 full preprocessing decision: technically unblocked after small validation, but not started in this turn; run full as a Windows background job only after reviewing small visualizations or just before real AV2 training
 ```
 
 ## Open External Requirements
 
 ```text
-HOME AV2 raw data is complete and ready for Phase 11 at D:\data\av2\motion-forecasting.
+HOME AV2 raw data is complete at D:\data\av2\motion-forecasting.
 HOME DATA_READY_FOR_PHASE11.txt exists and split counts have been verified.
+HOME small processed AV2 data is available at D:\data\vehicle_trajectory_project\processed\small.
 HOME needs s5cmd only for future direct AV2 download or resync; current archives were already downloaded manually under D:\datasets\argoverse.
 HOME needs conda or another managed Python environment before long GPU training.
 HOME vehicle_traj CUDA PyTorch environment must be created before long model training.
-For long AV2 download or extraction attempts, do not use a long foreground SSH command; use the safe remote execution rule in docs/windows_gpu_training_only_workflow.md.
+For full AV2 preprocessing, long AV2 download/extraction, or GPU training attempts, do not use a long foreground SSH command; use the safe remote execution rule in docs/windows_gpu_training_only_workflow.md.
 ```
 
 ## GitHub
@@ -192,6 +214,7 @@ Repository: https://github.com/thddydgnl/vehicle-trajectory-prediction-av2
 Remote: origin
 Default branch: main
 Latest pushed branch: main
+Latest pushed commit: 143dd6b
 ```
 
 ## Update Rule
