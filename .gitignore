@@ -26,6 +26,9 @@ outputs/checkpoints/*
 outputs/predictions/*
 outputs/logs/*
 outputs/remote_runs/*
+outputs/**/checkpoints/*
+outputs/**/predictions/*
+outputs/**/logs/*
 windows_training_results/
 !outputs/checkpoints/.gitkeep
 !outputs/predictions/.gitkeep

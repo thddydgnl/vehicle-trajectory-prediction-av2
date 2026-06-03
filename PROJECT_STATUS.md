@@ -31,6 +31,8 @@ HOME small AV2 preprocessing completed successfully on 2026-06-03.
 D:\data\vehicle_trajectory_project\processed\small\train_small.npz and val_small.npz passed schema validation.
 Phase 12 visualization code has been implemented and tested on Mac.
 Synthetic and small AV2 trajectory/error/PCA/K-means smoke figures were generated successfully.
+Phase 13 PCA/K-means/error analysis code has been implemented and tested on Mac.
+Phase 13 analysis now validates prediction/data alignment and can require expected model predictions to avoid silent model omission.
 Full AV2 preprocessing is technically unblocked after small-data visualization smoke checks, but should still be run as a background Windows job immediately before real training.
 HOME vehicle_traj CUDA environment still must be created before long GPU training.
 ```
@@ -66,7 +68,7 @@ Phase 9  Direct Diffusion Model                   complete
 Phase 10 PCA Latent Diffusion                     complete
 Phase 11 Argoverse 2 Preprocessing                complete
 Phase 12 Visualization                            complete
-Phase 13 PCA and K-means Analysis                 pending
+Phase 13 PCA and K-means Analysis                 complete
 Phase 14 Final Experiment Matrix                  pending
 Phase 15 Final Report Assets                      pending
 ```
@@ -74,10 +76,10 @@ Phase 15 Final Report Assets                      pending
 ## Next Recommended Task
 
 ```text
-Phase 12 is complete.
-Start Phase 13 PCA and K-means Analysis next.
-Use subagent review for leakage, metric definitions, shape contracts, and result-claim consistency.
-Use synthetic data first, then small AV2 data if practical.
+Phase 13 is complete.
+Start Phase 14 Final Experiment Matrix next.
+First verify HOME Windows access, latest repo sync, and CUDA-enabled vehicle_traj environment.
+If CUDA setup is unavailable, implement and validate Mac-side experiment matrix tooling and record Windows training as environment-blocked rather than faking results.
 Do not start full AV2 preprocessing in a foreground SSH session.
 If full preprocessing is needed before Phase 14 model training, run it as a Windows background job and validate train_full.npz/val_full.npz before training.
 ```
@@ -145,6 +147,13 @@ python -m src.visualization.plot_trajectories --data data/processed/val_small.np
 python -m src.visualization.plot_errors --data data/processed/val_small.npz --predictions outputs/predictions --out_dir outputs/figures/av2_small
 python -m src.visualization.plot_pca --data data/processed/val_small.npz --out_dir outputs/figures/av2_small
 python -m src.visualization.plot_clusters --data data/processed/val_small.npz --out_dir outputs/figures/av2_small --n_clusters 5
+pytest tests/test_analysis_phase13.py -q
+python -m src.analysis.pca_analysis --train_data data/processed/train_smoke.npz --data data/processed/val_smoke.npz --out_dir outputs --n_components 12
+python -m src.analysis.kmeans_analysis --train_data data/processed/train_smoke.npz --data data/processed/val_smoke.npz --predictions outputs/predictions --out_dir outputs --n_components 12 --n_clusters 5 --required_models linear
+python -m src.analysis.error_analysis --data data/processed/val_smoke.npz --predictions outputs/predictions --out_dir outputs --top_k 10 --required_models linear
+python -m src.analysis.pca_analysis --train_data data/processed/train_small.npz --data data/processed/val_small.npz --out_dir outputs/av2_small_analysis --n_components 12
+python -m src.analysis.kmeans_analysis --train_data data/processed/train_small.npz --data data/processed/val_small.npz --predictions outputs/predictions --out_dir outputs/av2_small_analysis --n_components 12 --n_clusters 5 --required_models linear
+python -m src.analysis.error_analysis --data data/processed/val_small.npz --predictions outputs/predictions --out_dir outputs/av2_small_analysis --top_k 10 --required_models linear
 ```
 
 Result:
@@ -213,6 +222,12 @@ Phase 12 synthetic smoke: generated trajectory_overlay_linear_lstm_transformer.p
 Phase 12 small AV2 smoke: copied ignored train_small.npz/val_small.npz to Mac, validated both files, and generated the same figure set under outputs/figures/av2_small
 Phase 12 visual QA: representative synthetic and small AV2 trajectory overlay PNGs were inspected and showed nonblank trajectory plots with readable layout
 Phase 12 GitHub: visualization work pushed on main; use git log --oneline for the authoritative latest commit hash
+Phase 13 analysis implementation: added common prediction/metric utilities, expanded PCA analysis, added K-means cluster analysis, added error summary/top-case analysis, and added configs/analysis.yaml
+Phase 13 tests: tests/test_analysis_phase13.py passed 4 tests; full pytest passed 63 tests
+Phase 13 subagent review: no train-data leakage found; prediction/data alignment, required-model checks, best-of-K minMiss Rate, and global masked ADE aggregation findings were fixed
+Phase 13 synthetic smoke: generated outputs/tables/cluster_summary.csv, cluster_metrics.csv, error_summary.csv, pca_latent.csv, top_error_cases.csv, and refreshed PCA/K-means figures
+Phase 13 small AV2 smoke: generated the same analysis outputs under outputs/av2_small_analysis using ignored Mac copies of train_small.npz and val_small.npz
+Phase 13 result scope: current committed analysis tables are Linear-only because only linear prediction outputs are currently available; Phase 14 must generate model prediction outputs before claiming LSTM/Transformer/Diffusion cluster metrics
 ```
 
 ## Open External Requirements

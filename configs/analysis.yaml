@@ -1,0 +1,11 @@
+train_data: data/processed/train_smoke.npz
+data: data/processed/val_smoke.npz
+predictions: outputs/predictions
+out_dir: outputs
+n_components: 12
+n_clusters: 5
+miss_threshold: 2.0
+top_k: 20
+max_export_rows: 5000
+required_models:
+  - linear
