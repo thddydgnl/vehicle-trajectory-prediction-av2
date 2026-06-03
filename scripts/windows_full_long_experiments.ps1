@@ -162,6 +162,15 @@ function Invoke-PcaCodecFit {
   Copy-Item -Force $DefaultCodec $NamedCodec
 }
 
+function Clear-RunDirectory {
+  param([string]$Path)
+  if (Test-Path $Path) {
+    Get-ChildItem -Path $Path -Force | Remove-Item -Recurse -Force
+  } else {
+    New-Item -ItemType Directory -Force $Path | Out-Null
+  }
+}
+
 try {
   Write-Status -Status "running" -Step "preflight" -Message "Full long experiments started"
   Add-Content -Path $Log -Value "[$(Get-Date -Format o)] Starting full long experiments"
@@ -179,6 +188,12 @@ try {
   Set-Location $Repo
   & git status --short --branch 2>&1 | Tee-Object -FilePath $Log -Append
   & git rev-parse --short HEAD 2>&1 | Tee-Object -FilePath $Log -Append
+
+  if (-not $ResumeAfterTuning) {
+    Add-Content -Path $Log -Value "[$(Get-Date -Format o)] Clearing previous tuning/final run artifacts"
+    Clear-RunDirectory $TuningRunDir
+    Clear-RunDirectory $FinalRunDir
+  }
 
   Invoke-CondaPython "cuda_preflight" @(
     "-c",
