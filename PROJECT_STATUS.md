@@ -41,6 +41,7 @@ Phase 14 Windows small AV2 GPU smoke training completed for LSTM, Transformer, D
 Phase 14 all-model evaluation was rerun on Windows with explicit checkpoint_dir/checkpoint_tag and prediction_tag, then regenerated on Mac from ignored copied small checkpoints to keep Mac as the evaluation source of truth.
 outputs/tables/model_comparison.csv and model_comparison.md now contain real val_small AV2 smoke results for Linear, LSTM, Transformer, Direct Diffusion, and PCA Diffusion.
 Full AV2 preprocessing/training has not been run; Phase 14 results are small AV2 smoke results, not full-data final performance.
+Full AV2 staged training workflow is documented in docs/full_av2_training_staged_workflow.md.
 ```
 
 Verified Windows access:
@@ -83,9 +84,10 @@ Phase 15 Final Report Assets                      pending
 
 ```text
 Phase 14 is complete on small AV2 smoke scope.
-Start Phase 15 Final Report Assets next.
-Use outputs/tables/model_comparison.csv and outputs/av2_small_analysis/tables for report assets, while clearly labeling them as val_small AV2 smoke results.
-Optional before Phase 15: run full AV2 preprocessing/training as a Windows background workflow if stronger full-data results are required.
+If the user wants stronger report results, follow docs/full_av2_training_staged_workflow.md before Phase 15.
+Recommended next FULL goal: Stage F1-F3 only, meaning full preprocessing, schema validation, and 1-epoch full pilot.
+Do not start 5-epoch or 30-50 epoch long runs until the 1-epoch full pilot passes and the user explicitly continues.
+If the user chooses not to run FULL, start Phase 15 Final Report Assets using current val_small AV2 smoke results and label them clearly.
 Do not start full AV2 preprocessing or full training in a foreground SSH session.
 ```
 

@@ -65,9 +65,10 @@ Read order:
 3. /Users/song-yonghwi/Documents/vehicle_trajectory_project/docs/codex_vehicle_trajectory_project_plan.md
 4. /Users/song-yonghwi/Documents/vehicle_trajectory_project/docs/windows_gpu_training_only_workflow.md
 5. /Users/song-yonghwi/Documents/vehicle_trajectory_project/docs/WINDOWS_ENV_SETUP.md
-6. /Users/song-yonghwi/Documents/vehicle_trajectory_project/docs/github_portfolio_workflow.md
-7. 현재 구현된 README.md, AGENTS.md, CODEX_TASKS.md가 있으면 함께 확인
-8. 마지막 Phase Result 또는 outputs/report_summary.md가 있으면 진행 상태 확인
+6. /Users/song-yonghwi/Documents/vehicle_trajectory_project/docs/full_av2_training_staged_workflow.md
+7. /Users/song-yonghwi/Documents/vehicle_trajectory_project/docs/github_portfolio_workflow.md
+8. 현재 구현된 README.md, AGENTS.md, CODEX_TASKS.md가 있으면 함께 확인
+9. 마지막 Phase Result 또는 outputs/report_summary.md가 있으면 진행 상태 확인
 ```
 
 Goal start prompt 예시:
@@ -79,6 +80,7 @@ Read PROJECT_STATUS.md before selecting the next Phase.
 Read docs/codex_vehicle_trajectory_project_plan.md for the phase specification.
 Use docs/windows_gpu_training_only_workflow.md for Windows AV2 data and GPU training.
 Use docs/WINDOWS_ENV_SETUP.md before any AV2 download or long Windows training run.
+Use docs/full_av2_training_staged_workflow.md before full AV2 preprocessing/training.
 Use docs/github_portfolio_workflow.md for commit/push and portfolio rules.
 Keep Mac as the source-of-truth environment.
 Use Windows only for AV2 data storage, data-local preprocessing, and GPU training.
@@ -101,6 +103,8 @@ Goal turn algorithm:
 7. Sync source/config only; avoid moving raw AV2 or large processed files to Mac.
 8. Run Windows environment/CUDA preflight.
 9. Run exactly the intended preprocessing or training command on Windows.
+   If this is full AV2 work, follow the staged gates in
+   docs/full_av2_training_staged_workflow.md.
 10. Pull checkpoint/log/metric/lightweight result files back to Mac.
 11. Run evaluate/visualization/analysis on Mac when the required inputs are available.
 12. Commit and push verified code/results according to docs/github_portfolio_workflow.md.

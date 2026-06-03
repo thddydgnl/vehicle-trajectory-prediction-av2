@@ -14,7 +14,8 @@ Every goal turn must start by reading:
 3. docs/codex_vehicle_trajectory_project_plan.md
 4. docs/windows_gpu_training_only_workflow.md
 5. docs/WINDOWS_ENV_SETUP.md
-6. docs/github_portfolio_workflow.md
+6. docs/full_av2_training_staged_workflow.md
+7. docs/github_portfolio_workflow.md
 ```
 
 Then inspect the actual filesystem:
@@ -94,6 +95,11 @@ python -m src.training.train ...
 
 Before using Windows, follow `docs/windows_gpu_training_only_workflow.md` and
 `docs/WINDOWS_ENV_SETUP.md`.
+
+Before full AV2 preprocessing/training, follow
+`docs/full_av2_training_staged_workflow.md`. Full work must move through staged
+gates: preprocessing, schema validation, 1-epoch pilot, 5-epoch pilot, and only
+then report-ready long runs.
 
 Verified Windows SSH:
 

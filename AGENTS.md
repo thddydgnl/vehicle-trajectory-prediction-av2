@@ -12,7 +12,8 @@ At the start of every goal-mode turn, read:
 3. docs/codex_vehicle_trajectory_project_plan.md
 4. docs/windows_gpu_training_only_workflow.md
 5. docs/WINDOWS_ENV_SETUP.md
-6. docs/github_portfolio_workflow.md
+6. docs/full_av2_training_staged_workflow.md
+7. docs/github_portfolio_workflow.md
 ```
 
 ## Work Rules
@@ -52,6 +53,11 @@ home\thddy
 
 For GPU training, use the `vehicle_traj` conda environment from
 `docs/WINDOWS_ENV_SETUP.md`. Do not run long training with a CPU-only PyTorch build.
+
+For full AV2 preprocessing/training after Phase 14 small smoke, follow
+`docs/full_av2_training_staged_workflow.md`. Do not jump directly to a 30-50
+epoch long run; proceed through full preprocessing, schema validation,
+1-epoch pilot, 5-epoch pilot, then report-ready long run.
 
 For real AV2 experiments, prefer Windows-local data paths:
 

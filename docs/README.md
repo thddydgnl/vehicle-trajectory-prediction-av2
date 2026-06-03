@@ -9,6 +9,7 @@
 - `codex_vehicle_trajectory_project_plan.md`: phase-by-phase implementation plan
 - `windows_gpu_training_only_workflow.md`: Windows AV2 data and GPU training workflow
 - `WINDOWS_ENV_SETUP.md`: Windows environment and dataset setup notes
+- `full_av2_training_staged_workflow.md`: staged full AV2 preprocessing/training gates
 - `github_portfolio_workflow.md`: GitHub commit/push and portfolio workflow
 
 ## Windows Host

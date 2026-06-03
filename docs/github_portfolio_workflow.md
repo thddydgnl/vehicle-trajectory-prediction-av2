@@ -39,14 +39,15 @@ Goal turn algorithm에 추가할 Git 단계:
 2. Read PROJECT_STATUS.md.
 3. Read docs/codex_vehicle_trajectory_project_plan.md.
 4. Read docs/windows_gpu_training_only_workflow.md if Windows AV2 data or training may be needed.
-5. Read this GitHub portfolio workflow.
-6. Run git status --short.
-7. Implement only the current Phase/Task.
-8. Run required tests and smoke commands.
-9. Review generated files and .gitignore coverage.
-10. Commit with a clear message.
-11. Push the current branch.
-12. Report commit hash, pushed branch, test results, and next Phase.
+5. Read docs/full_av2_training_staged_workflow.md if full AV2 preprocessing/training may be needed.
+6. Read this GitHub portfolio workflow.
+7. Run git status --short.
+8. Implement only the current Phase/Task.
+9. Run required tests and smoke commands.
+10. Review generated files and .gitignore coverage.
+11. Commit with a clear message.
+12. Push the current branch.
+13. Report commit hash, pushed branch, test results, and next Phase.
 ```
 
 If the working tree contains unrelated user changes:
