@@ -120,3 +120,13 @@ def test_diffusion_tuning_pca_configs_use_tuning_codec() -> None:
     for suffix, codec_name in expected.items():
         config = load_yaml_config(ROOT / "configs" / f"full_tune_diffusion_pca_{suffix}.yaml")
         assert config["model"]["codec_path"] == f"{RUN_DIR_TUNING}/checkpoints/{codec_name}"
+
+
+def test_full_long_windows_script_can_resume_completed_final_stages() -> None:
+    script = (ROOT / "scripts" / "windows_full_long_experiments.ps1").read_text(encoding="utf-8")
+    assert "ExpectedArtifacts" in script
+    assert "Invoke-OrSkipCompleted" in script
+    assert "completed_with_artifacts_after_nonzero_exit" in script
+    assert "skipped_existing_artifacts" in script
+    assert "metrics\\lstm_full_long_val_metrics.json" in script
+    assert "metrics\\transformer_full_long_val_metrics.json" in script

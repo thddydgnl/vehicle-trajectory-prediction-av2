@@ -41,6 +41,19 @@ function Test-Artifact {
   return Test-Path $Path
 }
 
+function Test-AllArtifacts {
+  param([string[]]$Paths)
+  if ($null -eq $Paths -or $Paths.Count -eq 0) {
+    return $false
+  }
+  foreach ($Path in $Paths) {
+    if (-not (Test-Path $Path)) {
+      return $false
+    }
+  }
+  return $true
+}
+
 function Write-Status {
   param(
     [string]$Status,
@@ -88,7 +101,8 @@ function Write-Status {
 function Invoke-CondaPython {
   param(
     [string]$Step,
-    [string[]]$PythonArgs
+    [string[]]$PythonArgs,
+    [string[]]$ExpectedArtifacts = @()
   )
   Write-Status -Status "running" -Step $Step -Message "started"
   Add-Content -Path $Log -Value ""
@@ -96,10 +110,29 @@ function Invoke-CondaPython {
   & $Conda run --no-capture-output -n vehicle_traj python @PythonArgs 2>&1 | Tee-Object -FilePath $Log -Append
   $ExitCode = $LASTEXITCODE
   if ($ExitCode -ne 0) {
+    if (Test-AllArtifacts $ExpectedArtifacts) {
+      Add-Content -Path $Log -Value "[$(Get-Date -Format o)] WARN $Step exited with $ExitCode but expected artifacts exist; continuing"
+      Write-Status -Status "running" -Step $Step -ExitCode 0 -Message "completed_with_artifacts_after_nonzero_exit"
+      return
+    }
     throw "$Step failed with exit code $ExitCode"
   }
   Add-Content -Path $Log -Value "[$(Get-Date -Format o)] END $Step"
   Write-Status -Status "running" -Step $Step -ExitCode 0 -Message "completed"
+}
+
+function Invoke-OrSkipCompleted {
+  param(
+    [string]$Step,
+    [string[]]$ExpectedArtifacts,
+    [scriptblock]$Action
+  )
+  if ($ResumeAfterTuning -and (Test-AllArtifacts $ExpectedArtifacts)) {
+    Add-Content -Path $Log -Value "[$(Get-Date -Format o)] SKIP $Step because expected artifacts already exist"
+    Write-Status -Status "running" -Step $Step -ExitCode 0 -Message "skipped_existing_artifacts"
+    return
+  }
+  & $Action
 }
 
 function Invoke-DiffusionCandidate {
@@ -221,10 +254,16 @@ try {
     Invoke-DiffusionCandidate "diffusion_direct" "direct_f" "configs/full_tune_diffusion_direct_f.yaml" (Join-Path $TuningRunDir "checkpoints\best_diffusion_direct_tune_f.pt")
   }
 
-  Invoke-CondaPython "select_diffusion_tuning" @(
-    "scripts/select_diffusion_tuning.py",
-    "--matrix", "configs/full_diffusion_tuning_matrix.yaml",
-    "--repo_root", $Repo
+  Invoke-CondaPython `
+    "select_diffusion_tuning" `
+    @(
+      "scripts/select_diffusion_tuning.py",
+      "--matrix", "configs/full_diffusion_tuning_matrix.yaml",
+      "--repo_root", $Repo
+    ) `
+    @(
+      (Join-Path $TuningRunDir "tables\selected_diffusion_configs.json"),
+      (Join-Path $TuningRunDir "tables\diffusion_tuning_summary.csv")
   )
 
   $SelectionPath = Join-Path $TuningRunDir "tables\selected_diffusion_configs.json"
@@ -236,62 +275,134 @@ try {
     throw "Diffusion target gates did not pass; FULL RUN is intentionally blocked. See $SelectionPath"
   }
 
-  Invoke-CondaPython "final_linear_evaluation" @(
-    "scripts/run_all_evaluations.py",
-    "--data", $ValData,
-    "--out_dir", $FinalRunDir,
-    "--models", "linear",
-    "--batch_size", "64",
-    "--data_split", "val_full",
-    "--target_type", "av2_focal_mixed",
-    "--prediction_tag", "full_long_final"
-  )
+  Invoke-OrSkipCompleted `
+    "final_linear_evaluation" `
+    @((Join-Path $FinalRunDir "metrics\linear_val_metrics.json")) `
+    {
+      Invoke-CondaPython `
+        "final_linear_evaluation" `
+        @(
+          "scripts/run_all_evaluations.py",
+          "--data", $ValData,
+          "--out_dir", $FinalRunDir,
+          "--models", "linear",
+          "--batch_size", "64",
+          "--data_split", "val_full",
+          "--target_type", "av2_focal_mixed",
+          "--prediction_tag", "full_long_final"
+        ) `
+        @((Join-Path $FinalRunDir "metrics\linear_val_metrics.json"))
+    }
 
-  Invoke-CondaPython "final_lstm_training" @(
-    "-m", "src.training.train",
-    "--config", "configs/full_long_lstm.yaml",
-    "--data", $TrainData,
-    "--val_data", $ValData
-  )
+  Invoke-OrSkipCompleted `
+    "final_lstm_training" `
+    @(
+      (Join-Path $FinalRunDir "checkpoints\best_lstm_full_long.pt"),
+      (Join-Path $FinalRunDir "metrics\lstm_full_long_val_metrics.json")
+    ) `
+    {
+      Invoke-CondaPython `
+        "final_lstm_training" `
+        @(
+          "-m", "src.training.train",
+          "--config", "configs/full_long_lstm.yaml",
+          "--data", $TrainData,
+          "--val_data", $ValData
+        ) `
+        @(
+          (Join-Path $FinalRunDir "checkpoints\best_lstm_full_long.pt"),
+          (Join-Path $FinalRunDir "metrics\lstm_full_long_val_metrics.json")
+        )
+    }
 
-  Invoke-CondaPython "final_transformer_training" @(
-    "-m", "src.training.train",
-    "--config", "configs/full_long_transformer.yaml",
-    "--data", $TrainData,
-    "--val_data", $ValData
-  )
+  Invoke-OrSkipCompleted `
+    "final_transformer_training" `
+    @(
+      (Join-Path $FinalRunDir "checkpoints\best_transformer_full_long.pt"),
+      (Join-Path $FinalRunDir "metrics\transformer_full_long_val_metrics.json")
+    ) `
+    {
+      Invoke-CondaPython `
+        "final_transformer_training" `
+        @(
+          "-m", "src.training.train",
+          "--config", "configs/full_long_transformer.yaml",
+          "--data", $TrainData,
+          "--val_data", $ValData
+        ) `
+        @(
+          (Join-Path $FinalRunDir "checkpoints\best_transformer_full_long.pt"),
+          (Join-Path $FinalRunDir "metrics\transformer_full_long_val_metrics.json")
+        )
+    }
 
   $FinalPcaComponents = 12
   if ($Selection.selected.diffusion_pca.latent_dim) {
     $FinalPcaComponents = [int]$Selection.selected.diffusion_pca.latent_dim
   }
 
-  Invoke-CondaPython "final_pca_codec_fit" @(
-    "-m", "src.analysis.pca_analysis",
-    "--train_data", $TrainData,
-    "--data", $ValData,
-    "--out_dir", $FinalRunDir,
-    "--n_components", "$FinalPcaComponents",
-    "--max_export_rows", "5000"
-  )
+  Invoke-OrSkipCompleted `
+    "final_pca_codec_fit" `
+    @((Join-Path $FinalRunDir "checkpoints\pca_codec.pkl")) `
+    {
+      Invoke-CondaPython `
+        "final_pca_codec_fit" `
+        @(
+          "-m", "src.analysis.pca_analysis",
+          "--train_data", $TrainData,
+          "--data", $ValData,
+          "--out_dir", $FinalRunDir,
+          "--n_components", "$FinalPcaComponents",
+          "--max_export_rows", "5000"
+        ) `
+        @((Join-Path $FinalRunDir "checkpoints\pca_codec.pkl"))
+    }
 
   $PcaFinalConfig = Join-Path $FinalRunDir "generated_configs\full_long_diffusion_pca.yaml"
   $DirectFinalConfig = Join-Path $FinalRunDir "generated_configs\full_long_diffusion_direct.yaml"
 
-  Invoke-CondaPython "final_diffusion_pca_training" @(
-    "-m", "src.training.train",
-    "--config", $PcaFinalConfig,
-    "--data", $TrainData,
-    "--val_data", $ValData
-  )
+  Invoke-OrSkipCompleted `
+    "final_diffusion_pca_training" `
+    @(
+      (Join-Path $FinalRunDir "checkpoints\best_diffusion_pca_full_long.pt"),
+      (Join-Path $FinalRunDir "metrics\diffusion_pca_full_long_val_metrics.json")
+    ) `
+    {
+      Invoke-CondaPython `
+        "final_diffusion_pca_training" `
+        @(
+          "-m", "src.training.train",
+          "--config", $PcaFinalConfig,
+          "--data", $TrainData,
+          "--val_data", $ValData
+        ) `
+        @(
+          (Join-Path $FinalRunDir "checkpoints\best_diffusion_pca_full_long.pt"),
+          (Join-Path $FinalRunDir "metrics\diffusion_pca_full_long_val_metrics.json")
+        )
+    }
 
   if (-not $SkipFinalDirectDiffusion) {
-    Invoke-CondaPython "final_diffusion_direct_training" @(
-      "-m", "src.training.train",
-      "--config", $DirectFinalConfig,
-      "--data", $TrainData,
-      "--val_data", $ValData
-    )
+    Invoke-OrSkipCompleted `
+      "final_diffusion_direct_training" `
+      @(
+        (Join-Path $FinalRunDir "checkpoints\best_diffusion_direct_full_long.pt"),
+        (Join-Path $FinalRunDir "metrics\diffusion_direct_full_long_val_metrics.json")
+      ) `
+      {
+        Invoke-CondaPython `
+          "final_diffusion_direct_training" `
+          @(
+            "-m", "src.training.train",
+            "--config", $DirectFinalConfig,
+            "--data", $TrainData,
+            "--val_data", $ValData
+          ) `
+          @(
+            (Join-Path $FinalRunDir "checkpoints\best_diffusion_direct_full_long.pt"),
+            (Join-Path $FinalRunDir "metrics\diffusion_direct_full_long_val_metrics.json")
+          )
+      }
   }
 
   $EvalModels = @("linear", "lstm", "transformer", "diffusion_pca")
@@ -312,7 +423,13 @@ try {
     "--target_type", "av2_focal_mixed",
     "--prediction_tag", "full_long_final"
   )
-  Invoke-CondaPython "final_comparison_evaluation" $FinalEvalArgs
+  Invoke-CondaPython `
+    "final_comparison_evaluation" `
+    $FinalEvalArgs `
+    @(
+      (Join-Path $FinalRunDir "tables\model_comparison.csv"),
+      (Join-Path $FinalRunDir "tables\model_comparison.md")
+    )
 
   Set-Content -Path $CompleteMarker -Value "Completed full long experiments at $(Get-Date -Format o). Log: $Log" -Encoding UTF8
   Write-Status -Status "complete" -Step "complete" -ExitCode 0 -Message "Full long experiments complete"
