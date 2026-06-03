@@ -1420,18 +1420,25 @@ Notes
 
 ### 완료 기준
 
-```bash
-python -m src.evaluation.evaluate \
-  --all_models \
-  --data data/processed/val_small.npz \
-  --out_dir outputs
-```
-
 `--all_models` 구현이 복잡하면 다음 script를 만든다.
 
 ```bash
-python scripts/run_all_evaluations.py
+python scripts/run_all_evaluations.py \
+  --data data/processed/val_small.npz \
+  --out_dir outputs \
+  --models linear lstm transformer diffusion_direct diffusion_pca \
+  --checkpoint_dir outputs/checkpoints/phase14_av2_small \
+  --checkpoint_tag phase14_smoke \
+  --data_split val_small \
+  --target_type av2_focal_mixed \
+  --prediction_tag phase14_av2_small
 ```
+
+실제 Windows GPU 결과를 사용할 때는 `--checkpoint_dir`를 Windows run의
+checkpoint 폴더로 지정하거나 모델별 checkpoint 인자를 명시한다. Trainable 모델의
+checkpoint를 암묵적 기본값으로 추정하지 않는다. Small AV2 prediction payload는
+`--prediction_tag phase14_av2_small`처럼 별도 폴더에 보관해서 synthetic
+prediction과 섞이지 않게 한다.
 
 ---
 

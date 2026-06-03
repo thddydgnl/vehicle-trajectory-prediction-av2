@@ -1,10 +1,10 @@
 {
-  "ADE": 3.761397123336792,
-  "FDE": 8.524677276611328,
-  "Latency": 0.00014362749992869795,
-  "Miss Rate": 0.8266666531562805,
+  "ADE": 1.462841272354126,
+  "FDE": 3.491798162460327,
+  "Latency": 0.00017751184212485034,
+  "Miss Rate": 0.5157894492149353,
   "Parameters": 0,
-  "data": "data/processed/val_smoke.npz",
+  "data": "data/processed/val_small.npz",
   "model": "linear",
-  "num_samples": 150
+  "num_samples": 95
 }

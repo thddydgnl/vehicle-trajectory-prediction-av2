@@ -68,24 +68,29 @@ D drive free space after completed AV2 layout check about 776 GB
 Current PyTorch state:
 
 ```text
-HOME vehicle_traj environment not created yet.
-HOME conda is not installed or not on PATH yet.
-HOME s5cmd is missing at C:\Users\thddy\bin\s5cmd\s5cmd.exe.
+HOME Miniconda3 is installed at C:\Users\thddy\Miniconda3.
+HOME vehicle_traj environment exists with Python 3.12.
+HOME vehicle_traj has CUDA PyTorch 2.11.0+cu128.
+torch.cuda.is_available() is True.
+CUDA device: NVIDIA GeForce RTX 2070 SUPER.
+HOME s5cmd is only needed for future direct AV2 download or resync.
 ```
 
 Conclusion:
 
 ```text
-HOME SSH and NVIDIA GPU are available.
-HOME is not yet ready for long GPU training because vehicle_traj does not exist.
-s5cmd is required for future direct AV2 download or resync on HOME.
+HOME SSH, NVIDIA GPU, and vehicle_traj CUDA PyTorch are available.
+HOME is ready for small GPU smoke training.
+Long/full AV2 training should still use background-safe execution and log checks.
+s5cmd is optional for future direct AV2 download or resync on HOME.
 The current AV2 archives were downloaded manually under D:\data.
 ```
 
-## 2. Required Fix
+## 2. Environment Creation Reference
 
-Create a dedicated Python environment for this project with a CUDA-enabled
-PyTorch build.
+The environment already exists on HOME as of 2026-06-03. Keep this section as a
+reference if the environment must be recreated after reinstalling Windows,
+Miniconda, or PyTorch.
 
 Important:
 
@@ -175,19 +180,19 @@ NVIDIA GeForce RTX 2070 SUPER
 Run from Mac:
 
 ```bash
-ssh thddy@192.168.35.17 'powershell -NoProfile -ExecutionPolicy Bypass -Command "conda activate vehicle_traj; python -c \"import torch; print(torch.__version__); print(torch.cuda.is_available())\""'
+ssh thddy@192.168.35.17 'powershell -NoProfile -ExecutionPolicy Bypass -Command "& C:\Users\thddy\Miniconda3\Scripts\conda.exe run -n vehicle_traj python -c \"import torch; print(torch.__version__); print(torch.cuda.is_available())\""'
 ```
 
 If `conda activate` does not work in non-interactive PowerShell, use:
 
 ```powershell
-& C:\Users\thddy\anaconda3\Scripts\activate vehicle_traj
+& C:\Users\thddy\Miniconda3\Scripts\activate vehicle_traj
 ```
 
 or:
 
 ```powershell
-conda run -n vehicle_traj python -c "import torch; print(torch.__version__); print(torch.cuda.is_available())"
+& C:\Users\thddy\Miniconda3\Scripts\conda.exe run -n vehicle_traj python -c "import torch; print(torch.__version__); print(torch.cuda.is_available())"
 ```
 
 ## 5. Training Command Pattern
@@ -195,7 +200,7 @@ conda run -n vehicle_traj python -c "import torch; print(torch.__version__); pri
 Once verified, Windows training commands should use the environment explicitly:
 
 ```bash
-ssh thddy@192.168.35.17 'powershell -NoProfile -ExecutionPolicy Bypass -Command "Set-Location C:\Users\thddy\Documents\code\vehicle_trajectory_project; conda run -n vehicle_traj python -m src.training.train --config configs/lstm.yaml --data data\processed\train_smoke.npz --val_data data\processed\val_smoke.npz"'
+ssh thddy@192.168.35.17 'powershell -NoProfile -ExecutionPolicy Bypass -Command "Set-Location C:\Users\thddy\Documents\code\vehicle_trajectory_project; & C:\Users\thddy\Miniconda3\Scripts\conda.exe run -n vehicle_traj python -m src.training.train --config configs/lstm.yaml --data data\processed\train_smoke.npz --val_data data\processed\val_smoke.npz"'
 ```
 
 Do not run long training until:

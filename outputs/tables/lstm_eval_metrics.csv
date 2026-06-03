@@ -1,2 +1,2 @@
 model,checkpoint,data,num_samples,ADE,FDE,Miss Rate,Latency,Parameters
-lstm,outputs/checkpoints/best_lstm.pt,data/processed/val_smoke.npz,150,8.5144681930542,17.355661392211914,1.0,0.004000092499967044,401666
+lstm,outputs/checkpoints/phase14_av2_small/best_lstm_phase14_smoke.pt,data/processed/val_small.npz,95,10.734396934509277,21.011072158813477,0.8736842274665833,0.008121722799995424,35970

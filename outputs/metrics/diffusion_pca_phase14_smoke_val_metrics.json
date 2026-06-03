@@ -1,0 +1,42 @@
+{
+  "ADE": 7.114823818206787,
+  "FDE": 13.674212455749512,
+  "best_epoch": 1,
+  "epochs_ran": 1,
+  "metadata": {
+    "config_path": "configs\\phase14_diffusion_pca_smoke.yaml",
+    "device": "cuda",
+    "model": {
+      "architecture": "diffusion_pca",
+      "beta_end": 0.02,
+      "beta_start": 0.0001,
+      "codec_path": "D:/runs/vehicle_trajectory_project/phase14_smoke/checkpoints/pca_codec.pkl",
+      "cond_dim": 64,
+      "diffusion_steps": 10,
+      "hidden_dim": 96,
+      "input_dim": 6,
+      "latent_dim": 12,
+      "name": "diffusion_pca_phase14_smoke",
+      "num_samples": 4,
+      "pred_len": 30,
+      "sampling_steps": 5
+    },
+    "seed": 42,
+    "train_data": "D:\\data\\vehicle_trajectory_project\\processed\\small\\train_small.npz",
+    "training": {
+      "batch_size": 32,
+      "device": "cuda",
+      "early_stopping_patience": 1,
+      "epochs": 1,
+      "gradient_clip": 1.0,
+      "learning_rate": 0.0005,
+      "loss": "noise_mse",
+      "num_workers": 0,
+      "out_dir": "D:/runs/vehicle_trajectory_project/phase14_smoke",
+      "seed": 42,
+      "weight_decay": 0.0001
+    },
+    "val_data": "D:\\data\\vehicle_trajectory_project\\processed\\small\\val_small.npz"
+  },
+  "model": "diffusion_pca_phase14_smoke"
+}

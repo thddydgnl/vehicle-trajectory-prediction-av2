@@ -16,8 +16,11 @@ Primary Windows training host has changed to HOME.
 HOME SSH works over LAN.
 Use HOME LAN first for Windows work.
 HOME Tailscale SSH was documented as fallback, but port 22 timed out on 2026-06-03; re-verify before use.
-HOME NVIDIA GPU is visible, but the dedicated vehicle_traj CUDA environment has not been created yet.
-HOME conda and s5cmd are not installed or not on PATH yet.
+HOME NVIDIA GPU is visible.
+HOME Miniconda3 is installed at C:\Users\thddy\Miniconda3.
+HOME vehicle_traj conda environment exists with Python 3.12 and CUDA PyTorch 2.11.0+cu128.
+HOME vehicle_traj torch.cuda.is_available() is True on NVIDIA GeForce RTX 2070 SUPER.
+HOME s5cmd is still only needed for future direct AV2 download or resync.
 The previous song AV2 download attempt was stopped; do not treat the song AV2 folder as complete.
 HOME AV2 Motion Forecasting archives are stored under D:\datasets\argoverse.
 HOME AV2 extraction/organization completed successfully.
@@ -33,8 +36,11 @@ Phase 12 visualization code has been implemented and tested on Mac.
 Synthetic and small AV2 trajectory/error/PCA/K-means smoke figures were generated successfully.
 Phase 13 PCA/K-means/error analysis code has been implemented and tested on Mac.
 Phase 13 analysis now validates prediction/data alignment and can require expected model predictions to avoid silent model omission.
-Full AV2 preprocessing is technically unblocked after small-data visualization smoke checks, but should still be run as a background Windows job immediately before real training.
-HOME vehicle_traj CUDA environment still must be created before long GPU training.
+Phase 14 final experiment matrix tooling has been implemented, tested, committed, and pushed.
+Phase 14 Windows small AV2 GPU smoke training completed for LSTM, Transformer, Direct Diffusion, and PCA Diffusion.
+Phase 14 all-model evaluation was rerun on Windows with explicit checkpoint_dir/checkpoint_tag and prediction_tag, then regenerated on Mac from ignored copied small checkpoints to keep Mac as the evaluation source of truth.
+outputs/tables/model_comparison.csv and model_comparison.md now contain real val_small AV2 smoke results for Linear, LSTM, Transformer, Direct Diffusion, and PCA Diffusion.
+Full AV2 preprocessing/training has not been run; Phase 14 results are small AV2 smoke results, not full-data final performance.
 ```
 
 Verified Windows access:
@@ -69,19 +75,18 @@ Phase 10 PCA Latent Diffusion                     complete
 Phase 11 Argoverse 2 Preprocessing                complete
 Phase 12 Visualization                            complete
 Phase 13 PCA and K-means Analysis                 complete
-Phase 14 Final Experiment Matrix                  pending
+Phase 14 Final Experiment Matrix                  complete
 Phase 15 Final Report Assets                      pending
 ```
 
 ## Next Recommended Task
 
 ```text
-Phase 13 is complete.
-Start Phase 14 Final Experiment Matrix next.
-First verify HOME Windows access, latest repo sync, and CUDA-enabled vehicle_traj environment.
-If CUDA setup is unavailable, implement and validate Mac-side experiment matrix tooling and record Windows training as environment-blocked rather than faking results.
-Do not start full AV2 preprocessing in a foreground SSH session.
-If full preprocessing is needed before Phase 14 model training, run it as a Windows background job and validate train_full.npz/val_full.npz before training.
+Phase 14 is complete on small AV2 smoke scope.
+Start Phase 15 Final Report Assets next.
+Use outputs/tables/model_comparison.csv and outputs/av2_small_analysis/tables for report assets, while clearly labeling them as val_small AV2 smoke results.
+Optional before Phase 15: run full AV2 preprocessing/training as a Windows background workflow if stronger full-data results are required.
+Do not start full AV2 preprocessing or full training in a foreground SSH session.
 ```
 
 ## Latest Verified Commands
@@ -152,8 +157,29 @@ python -m src.analysis.pca_analysis --train_data data/processed/train_smoke.npz 
 python -m src.analysis.kmeans_analysis --train_data data/processed/train_smoke.npz --data data/processed/val_smoke.npz --predictions outputs/predictions --out_dir outputs --n_components 12 --n_clusters 5 --required_models linear
 python -m src.analysis.error_analysis --data data/processed/val_smoke.npz --predictions outputs/predictions --out_dir outputs --top_k 10 --required_models linear
 python -m src.analysis.pca_analysis --train_data data/processed/train_small.npz --data data/processed/val_small.npz --out_dir outputs/av2_small_analysis --n_components 12
-python -m src.analysis.kmeans_analysis --train_data data/processed/train_small.npz --data data/processed/val_small.npz --predictions outputs/predictions --out_dir outputs/av2_small_analysis --n_components 12 --n_clusters 5 --required_models linear
-python -m src.analysis.error_analysis --data data/processed/val_small.npz --predictions outputs/predictions --out_dir outputs/av2_small_analysis --top_k 10 --required_models linear
+python -m src.analysis.kmeans_analysis --train_data data/processed/train_small.npz --data data/processed/val_small.npz --predictions outputs/predictions/phase14_av2_small --out_dir outputs/av2_small_analysis --n_components 12 --n_clusters 5 --required_models linear lstm transformer diffusion_direct diffusion_pca
+python -m src.analysis.error_analysis --data data/processed/val_small.npz --predictions outputs/predictions/phase14_av2_small --out_dir outputs/av2_small_analysis --top_k 10 --required_models linear lstm transformer diffusion_direct diffusion_pca
+pytest tests/test_phase14_experiment_matrix.py tests/test_metrics.py -q
+python scripts/run_all_evaluations.py --data data/processed/val_smoke.npz --out_dir /tmp/phase14_eval_smoke --models linear lstm transformer diffusion_direct diffusion_pca --checkpoint_dir outputs/checkpoints --batch_size 64 --data_split val_smoke --target_type synthetic_mixed --prediction_tag synthetic_smoke
+pytest -q
+ssh -o ConnectTimeout=12 thddy@192.168.35.17 'hostname && whoami'
+ssh -o ConnectTimeout=12 thddy@192.168.35.17 'cmd /c "cd /d C:\Users\thddy\Documents\code\vehicle_trajectory_project && git status --short --branch && git pull --ff-only origin main && git rev-parse --short HEAD"'
+ssh -o ConnectTimeout=12 thddy@192.168.35.17 'powershell -NoProfile -ExecutionPolicy Bypass -Command "& C:\Users\thddy\Miniconda3\Scripts\conda.exe run -n vehicle_traj python -c \"import torch; print(torch.__version__); print(torch.cuda.is_available()); print(torch.cuda.get_device_name(0) if torch.cuda.is_available() else 0)\""'
+ssh -o ConnectTimeout=12 thddy@192.168.35.17 'powershell -NoProfile -ExecutionPolicy Bypass -Command "Set-Location C:\Users\thddy\Documents\code\vehicle_trajectory_project; & C:\Users\thddy\Miniconda3\Scripts\conda.exe run -n vehicle_traj python -m pytest tests/test_phase14_experiment_matrix.py tests/test_metrics.py -q"'
+ssh -o ConnectTimeout=12 thddy@192.168.35.17 'powershell -NoProfile -ExecutionPolicy Bypass -Command "Set-Location C:\Users\thddy\Documents\code\vehicle_trajectory_project; & C:\Users\thddy\Miniconda3\Scripts\conda.exe run -n vehicle_traj python scripts/run_all_evaluations.py --data D:/data/vehicle_trajectory_project/processed/small/val_small.npz --out_dir D:/runs/vehicle_trajectory_project/phase14_smoke --models linear lstm transformer diffusion_direct diffusion_pca --checkpoint_dir D:/runs/vehicle_trajectory_project/phase14_smoke/checkpoints --checkpoint_tag phase14_smoke --batch_size 64 --data_split val_small --target_type av2_focal_mixed --prediction_tag phase14_av2_small"'
+scp thddy@192.168.35.17:'D:/runs/vehicle_trajectory_project/phase14_smoke/tables/model_comparison.csv' outputs/tables/model_comparison.csv
+scp thddy@192.168.35.17:'D:/runs/vehicle_trajectory_project/phase14_smoke/tables/model_comparison.md' outputs/tables/model_comparison.md
+scp thddy@192.168.35.17:'D:/runs/vehicle_trajectory_project/phase14_smoke/tables/*_metrics.csv' outputs/tables/
+scp thddy@192.168.35.17:'D:/runs/vehicle_trajectory_project/phase14_smoke/metrics/*_metrics.json' outputs/metrics/
+scp thddy@192.168.35.17:'D:/runs/vehicle_trajectory_project/phase14_smoke/predictions/phase14_av2_small/*.pkl' outputs/predictions/phase14_av2_small/
+scp thddy@192.168.35.17:'D:/runs/vehicle_trajectory_project/phase14_smoke/checkpoints/best_lstm_phase14_smoke.pt' outputs/checkpoints/phase14_av2_small/
+scp thddy@192.168.35.17:'D:/runs/vehicle_trajectory_project/phase14_smoke/checkpoints/best_transformer_phase14_smoke.pt' outputs/checkpoints/phase14_av2_small/
+scp thddy@192.168.35.17:'D:/runs/vehicle_trajectory_project/phase14_smoke/checkpoints/best_diffusion_direct_phase14_smoke.pt' outputs/checkpoints/phase14_av2_small/
+scp thddy@192.168.35.17:'D:/runs/vehicle_trajectory_project/phase14_smoke/checkpoints/best_diffusion_pca_phase14_smoke.pt' outputs/checkpoints/phase14_av2_small/
+scp thddy@192.168.35.17:'D:/runs/vehicle_trajectory_project/phase14_smoke/checkpoints/pca_codec.pkl' outputs/checkpoints/phase14_av2_small/
+python scripts/run_all_evaluations.py --data data/processed/val_small.npz --out_dir outputs --models linear lstm transformer diffusion_direct diffusion_pca --checkpoint_dir outputs/checkpoints/phase14_av2_small --checkpoint_tag phase14_smoke --batch_size 64 --data_split val_small --target_type av2_focal_mixed --prediction_tag phase14_av2_small
+python -m src.analysis.kmeans_analysis --train_data data/processed/train_small.npz --data data/processed/val_small.npz --predictions outputs/predictions/phase14_av2_small --out_dir outputs/av2_small_analysis --n_components 12 --n_clusters 5 --required_models linear lstm transformer diffusion_direct diffusion_pca
+python -m src.analysis.error_analysis --data data/processed/val_small.npz --predictions outputs/predictions/phase14_av2_small --out_dir outputs/av2_small_analysis --top_k 10 --required_models linear lstm transformer diffusion_direct diffusion_pca
 ```
 
 Result:
@@ -227,7 +253,19 @@ Phase 13 tests: tests/test_analysis_phase13.py passed 4 tests; full pytest passe
 Phase 13 subagent review: no train-data leakage found; prediction/data alignment, required-model checks, best-of-K minMiss Rate, and global masked ADE aggregation findings were fixed
 Phase 13 synthetic smoke: generated outputs/tables/cluster_summary.csv, cluster_metrics.csv, error_summary.csv, pca_latent.csv, top_error_cases.csv, and refreshed PCA/K-means figures
 Phase 13 small AV2 smoke: generated the same analysis outputs under outputs/av2_small_analysis using ignored Mac copies of train_small.npz and val_small.npz
-Phase 13 result scope: current committed analysis tables are Linear-only because only linear prediction outputs are currently available; Phase 14 must generate model prediction outputs before claiming LSTM/Transformer/Diffusion cluster metrics
+Phase 13 result scope: the original Phase 13 committed small AV2 analysis tables were Linear-only; Phase 14 regenerated current small AV2 analysis tables with all five model prediction payloads under outputs/predictions/phase14_av2_small
+Phase 14 tooling: scripts/run_all_evaluations.py writes model_comparison.csv/md and now requires explicit trainable-model checkpoints by default to avoid stale checkpoint use
+Phase 14 tooling: prediction_tag archives evaluation payloads under outputs/predictions/<tag> so small AV2 analysis does not accidentally consume top-level synthetic prediction payloads
+Phase 14 metric fix: diffusion minFDE evaluation is mask-aware; saved val_small results are numerically unaffected because val_small has full future masks
+Phase 14 tests: tests/test_phase14_experiment_matrix.py and tests/test_metrics.py passed 23 tests on Mac and Windows; full Mac pytest passed 70 tests
+Phase 14 Windows environment: Miniconda3 and vehicle_traj were created on HOME; vehicle_traj reports torch 2.11.0+cu128, torch.cuda.is_available() True, NVIDIA GeForce RTX 2070 SUPER
+Phase 14 Windows repo sync: HOME pulled main to a4f77bd before the final strict small AV2 evaluation rerun
+Phase 14 Windows small training validation metrics: LSTM ADE 10.734397888183594 / FDE 21.01107406616211; Transformer ADE 10.198661804199219 / FDE 19.419828414916992; Direct Diffusion ADE 11.003629684448242 / FDE 21.149229049682617; PCA Diffusion ADE 7.114823818206787 / FDE 13.674212455749512
+Phase 14 Mac final strict val_small comparison: Linear ADE 1.462841272354126 / FDE 3.491798162460327; LSTM ADE 10.734396934509277 / FDE 21.011072158813477; Transformer ADE 10.198661804199219 / FDE 19.419828414916992; Direct Diffusion ADE 10.946355819702148 / FDE 21.14156723022461 / minADE 10.79123306274414 / minFDE 20.124284744262695; PCA Diffusion ADE 7.103316307067871 / FDE 13.77344036102295 / minADE 6.917838096618652 / minFDE 12.924206733703613
+Phase 14 Mac evaluation note: loading the Windows-trained PCA codec on Mac emitted a scikit-learn version warning, but evaluation completed; keep the copied codec/checkpoints ignored and do not commit them
+Phase 14 all-model analysis: outputs/av2_small_analysis/tables/cluster_metrics.csv and error_summary.csv were regenerated from tagged phase14_av2_small prediction payloads with required_models linear, lstm, transformer, diffusion_direct, diffusion_pca
+Phase 14 subagent review: stale checkpoint defaults, prediction provenance, mask-aware minFDE, permissive missing-model handling, and stale PROJECT_STATUS findings were addressed before final Phase 14 completion
+Phase 14 result scope: complete for small AV2 smoke matrix; full AV2 preprocessing/training has not been run and should not be claimed
 ```
 
 ## Open External Requirements
@@ -238,8 +276,8 @@ HOME DATA_READY_FOR_PHASE11.txt exists and split counts have been verified.
 HOME small processed AV2 data is available at D:\data\vehicle_trajectory_project\processed\small.
 Mac has ignored lightweight copies of train_small.npz and val_small.npz for visualization/analysis smoke checks.
 HOME needs s5cmd only for future direct AV2 download or resync; current archives were already downloaded manually under D:\datasets\argoverse.
-HOME needs conda or another managed Python environment before long GPU training.
-HOME vehicle_traj CUDA PyTorch environment must be created before long model training.
+HOME Miniconda3 and the vehicle_traj CUDA PyTorch environment are available for GPU smoke training.
+Full AV2 preprocessing and larger/full AV2 training remain optional external long-running work before Phase 15 if stronger final results are desired.
 For full AV2 preprocessing, long AV2 download/extraction, or GPU training attempts, do not use a long foreground SSH command; use the safe remote execution rule in docs/windows_gpu_training_only_workflow.md.
 ```
 

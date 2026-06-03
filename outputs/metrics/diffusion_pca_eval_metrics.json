@@ -1,14 +1,14 @@
 {
-  "ADE": 4.496754169464111,
-  "FDE": 9.384163856506348,
-  "Latency": 0.0014044830532899746,
-  "Miss Rate": 0.8866666555404663,
-  "Parameters": 58252,
-  "checkpoint": "outputs/checkpoints/best_diffusion_pca.pt",
-  "data": "data/processed/val_smoke.npz",
-  "minADE": 4.342960834503174,
-  "minFDE": 8.741191864013672,
+  "ADE": 7.103316307067871,
+  "FDE": 13.77344036102295,
+  "Latency": 0.001305927631543263,
+  "Miss Rate": 0.9473684430122375,
+  "Parameters": 46156,
+  "checkpoint": "outputs/checkpoints/phase14_av2_small/best_diffusion_pca_phase14_smoke.pt",
+  "data": "data/processed/val_small.npz",
+  "minADE": 6.917838096618652,
+  "minFDE": 12.924206733703613,
   "model": "diffusion_pca",
   "num_prediction_samples": 4,
-  "num_samples": 150
+  "num_samples": 95
 }

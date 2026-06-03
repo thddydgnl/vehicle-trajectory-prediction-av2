@@ -537,15 +537,16 @@ infrastructure/policy failure and do not use it for project runs.
 
 ## 7. Windows Environment Preflight
 
-Current verified issue:
+Current verified state:
 
 ```text
 HOME default Python is 3.12.7.
 HOME GPU is NVIDIA GeForce RTX 2070 SUPER, 8192 MiB.
-HOME conda is not installed or not on PATH.
-HOME s5cmd is not installed at C:\Users\thddy\bin\s5cmd\s5cmd.exe.
-Before long training, create and verify the vehicle_traj conda environment in
-docs/WINDOWS_ENV_SETUP.md.
+HOME Miniconda3 is installed at C:\Users\thddy\Miniconda3.
+HOME vehicle_traj exists with Python 3.12 and CUDA PyTorch 2.11.0+cu128.
+HOME vehicle_traj torch.cuda.is_available() is True.
+HOME s5cmd is not required for current Phase 14 work and is only needed for
+future direct AV2 download or resync.
 ```
 
 Run once per Windows session:
@@ -557,7 +558,7 @@ trajwinssh thddy@192.168.35.17 'powershell -NoProfile -ExecutionPolicy Bypass -C
 PyTorch CUDA check:
 
 ```bash
-trajwinssh thddy@192.168.35.17 'powershell -NoProfile -ExecutionPolicy Bypass -Command "conda run -n vehicle_traj python -c \"import torch; print(torch.__version__); print(torch.cuda.is_available()); print(torch.cuda.get_device_name(0) if torch.cuda.is_available() else 0)\""'
+trajwinssh thddy@192.168.35.17 'powershell -NoProfile -ExecutionPolicy Bypass -Command "& C:\Users\thddy\Miniconda3\Scripts\conda.exe run -n vehicle_traj python -c \"import torch; print(torch.__version__); print(torch.cuda.is_available()); print(torch.cuda.get_device_name(0) if torch.cuda.is_available() else 0)\""'
 ```
 
 If CUDA is unavailable:

@@ -172,7 +172,20 @@ def _build_diffusion_from_checkpoint(checkpoint: dict[str, Any]) -> GaussianDiff
     )
 
 
-def _build_diffusion_pca_from_checkpoint(checkpoint: dict[str, Any]) -> PCALatentDiffusionTrajectory:
+def _resolve_pca_codec_path(model_config: dict[str, Any], checkpoint_path: Path) -> Path:
+    codec_path = Path(str(model_config.get("codec_path", "outputs/checkpoints/pca_codec.pkl")))
+    if codec_path.exists():
+        return codec_path
+    local_codec = checkpoint_path.parent / "pca_codec.pkl"
+    if local_codec.exists():
+        return local_codec
+    default_codec = Path("outputs/checkpoints/pca_codec.pkl")
+    if default_codec.exists():
+        return default_codec
+    return codec_path
+
+
+def _build_diffusion_pca_from_checkpoint(checkpoint: dict[str, Any], checkpoint_path: Path) -> PCALatentDiffusionTrajectory:
     metadata = checkpoint.get("metadata", {})
     if not isinstance(metadata, dict):
         raise ValueError("checkpoint metadata must be a mapping")
@@ -183,7 +196,7 @@ def _build_diffusion_pca_from_checkpoint(checkpoint: dict[str, Any]) -> PCALaten
         raise ValueError("checkpoint does not describe a PCA latent diffusion model")
     return PCALatentDiffusionTrajectory(
         input_dim=int(model_config.get("input_dim", 6)),
-        codec_path=str(model_config.get("codec_path", "outputs/checkpoints/pca_codec.pkl")),
+        codec_path=str(_resolve_pca_codec_path(model_config, checkpoint_path)),
         pred_len=int(model_config.get("pred_len", 30)),
         latent_dim=int(model_config.get("latent_dim", 12)),
         cond_dim=int(model_config.get("cond_dim", 128)),
@@ -399,7 +412,7 @@ def evaluate_diffusion_pca(
 ) -> dict[str, float | int | str]:
     device = device or get_device()
     checkpoint = torch.load(checkpoint_path, map_location=device)
-    model = _build_diffusion_pca_from_checkpoint(checkpoint).to(device)
+    model = _build_diffusion_pca_from_checkpoint(checkpoint, checkpoint_path).to(device)
     model.load_state_dict(checkpoint["model_state_dict"])
     model.eval()
     dataloader = create_dataloader(data_path, batch_size=batch_size, shuffle=False)

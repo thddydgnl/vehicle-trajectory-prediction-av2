@@ -1,11 +1,11 @@
 {
-  "ADE": 8.5144681930542,
-  "FDE": 17.355661392211914,
-  "Latency": 0.004000092499967044,
-  "Miss Rate": 1.0,
-  "Parameters": 401666,
-  "checkpoint": "outputs/checkpoints/best_lstm.pt",
-  "data": "data/processed/val_smoke.npz",
+  "ADE": 10.734396934509277,
+  "FDE": 21.011072158813477,
+  "Latency": 0.008121722799995424,
+  "Miss Rate": 0.8736842274665833,
+  "Parameters": 35970,
+  "checkpoint": "outputs/checkpoints/phase14_av2_small/best_lstm_phase14_smoke.pt",
+  "data": "data/processed/val_small.npz",
   "model": "lstm",
-  "num_samples": 150
+  "num_samples": 95
 }

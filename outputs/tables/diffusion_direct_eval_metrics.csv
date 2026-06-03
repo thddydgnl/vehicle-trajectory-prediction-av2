@@ -1,2 +1,2 @@
 model,checkpoint,data,num_samples,num_prediction_samples,ADE,FDE,minADE,minFDE,Miss Rate,Latency,Parameters
-diffusion_direct,outputs/checkpoints/best_diffusion_direct.pt,data/processed/val_smoke.npz,150,4,9.96528148651123,18.540878295898438,9.772790908813477,17.46110725402832,0.9866666793823242,0.0008923205533452953,70588
+diffusion_direct,outputs/checkpoints/phase14_av2_small/best_diffusion_direct_phase14_smoke.pt,data/processed/val_small.npz,95,4,10.946355819702148,21.14156723022461,10.79123306274414,20.124284744262695,0.8947368264198303,0.0009668179787695408,55420

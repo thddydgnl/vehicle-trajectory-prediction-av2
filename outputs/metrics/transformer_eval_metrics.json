@@ -1,11 +1,11 @@
 {
-  "ADE": 8.337967872619629,
-  "FDE": 17.609703063964844,
-  "Latency": 0.00046653944669136155,
-  "Miss Rate": 1.0,
-  "Parameters": 406332,
-  "checkpoint": "outputs/checkpoints/best_transformer.pt",
-  "data": "data/processed/val_smoke.npz",
+  "ADE": 10.198661804199219,
+  "FDE": 19.419828414916992,
+  "Latency": 0.002723057894648886,
+  "Miss Rate": 0.8631578683853149,
+  "Parameters": 71420,
+  "checkpoint": "outputs/checkpoints/phase14_av2_small/best_transformer_phase14_smoke.pt",
+  "data": "data/processed/val_small.npz",
   "model": "transformer",
-  "num_samples": 150
+  "num_samples": 95
 }

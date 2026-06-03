@@ -14,6 +14,7 @@ from scripts.run_all_evaluations import (
     run_all_evaluations,
     write_model_comparison,
 )
+from src.evaluation.evaluate import _resolve_pca_codec_path
 
 
 def _args(tmp_path: Path, **overrides: object) -> argparse.Namespace:
@@ -127,3 +128,15 @@ def test_prediction_tag_archives_model_payload(tmp_path: Path) -> None:
 
     assert archived == predictions_dir / "phase14_av2_small" / "lstm_val.pkl"
     assert archived.exists()
+
+
+def test_pca_codec_path_can_fall_back_to_checkpoint_directory(tmp_path: Path) -> None:
+    checkpoint_dir = tmp_path / "checkpoints"
+    checkpoint_dir.mkdir()
+    checkpoint_path = checkpoint_dir / "best_diffusion_pca_phase14_smoke.pt"
+    local_codec = checkpoint_dir / "pca_codec.pkl"
+    local_codec.touch()
+
+    resolved = _resolve_pca_codec_path({"codec_path": "D:/runs/missing/pca_codec.pkl"}, checkpoint_path)
+
+    assert resolved == local_codec
