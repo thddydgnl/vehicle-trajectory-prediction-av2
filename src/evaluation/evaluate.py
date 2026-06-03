@@ -14,6 +14,7 @@ from src.evaluation.metrics import ade, count_parameters, fde, min_ade, min_fde,
 from src.models.diffusion import GaussianDiffusionTrajectory
 from src.models.linear import LinearExtrapolation
 from src.models.lstm import LSTMForecast
+from src.models.pca_latent import PCALatentDiffusionTrajectory
 from src.models.transformer import TransformerForecast
 from src.utils.config import load_yaml_config
 from src.utils.device import get_device
@@ -37,6 +38,12 @@ def _save_metrics_csv(metrics: dict[str, float | int | str], path: Path) -> None
         writer = csv.DictWriter(f, fieldnames=list(metrics.keys()))
         writer.writeheader()
         writer.writerow(metrics)
+
+
+def _save_prediction_pickle(payload: dict[str, Any], path: Path) -> None:
+    ensure_dir(path.parent)
+    with path.open("wb") as f:
+        pickle.dump(payload, f)
 
 
 def evaluate_linear(data_path: Path, config_path: Path, out_dir: Path) -> dict[str, float | int | str]:
@@ -165,6 +172,30 @@ def _build_diffusion_from_checkpoint(checkpoint: dict[str, Any]) -> GaussianDiff
     )
 
 
+def _build_diffusion_pca_from_checkpoint(checkpoint: dict[str, Any]) -> PCALatentDiffusionTrajectory:
+    metadata = checkpoint.get("metadata", {})
+    if not isinstance(metadata, dict):
+        raise ValueError("checkpoint metadata must be a mapping")
+    model_config = metadata.get("model", {})
+    if not isinstance(model_config, dict):
+        raise ValueError("checkpoint metadata.model must be a mapping")
+    if str(model_config.get("architecture")) != "diffusion_pca":
+        raise ValueError("checkpoint does not describe a PCA latent diffusion model")
+    return PCALatentDiffusionTrajectory(
+        input_dim=int(model_config.get("input_dim", 6)),
+        codec_path=str(model_config.get("codec_path", "outputs/checkpoints/pca_codec.pkl")),
+        pred_len=int(model_config.get("pred_len", 30)),
+        latent_dim=int(model_config.get("latent_dim", 12)),
+        cond_dim=int(model_config.get("cond_dim", 128)),
+        hidden_dim=int(model_config.get("hidden_dim", 256)),
+        diffusion_steps=int(model_config.get("diffusion_steps", 100)),
+        sampling_steps=int(model_config.get("sampling_steps", 50)),
+        beta_start=float(model_config.get("beta_start", 0.0001)),
+        beta_end=float(model_config.get("beta_end", 0.02)),
+        num_samples=int(model_config.get("num_samples", 6)),
+    )
+
+
 def evaluate_lstm(
     data_path: Path,
     checkpoint_path: Path,
@@ -182,6 +213,8 @@ def evaluate_lstm(
     predictions: list[torch.Tensor] = []
     targets: list[torch.Tensor] = []
     masks: list[torch.Tensor] = []
+    scenario_ids: list[str] = []
+    track_ids: list[str] = []
     start = time.perf_counter()
     with torch.no_grad():
         for batch in dataloader:
@@ -189,6 +222,8 @@ def evaluate_lstm(
             predictions.append(pred.cpu())
             targets.append(batch["Y"].cpu())
             masks.append(batch["mask_y"].cpu())
+            scenario_ids.extend(batch["scenario_id"])
+            track_ids.extend(batch["track_id"])
     elapsed = time.perf_counter() - start
 
     pred_tensor = torch.cat(predictions, dim=0)
@@ -208,6 +243,17 @@ def evaluate_lstm(
 
     metrics_dir = ensure_dir(out_dir / "metrics")
     tables_dir = ensure_dir(out_dir / "tables")
+    predictions_dir = ensure_dir(out_dir / "predictions")
+    _save_prediction_pickle(
+        {
+            "pred": pred_tensor.numpy(),
+            "gt": gt_tensor.numpy(),
+            "mask_y": mask_tensor.numpy(),
+            "scenario_id": scenario_ids,
+            "track_id": track_ids,
+        },
+        predictions_dir / "lstm_val.pkl",
+    )
     save_json(metrics, metrics_dir / "lstm_eval_metrics.json")
     _save_metrics_csv(metrics, tables_dir / "lstm_eval_metrics.csv")
     return metrics
@@ -230,6 +276,8 @@ def evaluate_transformer(
     predictions: list[torch.Tensor] = []
     targets: list[torch.Tensor] = []
     masks: list[torch.Tensor] = []
+    scenario_ids: list[str] = []
+    track_ids: list[str] = []
     start = time.perf_counter()
     with torch.no_grad():
         for batch in dataloader:
@@ -237,6 +285,8 @@ def evaluate_transformer(
             predictions.append(pred.cpu())
             targets.append(batch["Y"].cpu())
             masks.append(batch["mask_y"].cpu())
+            scenario_ids.extend(batch["scenario_id"])
+            track_ids.extend(batch["track_id"])
     elapsed = time.perf_counter() - start
 
     pred_tensor = torch.cat(predictions, dim=0)
@@ -256,6 +306,17 @@ def evaluate_transformer(
 
     metrics_dir = ensure_dir(out_dir / "metrics")
     tables_dir = ensure_dir(out_dir / "tables")
+    predictions_dir = ensure_dir(out_dir / "predictions")
+    _save_prediction_pickle(
+        {
+            "pred": pred_tensor.numpy(),
+            "gt": gt_tensor.numpy(),
+            "mask_y": mask_tensor.numpy(),
+            "scenario_id": scenario_ids,
+            "track_id": track_ids,
+        },
+        predictions_dir / "transformer_val.pkl",
+    )
     save_json(metrics, metrics_dir / "transformer_eval_metrics.json")
     _save_metrics_csv(metrics, tables_dir / "transformer_eval_metrics.csv")
     return metrics
@@ -278,6 +339,8 @@ def evaluate_diffusion_direct(
     sample_batches: list[torch.Tensor] = []
     targets: list[torch.Tensor] = []
     masks: list[torch.Tensor] = []
+    scenario_ids: list[str] = []
+    track_ids: list[str] = []
     start = time.perf_counter()
     with torch.no_grad():
         for batch in dataloader:
@@ -285,6 +348,8 @@ def evaluate_diffusion_direct(
             sample_batches.append(samples.cpu())
             targets.append(batch["Y"].cpu())
             masks.append(batch["mask_y"].cpu())
+            scenario_ids.extend(batch["scenario_id"])
+            track_ids.extend(batch["track_id"])
     elapsed = time.perf_counter() - start
 
     samples_tensor = torch.cat(sample_batches, dim=0)
@@ -308,14 +373,94 @@ def evaluate_diffusion_direct(
 
     metrics_dir = ensure_dir(out_dir / "metrics")
     tables_dir = ensure_dir(out_dir / "tables")
+    predictions_dir = ensure_dir(out_dir / "predictions")
+    _save_prediction_pickle(
+        {
+            "samples": samples_tensor.numpy(),
+            "pred": pred_tensor.numpy(),
+            "gt": gt_tensor.numpy(),
+            "mask_y": mask_tensor.numpy(),
+            "scenario_id": scenario_ids,
+            "track_id": track_ids,
+        },
+        predictions_dir / "diffusion_direct_val.pkl",
+    )
     save_json(metrics, metrics_dir / "diffusion_direct_eval_metrics.json")
     _save_metrics_csv(metrics, tables_dir / "diffusion_direct_eval_metrics.csv")
     return metrics
 
 
+def evaluate_diffusion_pca(
+    data_path: Path,
+    checkpoint_path: Path,
+    out_dir: Path,
+    batch_size: int = 64,
+    device: torch.device | None = None,
+) -> dict[str, float | int | str]:
+    device = device or get_device()
+    checkpoint = torch.load(checkpoint_path, map_location=device)
+    model = _build_diffusion_pca_from_checkpoint(checkpoint).to(device)
+    model.load_state_dict(checkpoint["model_state_dict"])
+    model.eval()
+    dataloader = create_dataloader(data_path, batch_size=batch_size, shuffle=False)
+
+    sample_batches: list[torch.Tensor] = []
+    targets: list[torch.Tensor] = []
+    masks: list[torch.Tensor] = []
+    scenario_ids: list[str] = []
+    track_ids: list[str] = []
+    start = time.perf_counter()
+    with torch.no_grad():
+        for batch in dataloader:
+            samples = model.sample(batch["X"].to(device))
+            sample_batches.append(samples.cpu())
+            targets.append(batch["Y"].cpu())
+            masks.append(batch["mask_y"].cpu())
+            scenario_ids.extend(batch["scenario_id"])
+            track_ids.extend(batch["track_id"])
+    elapsed = time.perf_counter() - start
+
+    samples_tensor = torch.cat(sample_batches, dim=0)
+    pred_tensor = samples_tensor[:, 0]
+    gt_tensor = torch.cat(targets, dim=0)
+    mask_tensor = torch.cat(masks, dim=0)
+    metrics: dict[str, float | int | str] = {
+        "model": "diffusion_pca",
+        "checkpoint": str(checkpoint_path),
+        "data": str(data_path),
+        "num_samples": int(pred_tensor.shape[0]),
+        "num_prediction_samples": int(samples_tensor.shape[1]),
+        "ADE": float(ade(pred_tensor, gt_tensor, mask_tensor).item()),
+        "FDE": float(fde(pred_tensor, gt_tensor, mask_tensor).item()),
+        "minADE": float(min_ade(samples_tensor, gt_tensor, mask_tensor).item()),
+        "minFDE": float(min_fde(samples_tensor, gt_tensor).item()),
+        "Miss Rate": float(miss_rate(pred_tensor, gt_tensor, mask=mask_tensor).item()),
+        "Latency": float(elapsed / max(int(pred_tensor.shape[0]), 1)),
+        "Parameters": count_parameters(model),
+    }
+
+    metrics_dir = ensure_dir(out_dir / "metrics")
+    tables_dir = ensure_dir(out_dir / "tables")
+    predictions_dir = ensure_dir(out_dir / "predictions")
+    _save_prediction_pickle(
+        {
+            "samples": samples_tensor.numpy(),
+            "pred": pred_tensor.numpy(),
+            "gt": gt_tensor.numpy(),
+            "mask_y": mask_tensor.numpy(),
+            "scenario_id": scenario_ids,
+            "track_id": track_ids,
+        },
+        predictions_dir / "diffusion_pca_val.pkl",
+    )
+    save_json(metrics, metrics_dir / "diffusion_pca_eval_metrics.json")
+    _save_metrics_csv(metrics, tables_dir / "diffusion_pca_eval_metrics.csv")
+    return metrics
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Evaluate trajectory forecasting models.")
-    parser.add_argument("--model", choices=["linear", "lstm", "transformer", "diffusion_direct"], required=True)
+    parser.add_argument("--model", choices=["linear", "lstm", "transformer", "diffusion_direct", "diffusion_pca"], required=True)
     parser.add_argument("--data", type=Path, required=True)
     parser.add_argument("--config", type=Path, default=None)
     parser.add_argument("--checkpoint", type=Path, default=None)
@@ -342,6 +487,10 @@ def main() -> None:
         if args.checkpoint is None:
             raise ValueError("--checkpoint is required for diffusion_direct evaluation")
         metrics = evaluate_diffusion_direct(args.data, args.checkpoint, args.out_dir, batch_size=args.batch_size)
+    elif args.model == "diffusion_pca":
+        if args.checkpoint is None:
+            raise ValueError("--checkpoint is required for diffusion_pca evaluation")
+        metrics = evaluate_diffusion_pca(args.data, args.checkpoint, args.out_dir, batch_size=args.batch_size)
     else:
         raise ValueError(f"Unsupported model: {args.model}")
     for key, value in metrics.items():

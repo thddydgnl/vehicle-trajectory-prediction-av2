@@ -1,0 +1,2 @@
+model,checkpoint,data,num_samples,num_prediction_samples,ADE,FDE,minADE,minFDE,Miss Rate,Latency,Parameters
+diffusion_pca,outputs/checkpoints/best_diffusion_pca.pt,data/processed/val_smoke.npz,150,4,4.496754169464111,9.384163856506348,4.342960834503174,8.741191864013672,0.8866666555404663,0.0014044830532899746,58252

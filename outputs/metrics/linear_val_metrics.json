@@ -1,7 +1,7 @@
 {
   "ADE": 3.761397123336792,
   "FDE": 8.524677276611328,
-  "Latency": 6.667028001781243e-05,
+  "Latency": 0.00014362749992869795,
   "Miss Rate": 0.8266666531562805,
   "Parameters": 0,
   "data": "data/processed/val_smoke.npz",

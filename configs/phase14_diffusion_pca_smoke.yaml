@@ -1,0 +1,27 @@
+model:
+  name: diffusion_pca_phase14_smoke
+  architecture: diffusion_pca
+  input_dim: 6
+  pred_len: 30
+  latent_dim: 12
+  codec_path: D:/runs/vehicle_trajectory_project/phase14_smoke/checkpoints/pca_codec.pkl
+  cond_dim: 64
+  hidden_dim: 96
+  diffusion_steps: 10
+  sampling_steps: 5
+  beta_start: 0.0001
+  beta_end: 0.02
+  num_samples: 4
+
+training:
+  batch_size: 32
+  epochs: 1
+  learning_rate: 0.0005
+  weight_decay: 0.0001
+  loss: noise_mse
+  gradient_clip: 1.0
+  early_stopping_patience: 1
+  seed: 42
+  device: cuda
+  num_workers: 0
+  out_dir: D:/runs/vehicle_trajectory_project/phase14_smoke

@@ -1,0 +1,21 @@
+model:
+  name: lstm_phase14_smoke
+  architecture: lstm
+  input_dim: 6
+  hidden_dim: 64
+  num_layers: 1
+  dropout: 0.0
+  pred_len: 30
+
+training:
+  batch_size: 32
+  epochs: 2
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  loss: smooth_l1
+  gradient_clip: 1.0
+  early_stopping_patience: 2
+  seed: 42
+  device: cuda
+  num_workers: 0
+  out_dir: D:/runs/vehicle_trajectory_project/phase14_smoke
