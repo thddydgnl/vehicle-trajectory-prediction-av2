@@ -1,0 +1,11 @@
+{
+  "ADE": 1.0867810249328613,
+  "FDE": 2.707834482192993,
+  "Latency": 3.720914958223777e-05,
+  "Miss Rate": 0.5113051533699036,
+  "Parameters": 71420,
+  "checkpoint": "D:\\runs\\vehicle_trajectory_project\\full_pilot_1epoch\\checkpoints\\best_transformer_full_pilot_1epoch.pt",
+  "data": "D:\\data\\vehicle_trajectory_project\\processed\\full\\val_full.npz",
+  "model": "transformer",
+  "num_samples": 23706
+}

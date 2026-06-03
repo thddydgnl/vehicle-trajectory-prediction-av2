@@ -7,13 +7,16 @@ preprocessing/training을 진행할 때 따라야 하는 단계별 실행 전략
 
 ## 1. Purpose
 
-Current status:
+Current status as of 2026-06-04:
 
 ```text
 Phase 14 small AV2 smoke is complete.
-Full AV2 preprocessing/training has not been run.
-The small AV2 results prove the pipeline works, but they are not full-data
-performance results.
+Full AV2 Stage F1 preprocessing is complete.
+Full AV2 Stage F2 schema validation is complete.
+Full AV2 Stage F3 1-epoch pilot is complete.
+The small AV2 results prove the pipeline works, and the full 1-epoch pilot
+proves the full processed dataset can train/evaluate on Windows CUDA.
+These are still pilot results, not report-ready long-run final performance.
 ```
 
 Goal-mode rule:
@@ -387,7 +390,8 @@ long-run success before checkpoints and logs are verified
 
 ## 11. Recommended Next Goal
 
-Use this as the next goal objective if the user wants to start FULL:
+Use this as the next goal objective if the user wants to start FULL from small
+AV2 smoke only:
 
 ```text
 Proceed with Full AV2 Stage F1-F3 only:
@@ -403,3 +407,6 @@ Proceed with Full AV2 Stage F1-F3 only:
 Do not run 5-epoch or long-run training in this goal unless Stage F3 passes
 and the user explicitly asks to continue.
 ```
+
+As of 2026-06-04, Stage F1-F3 have passed. The next recommended goal is Stage
+F4 only, or Phase 15 if the user wants to stop at the current pilot results.

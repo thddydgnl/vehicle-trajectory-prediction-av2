@@ -40,12 +40,13 @@ Phase 14 final experiment matrix tooling has been implemented, tested, committed
 Phase 14 Windows small AV2 GPU smoke training completed for LSTM, Transformer, Direct Diffusion, and PCA Diffusion.
 Phase 14 all-model evaluation was rerun on Windows with explicit checkpoint_dir/checkpoint_tag and prediction_tag, then regenerated on Mac from ignored copied small checkpoints to keep Mac as the evaluation source of truth.
 outputs/tables/model_comparison.csv and model_comparison.md now contain real val_small AV2 smoke results for Linear, LSTM, Transformer, Direct Diffusion, and PCA Diffusion.
-Full AV2 preprocessing has completed; full AV2 training has not completed. Phase 14 results are small AV2 smoke results, not full-data final performance.
+Full AV2 preprocessing and Stage F3 1-epoch pilot training/evaluation have completed. Phase 14 results remain small AV2 smoke results; full AV2 pilot results are stored separately under outputs/full_av2_pilot.
 Full AV2 staged training workflow is documented in docs/full_av2_training_staged_workflow.md.
 Full AV2 preprocessing background retry on 2026-06-03 reached train file index 16609 and failed on a corrupted/unreadable parquet file with Windows WinError 1392.
 AV2 preprocessing now skips logged parquet read errors including PermissionError, OSError, and PyArrow read errors, with max_read_errors defaulting to 1000 per split to avoid silently dropping too much data.
 Full AV2 preprocessing was restarted on HOME at 2026-06-03T17:47+09:00 using commit f9a6a14; by 2026-06-03T18:18+09:00 it was still running at train 20617/199887, had skipped 3 unreadable parquet files, and had passed the previous failure at train 16609.
 Full AV2 preprocessing completed on HOME by 2026-06-03T23:57+09:00. Outputs exist at D:\data\vehicle_trajectory_project\processed\full\train_full.npz and val_full.npz; schema validation passed with 189,541 train samples and 23,706 val samples. The run skipped 25 unreadable train parquet files.
+Full AV2 Stage F3 completed on HOME by 2026-06-04T00:16+09:00 using commit 8c70cf1. CUDA preflight passed, Linear/LSTM/Transformer/PCA Diffusion/Direct Diffusion all produced finite val_full metrics, checkpoints, and comparison tables. Full pilot comparison tables and metrics were copied to outputs/full_av2_pilot without raw data, processed .npz files, checkpoints, logs, or prediction payloads.
 ```
 
 Verified Windows access:
@@ -89,9 +90,10 @@ Phase 15 Final Report Assets                      pending
 ```text
 Phase 14 is complete on small AV2 smoke scope.
 Full AV2 Stage F1 preprocessing and Stage F2 schema validation are complete.
-Recommended next FULL goal: Stage F3 only, meaning full 1-epoch pilot training/evaluation.
-Do not start 5-epoch or 30-50 epoch long runs until the 1-epoch full pilot passes and the user explicitly continues.
-If the user chooses not to run FULL, start Phase 15 Final Report Assets using current val_small AV2 smoke results and label them clearly.
+Full AV2 Stage F3 1-epoch pilot is complete.
+Recommended next choice: either run Stage F4 Full 5-Epoch Pilot for stronger report results, or start Phase 15 Final Report Assets using the current full 1-epoch pilot and small AV2 smoke results with clear labels.
+Do not start 30-50 epoch long runs until a 5-epoch pilot passes and the user explicitly continues.
+If the user chooses not to run Stage F4, start Phase 15 Final Report Assets.
 Do not start full AV2 preprocessing or full training in a foreground SSH session.
 ```
 
@@ -272,7 +274,12 @@ Phase 14 Mac final strict val_small comparison: Linear ADE 1.462841272354126 / F
 Phase 14 Mac evaluation note: loading the Windows-trained PCA codec on Mac emitted a scikit-learn version warning, but evaluation completed; keep the copied codec/checkpoints ignored and do not commit them
 Phase 14 all-model analysis: outputs/av2_small_analysis/tables/cluster_metrics.csv and error_summary.csv were regenerated from tagged phase14_av2_small prediction payloads with required_models linear, lstm, transformer, diffusion_direct, diffusion_pca
 Phase 14 subagent review: stale checkpoint defaults, prediction provenance, mask-aware minFDE, permissive missing-model handling, and stale PROJECT_STATUS findings were addressed before final Phase 14 completion
-Phase 14 result scope: complete for small AV2 smoke matrix; full AV2 preprocessing/training has not been run and should not be claimed
+Phase 14 result scope: complete for small AV2 smoke matrix; full AV2 Stage F1-F3 are also complete as optional follow-up pilot work, but report-ready 5-epoch/long-run results have not been run and should not be claimed
+Full AV2 Stage F3 configs/tooling: committed in 8c70cf1 with dedicated 1-epoch configs and Windows background/status scripts
+Full AV2 Stage F3 Windows run: HOME pulled 8c70cf1, verified CUDA torch 2.11.0+cu128 on NVIDIA GeForce RTX 2070 SUPER, and ran scripts/windows_full_pilot_1epoch.ps1 as scheduled task VehicleTrajectoryFullPilot1Epoch
+Full AV2 Stage F3 validation: Windows verification confirmed complete status, CUDA checkpoint metadata, finite ADE/FDE, exactly 1 epoch for each trainable model, PCA codec existence, and model_comparison.csv rows for Linear/LSTM/Transformer/PCA Diffusion/Direct Diffusion
+Full AV2 Stage F3 val_full metrics: Linear ADE 1.5324182510375977 / FDE 3.7973430156707764; LSTM ADE 1.3740959167480469 / FDE 3.951328992843628; Transformer ADE 1.0867810249328613 / FDE 2.707834482192993; PCA Diffusion ADE 6.28801155090332 / FDE 12.30606460571289 / minADE 6.107557773590088 / minFDE 11.599884986877441; Direct Diffusion ADE 10.117935180664062 / FDE 19.455183029174805 / minADE 9.942566871643066 / minFDE 18.461170196533203
+Full AV2 Stage F3 result artifacts copied to Mac: outputs/full_av2_pilot/tables/model_comparison.csv, outputs/full_av2_pilot/tables/model_comparison.md, and lightweight metrics CSV/JSON files. Checkpoints, logs, prediction payloads, and full .npz files remain Windows-local or ignored.
 ```
 
 ## Open External Requirements
@@ -284,7 +291,7 @@ HOME small processed AV2 data is available at D:\data\vehicle_trajectory_project
 Mac has ignored lightweight copies of train_small.npz and val_small.npz for visualization/analysis smoke checks.
 HOME needs s5cmd only for future direct AV2 download or resync; current archives were already downloaded manually under D:\datasets\argoverse.
 HOME Miniconda3 and the vehicle_traj CUDA PyTorch environment are available for GPU smoke training.
-Full AV2 preprocessing and larger/full AV2 training remain optional external long-running work before Phase 15 if stronger final results are desired.
+Full AV2 preprocessing, schema validation, and 1-epoch pilot are complete. Full 5-epoch pilot and larger/full AV2 training remain optional external long-running work before Phase 15 if stronger final results are desired.
 For full AV2 preprocessing, long AV2 download/extraction, or GPU training attempts, do not use a long foreground SSH command; use the safe remote execution rule in docs/windows_gpu_training_only_workflow.md.
 ```
 
