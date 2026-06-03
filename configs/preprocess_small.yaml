@@ -1,0 +1,13 @@
+raw_dir: data/raw/av2_motion_forecasting
+out_dir: data/processed
+num_scenarios: 100
+target_types:
+  - VEHICLE
+  - PEDESTRIAN
+obs_len: 50
+pred_len: 30
+target_mode: focal
+seed: 42
+splits:
+  - train
+  - val
