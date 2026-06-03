@@ -1,0 +1,38 @@
+{
+  "ADE": 0.9415797591209412,
+  "FDE": 2.416048526763916,
+  "best_epoch": 4,
+  "epochs_ran": 5,
+  "metadata": {
+    "config_path": "configs\\full_pilot_transformer_5epoch.yaml",
+    "device": "cuda",
+    "model": {
+      "architecture": "transformer",
+      "d_model": 64,
+      "dim_feedforward": 128,
+      "dropout": 0.1,
+      "input_dim": 6,
+      "name": "transformer_full_pilot_5epoch",
+      "nhead": 4,
+      "num_layers": 2,
+      "pred_len": 30
+    },
+    "seed": 42,
+    "train_data": "D:\\data\\vehicle_trajectory_project\\processed\\full\\train_full.npz",
+    "training": {
+      "batch_size": 32,
+      "device": "cuda",
+      "early_stopping_patience": 5,
+      "epochs": 5,
+      "gradient_clip": 1.0,
+      "learning_rate": 0.0005,
+      "loss": "smooth_l1",
+      "num_workers": 0,
+      "out_dir": "D:/runs/vehicle_trajectory_project/full_pilot_5epoch",
+      "seed": 42,
+      "weight_decay": 0.0001
+    },
+    "val_data": "D:\\data\\vehicle_trajectory_project\\processed\\full\\val_full.npz"
+  },
+  "model": "transformer_full_pilot_5epoch"
+}

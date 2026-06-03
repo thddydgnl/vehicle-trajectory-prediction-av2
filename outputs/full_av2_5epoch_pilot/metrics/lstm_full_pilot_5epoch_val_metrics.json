@@ -1,0 +1,36 @@
+{
+  "ADE": 1.0401222705841064,
+  "FDE": 2.6033456325531006,
+  "best_epoch": 5,
+  "epochs_ran": 5,
+  "metadata": {
+    "config_path": "configs\\full_pilot_lstm_5epoch.yaml",
+    "device": "cuda",
+    "model": {
+      "architecture": "lstm",
+      "dropout": 0.0,
+      "hidden_dim": 64,
+      "input_dim": 6,
+      "name": "lstm_full_pilot_5epoch",
+      "num_layers": 1,
+      "pred_len": 30
+    },
+    "seed": 42,
+    "train_data": "D:\\data\\vehicle_trajectory_project\\processed\\full\\train_full.npz",
+    "training": {
+      "batch_size": 64,
+      "device": "cuda",
+      "early_stopping_patience": 5,
+      "epochs": 5,
+      "gradient_clip": 1.0,
+      "learning_rate": 0.001,
+      "loss": "smooth_l1",
+      "num_workers": 0,
+      "out_dir": "D:/runs/vehicle_trajectory_project/full_pilot_5epoch",
+      "seed": 42,
+      "weight_decay": 0.0001
+    },
+    "val_data": "D:\\data\\vehicle_trajectory_project\\processed\\full\\val_full.npz"
+  },
+  "model": "lstm_full_pilot_5epoch"
+}

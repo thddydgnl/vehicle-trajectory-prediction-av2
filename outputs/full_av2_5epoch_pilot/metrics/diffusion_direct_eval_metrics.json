@@ -1,0 +1,14 @@
+{
+  "ADE": 10.058550834655762,
+  "FDE": 19.448150634765625,
+  "Latency": 9.555183497872677e-05,
+  "Miss Rate": 0.9046233296394348,
+  "Parameters": 55420,
+  "checkpoint": "D:\\runs\\vehicle_trajectory_project\\full_pilot_5epoch\\checkpoints\\best_diffusion_direct_full_pilot_5epoch.pt",
+  "data": "D:\\data\\vehicle_trajectory_project\\processed\\full\\val_full.npz",
+  "minADE": 9.881662368774414,
+  "minFDE": 18.506914138793945,
+  "model": "diffusion_direct",
+  "num_prediction_samples": 4,
+  "num_samples": 23706
+}

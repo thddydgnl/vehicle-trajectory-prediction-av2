@@ -1,0 +1,14 @@
+{
+  "ADE": 6.277219772338867,
+  "FDE": 12.322331428527832,
+  "Latency": 8.197158947119506e-05,
+  "Miss Rate": 0.9362186789512634,
+  "Parameters": 46156,
+  "checkpoint": "D:\\runs\\vehicle_trajectory_project\\full_pilot_5epoch\\checkpoints\\best_diffusion_pca_full_pilot_5epoch.pt",
+  "data": "D:\\data\\vehicle_trajectory_project\\processed\\full\\val_full.npz",
+  "minADE": 6.096756935119629,
+  "minFDE": 11.606433868408203,
+  "model": "diffusion_pca",
+  "num_prediction_samples": 4,
+  "num_samples": 23706
+}

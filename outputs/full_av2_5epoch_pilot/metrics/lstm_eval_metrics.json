@@ -1,0 +1,11 @@
+{
+  "ADE": 1.0401222705841064,
+  "FDE": 2.6033456325531006,
+  "Latency": 0.00010170723023705218,
+  "Miss Rate": 0.47920358180999756,
+  "Parameters": 35970,
+  "checkpoint": "D:\\runs\\vehicle_trajectory_project\\full_pilot_5epoch\\checkpoints\\best_lstm_full_pilot_5epoch.pt",
+  "data": "D:\\data\\vehicle_trajectory_project\\processed\\full\\val_full.npz",
+  "model": "lstm",
+  "num_samples": 23706
+}

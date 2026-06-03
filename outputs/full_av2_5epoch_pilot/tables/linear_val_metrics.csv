@@ -1,0 +1,2 @@
+model,data,num_samples,ADE,FDE,Miss Rate,Latency,Parameters
+linear,D:\data\vehicle_trajectory_project\processed\full\val_full.npz,23706,1.5324182510375977,3.7973430156707764,0.596304714679718,1.9351316122703737e-05,0

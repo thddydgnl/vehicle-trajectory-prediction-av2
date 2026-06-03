@@ -14,9 +14,11 @@ Phase 14 small AV2 smoke is complete.
 Full AV2 Stage F1 preprocessing is complete.
 Full AV2 Stage F2 schema validation is complete.
 Full AV2 Stage F3 1-epoch pilot is complete.
-The small AV2 results prove the pipeline works, and the full 1-epoch pilot
-proves the full processed dataset can train/evaluate on Windows CUDA.
-These are still pilot results, not report-ready long-run final performance.
+Full AV2 Stage F4 5-epoch pilot is complete.
+The small AV2 results prove the pipeline works, and the full 1/5-epoch pilots
+prove the full processed dataset can train/evaluate on Windows CUDA.
+These are useful school-project pilot results, but still not report-ready
+long-run final performance.
 ```
 
 Goal-mode rule:
@@ -37,6 +39,17 @@ Full schema validation and PCA fitting: 10-40 minutes
 Full 1-epoch pilot across core models: 1-3 hours
 Full 5-epoch pilot across core models: 3-8 hours
 Report-ready long run: 8-20 hours
+```
+
+Observed on HOME for the current compact pilot configs:
+
+```text
+Full preprocessing completed in roughly 6 hours, after retrying with parquet
+read-error skipping.
+Full 5-epoch pilot completed in about 13 minutes from scheduled-task start to
+final comparison table generation.
+Future long-run timing can still be much longer if epochs, model sizes,
+sampling steps, or batch sizes are increased.
 ```
 
 Main bottleneck:
@@ -280,6 +293,24 @@ If LSTM and Transformer are still dramatically worse than Linear and not
 improving, pause for config tuning before running Diffusion long runs.
 ```
 
+Observed F4 result on 2026-06-04:
+
+```text
+Stage F4 passed on HOME using commit 8014ed3.
+All trainable models ran exactly 5 epochs with CUDA checkpoint metadata.
+Linear val_full:       ADE 1.53242 / FDE 3.79734
+LSTM val_full:         ADE 1.04012 / FDE 2.60335
+Transformer val_full:  ADE 0.94158 / FDE 2.41605
+PCA Diffusion val_full:    ADE 6.27722 / FDE 12.32233 / minADE 6.09676 / minFDE 11.60643
+Direct Diffusion val_full: ADE 10.05855 / FDE 19.44815 / minADE 9.88166 / minFDE 18.50691
+
+LSTM and Transformer improved from Stage F3 and beat Linear after 5 epochs.
+Transformer is currently the strongest pilot model.
+Diffusion variants are still much worse than Linear and should be tuned before
+any expensive long Diffusion run.
+Lightweight F4 artifacts are stored under outputs/full_av2_5epoch_pilot.
+```
+
 Useful tuning checks before long run:
 
 ```text
@@ -294,7 +325,8 @@ relative coordinate assumptions
 
 ## 8. Stage F5 - Report-Ready Long Run
 
-Only start after Stage F4 passes.
+Only start after Stage F4 passes and the user explicitly asks for stronger
+final numbers beyond the pilot results.
 
 Recommended priority:
 
