@@ -79,8 +79,16 @@ Preferred Windows training host:
 
 ```text
 Primary: HOME over LAN, thddy@192.168.35.17
-Fallback: HOME over Tailscale, thddy@100.99.63.23
-Legacy/secondary: song over Tailscale, song@100.87.219.58
+Fallback: HOME over Tailscale, thddy@100.99.63.23, only after verifying SSH works
+Legacy/secondary: song over Tailscale, song@100.87.219.58, not the AV2 data host
+```
+
+Latest connection note:
+
+```text
+Verified on 2026-06-03: thddy@192.168.35.17 reaches HOME and sees D:\data.
+Observed on 2026-06-03: thddy@100.99.63.23 SSH timed out.
+Observed on 2026-06-03: song@100.87.219.58 sees only C: and does not expose D:\data.
 ```
 
 Do not edit code or documentation on Windows. If AV2 preprocessing runs on

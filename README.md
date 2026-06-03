@@ -69,5 +69,6 @@ Default Windows training host:
 
 ```text
 Primary: HOME over LAN, ssh thddy@192.168.35.17
-Fallback: HOME over Tailscale, ssh thddy@100.99.63.23
+Fallback: HOME over Tailscale, ssh thddy@100.99.63.23, only after verifying SSH works
+Do not use legacy song@100.87.219.58 for AV2 data; it does not expose D:\data.
 ```

@@ -32,7 +32,8 @@ Verified command: ssh thddy@192.168.35.17 'hostname && whoami'
 Verified output: HOME / home\thddy
 Connection priority: LAN first, Tailscale fallback
 Fallback command: ssh thddy@100.99.63.23 'hostname && whoami'
-Legacy secondary host: song, song@100.87.219.58
+Fallback status on 2026-06-03: SSH port timed out; verify before use
+Legacy secondary host: song, song@100.87.219.58, not the AV2 data host
 ```
 
 Goal 진행 시 Codex가 지켜야 하는 첫 규칙:
@@ -233,11 +234,13 @@ Remote identity:
 
 ```text
 Primary SSH login: thddy@192.168.35.17
-Fallback SSH login: thddy@100.99.63.23
+Fallback SSH login: thddy@100.99.63.23, verify before use
 Mac Tailscale address: 100.75.150.25
 Windows LAN address: 192.168.35.17
 Windows Tailscale address: 100.99.63.23
-Legacy secondary host: song@100.87.219.58
+Legacy secondary host: song@100.87.219.58, not for AV2 data
+Latest check on 2026-06-03: HOME LAN sees D:\data; HOME Tailscale SSH timed out;
+legacy song sees only C: and does not expose D:\data.
 ```
 
 Windows 사용자명이나 경로가 달라지면 이 섹션을 먼저 수정한다.

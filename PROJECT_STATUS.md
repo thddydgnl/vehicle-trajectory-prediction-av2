@@ -13,14 +13,17 @@ Git repository has been initialized on branch main.
 GitHub remote has been configured and pushed.
 Long-form workflow documents have been moved under docs/.
 Primary Windows training host has changed to HOME.
-HOME SSH works over LAN and Tailscale.
-Use HOME LAN first for Windows work; use HOME Tailscale only as fallback.
+HOME SSH works over LAN.
+Use HOME LAN first for Windows work.
+HOME Tailscale SSH was documented as fallback, but port 22 timed out on 2026-06-03; re-verify before use.
 HOME NVIDIA GPU is visible, but the dedicated vehicle_traj CUDA environment has not been created yet.
 HOME conda and s5cmd are not installed or not on PATH yet.
 The previous song AV2 download attempt was stopped; do not treat the song AV2 folder as complete.
 HOME AV2 Motion Forecasting archives are stored under D:\datasets\argoverse.
 HOME AV2 extraction/organization completed successfully.
 D:\data\av2\motion-forecasting\DATA_READY_FOR_PHASE11.txt exists.
+HOME D:\data was re-verified on 2026-06-03 over LAN SSH.
+Legacy song@100.87.219.58 is not the AV2 data host; it currently exposes only C: over SSH.
 HOME Windows data/training folder layout is ready for Phase 11 preprocessing and later GPU training.
 Phase 11 can start next, but HOME vehicle_traj CUDA environment still must be created before long GPU training.
 ```
@@ -35,8 +38,9 @@ HOME Tailscale IP: 100.99.63.23
 SSH user: thddy
 Primary command: ssh thddy@192.168.35.17 'hostname && whoami'
 Fallback command: ssh thddy@100.99.63.23 'hostname && whoami'
+Fallback status: timed out on 2026-06-03, verify before use
 Output: HOME / home\thddy
-Legacy secondary Windows host: song, song@100.87.219.58
+Legacy secondary Windows host: song, song@100.87.219.58, not for AV2 data
 ```
 
 ## Phase Progress
@@ -75,6 +79,11 @@ For Windows-local preprocessing, write and test the preprocessing code on Mac fi
 ```text
 ssh thddy@192.168.35.17 'hostname && whoami'
 ssh thddy@100.99.63.23 'hostname && whoami'
+ssh -o ConnectTimeout=8 thddy@192.168.35.17 'cmd /c "dir D:\data"'
+ssh -o ConnectTimeout=8 thddy@192.168.35.17 'cmd /c "dir D:\data\av2\motion-forecasting"'
+ssh -o ConnectTimeout=8 thddy@192.168.35.17 'cmd /c "type D:\data\av2\motion-forecasting\DATA_READY_FOR_PHASE11.txt"'
+ssh -o ConnectTimeout=8 thddy@100.99.63.23 'hostname && whoami'
+ssh song@100.87.219.58 'powershell -NoProfile -ExecutionPolicy Bypass -Command "Get-CimInstance Win32_LogicalDisk | Select-Object DeviceID,DriveType,FileSystem,FreeSpace,Size,VolumeName | ConvertTo-Json -Depth 3"'
 ssh thddy@192.168.35.17 'powershell -NoProfile -Command "hostname; whoami; python --version; where.exe python; nvidia-smi --query-gpu=name,driver_version,memory.total --format=csv,noheader"'
 ssh thddy@192.168.35.17 'powershell -NoProfile -Command "conda --version; conda env list; if (Test-Path ''C:\Users\thddy\bin\s5cmd\s5cmd.exe'') { & ''C:\Users\thddy\bin\s5cmd\s5cmd.exe'' version } else { ''s5cmd-missing'' }"'
 ssh thddy@192.168.35.17 'powershell -NoProfile -Command "Get-ChildItem D:\data"'
@@ -117,7 +126,7 @@ Result:
 HOME
 home\thddy
 HOME LAN SSH: verified
-HOME Tailscale SSH: verified
+HOME Tailscale SSH: timed out on 2026-06-03; re-verify before use
 Python 3.12.7
 C:\Users\thddy\AppData\Local\Programs\Python\Python312\python.exe
 NVIDIA GeForce RTX 2070 SUPER, 591.86, 8192 MiB
@@ -125,8 +134,10 @@ HOME C drive free space: about 192 GB
 HOME conda: not found on PATH
 HOME s5cmd: missing at C:\Users\thddy\bin\s5cmd\s5cmd.exe
 HOME AV2 archive inventory under D:\datasets\argoverse: train.tar, val.tar, test.tar, av2_mf_focal_test_annotations.parquet, av2_mf_multi_test_annotations.parquet
-HOME D drive free space before completed AV2 layout check: about 776 GB
+HOME D drive free space after completed AV2 layout check: about 776 GB
+HOME D:\data contains av2 and vehicle_trajectory_project directories
 HOME AV2 raw standard path: D:\data\av2\motion-forecasting
+HOME AV2 raw path contains train, val, test, archives, test annotation parquet files, and DATA_READY_FOR_PHASE11.txt
 HOME AV2 organizer script: D:\data\av2\organize_phase11_av2.ps1
 HOME AV2 organizer scheduled task: VehicleTrajectoryAV2Organize
 HOME AV2 organizer background log: D:\data\av2\logs\phase11_data_organize_bg_20260602_221953.log
@@ -143,6 +154,7 @@ pytest: 5 passed
 get_device: mps
 song s5cmd: v2.3.0-991c9fb at C:\Users\thddy\bin\s5cmd\s5cmd.exe
 song AV2 partial state: annotation parquet files downloaded; test split partially created; train/val not downloaded; INCOMPLETE_DOWNLOAD.txt marker written
+song host latest check: only C: is exposed over SSH; D:\data is not available there
 song stop verification: taskkill terminated s5cmd.exe PID 27984; later tasklist found no s5cmd.exe; VehicleTrajectoryAV2Download task not present
 Phase 1 synthetic generator: created ignored train_smoke.npz, val_smoke.npz, and test_smoke.npz
 Phase 1 tests: tests/test_synthetic_data.py passed, full pytest passed 10 tests

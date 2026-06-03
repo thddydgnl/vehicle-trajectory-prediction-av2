@@ -21,12 +21,21 @@ HOME
 home\thddy
 ```
 
+2026-06-03 update:
+
+```text
+HOME LAN SSH, thddy@192.168.35.17, is currently verified.
+HOME Tailscale SSH, thddy@100.99.63.23, timed out on port 22 and must be
+re-verified before use.
+Legacy song@100.87.219.58 is not the AV2 data host and does not expose D:\data.
+```
+
 Connection priority:
 
 ```text
 Primary: HOME LAN, thddy@192.168.35.17
-Fallback: HOME Tailscale, thddy@100.99.63.23
-Legacy secondary host: song, song@100.87.219.58
+Fallback: HOME Tailscale, thddy@100.99.63.23, only after verifying SSH works
+Legacy secondary host: song, song@100.87.219.58, not for AV2 data
 ```
 
 Windows home path:
@@ -53,6 +62,7 @@ Driver 591.86
 GPU memory 8192 MiB
 C drive free space about 192 GB
 D drive free space before AV2 extraction about 839.6 GB
+D drive free space after completed AV2 layout check about 776 GB
 ```
 
 Current PyTorch state:
