@@ -67,6 +67,14 @@ def test_min_fde_chooses_best_final_sample() -> None:
     assert torch.isclose(min_fde(pred_samples, gt), torch.tensor(1.0))
 
 
+def test_min_fde_can_use_final_valid_masked_step() -> None:
+    gt = torch.zeros((1, 2, 2))
+    pred_samples = torch.tensor([[[[4.0, 0.0], [0.0, 0.0]], [[2.0, 0.0], [100.0, 0.0]]]])
+    mask = torch.tensor([[True, False]])
+
+    assert torch.isclose(min_fde(pred_samples, gt, mask), torch.tensor(2.0))
+
+
 def test_miss_rate_uses_final_displacement_threshold() -> None:
     gt = torch.zeros((3, 2, 2))
     pred = torch.tensor(

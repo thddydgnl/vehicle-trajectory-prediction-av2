@@ -79,7 +79,7 @@ def min_ade(
     return sample_ade.min(dim=1).values.mean()
 
 
-def min_fde(pred_samples: torch.Tensor, gt: torch.Tensor) -> torch.Tensor:
+def min_fde(pred_samples: torch.Tensor, gt: torch.Tensor, mask: torch.Tensor | None = None) -> torch.Tensor:
     """Best-sample FDE for multi-sample predictions."""
     if pred_samples.ndim != 4 or pred_samples.shape[-1] != 2:
         raise ValueError(f"Expected pred_samples shape [B, K, T, 2], got {pred_samples.shape}")
@@ -88,7 +88,16 @@ def min_fde(pred_samples: torch.Tensor, gt: torch.Tensor) -> torch.Tensor:
     if pred_samples.shape[0] != gt.shape[0] or pred_samples.shape[2:] != gt.shape[1:]:
         raise ValueError(f"pred_samples and gt shapes are incompatible: {pred_samples.shape}, {gt.shape}")
 
-    final_errors = torch.linalg.norm(pred_samples[:, :, -1, :] - gt[:, None, -1, :], dim=-1)
+    if mask is not None:
+        if mask.shape != gt.shape[:2]:
+            raise ValueError(f"mask shape must be [B, T], got {mask.shape}, expected {gt.shape[:2]}")
+        final_indices = _final_valid_indices(mask.to(device=pred_samples.device, dtype=torch.bool))
+        batch_indices = torch.arange(pred_samples.shape[0], device=pred_samples.device)
+        final_pred = pred_samples[batch_indices, :, final_indices, :]
+        final_gt = gt.to(device=pred_samples.device)[batch_indices, final_indices, :]
+        final_errors = torch.linalg.norm(final_pred - final_gt[:, None, :], dim=-1)
+    else:
+        final_errors = torch.linalg.norm(pred_samples[:, :, -1, :] - gt[:, None, -1, :], dim=-1)
     return final_errors.min(dim=1).values.mean()
 
 

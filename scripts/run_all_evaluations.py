@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import shutil
 import sys
 from pathlib import Path
 from typing import Callable
@@ -24,6 +25,13 @@ MetricDict = dict[str, float | int | str]
 
 
 MODEL_ORDER = ("linear", "lstm", "transformer", "diffusion_direct", "diffusion_pca")
+PREDICTION_FILENAMES = {
+    "linear": "linear_val.pkl",
+    "lstm": "lstm_val.pkl",
+    "transformer": "transformer_val.pkl",
+    "diffusion_direct": "diffusion_direct_val.pkl",
+    "diffusion_pca": "diffusion_pca_val.pkl",
+}
 
 
 def _metric(metrics: MetricDict, key: str, fallback: str | None = None) -> float | int | str:
@@ -79,13 +87,56 @@ def _format_markdown_cell(value: float | int | str) -> str:
     return str(value)
 
 
-def _checkpoint_arg(args: argparse.Namespace, model: str) -> Path:
-    return {
+def _checkpoint_arg(args: argparse.Namespace, model: str) -> Path | None:
+    explicit_checkpoint = {
         "lstm": args.lstm_checkpoint,
         "transformer": args.transformer_checkpoint,
         "diffusion_direct": args.diffusion_direct_checkpoint,
         "diffusion_pca": args.diffusion_pca_checkpoint,
     }[model]
+    if explicit_checkpoint is not None:
+        return explicit_checkpoint
+    if args.checkpoint_dir is not None:
+        checkpoint_tag = f"_{args.checkpoint_tag}" if args.checkpoint_tag else ""
+        return args.checkpoint_dir / f"best_{model}{checkpoint_tag}.pt"
+    return None
+
+
+def _checkpoint_message(model: str, checkpoint: Path | None) -> str:
+    if checkpoint is None:
+        return f"{model}: checkpoint is required; pass --{model}_checkpoint or --checkpoint_dir [--checkpoint_tag]"
+    return f"{model}: missing checkpoint {checkpoint}"
+
+
+def resolve_requested_checkpoints(args: argparse.Namespace) -> tuple[dict[str, Path], list[str]]:
+    checkpoints: dict[str, Path] = {}
+    skipped: list[str] = []
+    for model in args.models:
+        if model == "linear":
+            continue
+        checkpoint = _checkpoint_arg(args, model)
+        if checkpoint is not None and checkpoint.exists():
+            checkpoints[model] = checkpoint
+            continue
+
+        message = _checkpoint_message(model, checkpoint)
+        if args.allow_missing_models:
+            skipped.append(message)
+            continue
+        raise FileNotFoundError(message)
+    return checkpoints, skipped
+
+
+def archive_prediction(model: str, out_dir: str | Path, prediction_tag: str | None) -> Path | None:
+    if not prediction_tag:
+        return None
+    source = Path(out_dir) / "predictions" / PREDICTION_FILENAMES[model]
+    if not source.exists():
+        raise FileNotFoundError(f"Expected prediction payload was not written: {source}")
+    target_dir = ensure_dir(Path(out_dir) / "predictions" / prediction_tag)
+    target = target_dir / source.name
+    shutil.copy2(source, target)
+    return target
 
 
 def run_all_evaluations(args: argparse.Namespace) -> tuple[list[dict[str, float | int | str]], list[str]]:
@@ -96,20 +147,17 @@ def run_all_evaluations(args: argparse.Namespace) -> tuple[list[dict[str, float 
         "diffusion_pca": evaluate_diffusion_pca,
     }
     rows: list[dict[str, float | int | str]] = []
-    skipped: list[str] = []
+    checkpoints, skipped = resolve_requested_checkpoints(args)
 
     for model in args.models:
         if model == "linear":
             metrics = evaluate_linear(args.data, args.linear_config, args.out_dir)
         else:
-            checkpoint = _checkpoint_arg(args, model)
-            if not checkpoint.exists():
-                message = f"{model}: missing checkpoint {checkpoint}"
-                if args.strict_models:
-                    raise FileNotFoundError(message)
-                skipped.append(message)
+            checkpoint = checkpoints.get(model)
+            if checkpoint is None:
                 continue
             metrics = evaluators[model](args.data, checkpoint, args.out_dir, batch_size=args.batch_size)
+        archive_prediction(model, args.out_dir, args.prediction_tag)
         rows.append(comparison_row(metrics, args.data_split, args.target_type))
 
     if not rows:
@@ -124,14 +172,18 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--out_dir", type=Path, default=Path("outputs"))
     parser.add_argument("--models", nargs="+", choices=MODEL_ORDER, default=list(MODEL_ORDER))
     parser.add_argument("--linear_config", type=Path, default=Path("configs/linear.yaml"))
-    parser.add_argument("--lstm_checkpoint", type=Path, default=Path("outputs/checkpoints/best_lstm.pt"))
-    parser.add_argument("--transformer_checkpoint", type=Path, default=Path("outputs/checkpoints/best_transformer.pt"))
-    parser.add_argument("--diffusion_direct_checkpoint", type=Path, default=Path("outputs/checkpoints/best_diffusion_direct.pt"))
-    parser.add_argument("--diffusion_pca_checkpoint", type=Path, default=Path("outputs/checkpoints/best_diffusion_pca.pt"))
+    parser.add_argument("--lstm_checkpoint", type=Path, default=None)
+    parser.add_argument("--transformer_checkpoint", type=Path, default=None)
+    parser.add_argument("--diffusion_direct_checkpoint", type=Path, default=None)
+    parser.add_argument("--diffusion_pca_checkpoint", type=Path, default=None)
+    parser.add_argument("--checkpoint_dir", type=Path, default=None)
+    parser.add_argument("--checkpoint_tag", default=None)
     parser.add_argument("--batch_size", type=int, default=128)
     parser.add_argument("--data_split", default="val")
     parser.add_argument("--target_type", default="mixed")
-    parser.add_argument("--strict_models", action="store_true")
+    parser.add_argument("--prediction_tag", default=None)
+    parser.add_argument("--allow_missing_models", action="store_true")
+    parser.add_argument("--strict_models", action="store_true", help="Deprecated: strict checkpoint checking is now the default.")
     return parser.parse_args()
 
 
