@@ -15,10 +15,12 @@ Full AV2 Stage F1 preprocessing is complete.
 Full AV2 Stage F2 schema validation is complete.
 Full AV2 Stage F3 1-epoch pilot is complete.
 Full AV2 Stage F4 5-epoch pilot is complete.
-The small AV2 results prove the pipeline works, and the full 1/5-epoch pilots
-prove the full processed dataset can train/evaluate on Windows CUDA.
-These are useful school-project pilot results, but still not report-ready
-long-run final performance.
+Full AV2 Stage F5A diffusion tuning gate is complete.
+Full AV2 Stage F5B report-ready long run is complete.
+Phase 15 final report assets are complete.
+The small AV2 results prove the pipeline works, the full 1/5-epoch pilots
+prove the full processed dataset can train/evaluate on Windows CUDA, and the
+F5 long run provides the final report-ready comparison table.
 ```
 
 Goal-mode rule:
@@ -441,6 +443,20 @@ D:\runs\vehicle_trajectory_project\full_long_final\generated_configs\full_long_d
 D:\runs\vehicle_trajectory_project\full_long_final\generated_configs\full_long_diffusion_direct.yaml
 ```
 
+Observed F5A result on 2026-06-04:
+
+```text
+Stage F5A passed on HOME using real val_full outputs.
+Selected PCA Diffusion: pca_b, minADE 0.45693081617355347,
+minFDE 0.9440990686416626, Sample_Diversity 1.6574305295944214.
+Selected Direct Diffusion: direct_f, minADE 0.7230075597763062,
+minFDE 1.4557510614395142, Sample_Diversity 5.534523963928223.
+selected_diffusion_configs.json reported full_run_ready=true.
+Both user target gates passed:
+PCA Diffusion minADE < 4.8 / minFDE < 9.5.
+Direct Diffusion minADE < 8.0 / minFDE < 15.0.
+```
+
 ## 9. Stage F5B - Report-Ready Long Run
 
 Only start after Stage F5A selects analysis-ready Diffusion configs.
@@ -480,6 +496,29 @@ scripts/windows_full_long_experiments.ps1
 scripts/windows_full_long_status.ps1
 ```
 
+Observed F5B result on 2026-06-04:
+
+```text
+Stage F5B completed on HOME using repo commit 1e511e3.
+Windows status.json: status=complete, exit_code=0.
+Complete marker:
+D:\runs\vehicle_trajectory_project\full_long_goal\FULL_LONG_EXPERIMENTS_COMPLETE.txt
+
+Final val_full model comparison:
+Linear:           ADE 1.5324182510375977 / FDE 3.7973430156707764
+LSTM:             ADE 0.7916645407676697 / FDE 2.0570261478424072
+Transformer:      ADE 0.8514801263809204 / FDE 2.183514356613159
+PCA Diffusion:    ADE 1.4339096546173096 / FDE 3.6639866828918457 /
+                  minADE 0.41746464371681213 / minFDE 0.8582534193992615
+Direct Diffusion: ADE 1.9281558990478516 / FDE 4.91142463684082 /
+                  minADE 0.5009313821792603 / minFDE 0.9845224618911743
+
+Interpretation:
+LSTM is the best single-trajectory ADE/FDE model.
+PCA Diffusion has the best best-of-K minADE/minFDE with K=16.
+Diffusion ADE/FDE and minADE/minFDE must be reported separately.
+```
+
 Windows background execution:
 
 ```text
@@ -504,9 +543,33 @@ Preferred integration path:
    outputs/full_av2/tables/model_comparison.csv
    outputs/full_av2/tables/model_comparison.md
 5. Generate analysis outputs under:
-   outputs/full_av2_analysis/
+    outputs/full_av2_analysis/
 6. Keep raw data, full processed .npz, checkpoints, logs, and prediction .pkl
    files out of Git unless explicitly allowed and lightweight.
+```
+
+Observed F6/Phase 15 integration on 2026-06-04:
+
+```text
+Copied lightweight Windows results to:
+outputs/full_av2/tables
+outputs/full_av2/metrics
+outputs/full_av2/figures
+outputs/full_av2/metadata
+outputs/full_av2_tuning/tables
+
+Copied ignored Mac-only analysis inputs to:
+data/processed/train_full.npz
+data/processed/val_full.npz
+outputs/predictions/full_long_final
+
+Generated:
+outputs/full_av2/figures/trajectory_overlay_best_cases.png
+outputs/full_av2/figures/trajectory_overlay_worst_cases.png
+outputs/full_av2/figures/diffusion_samples_interesting_case.png
+outputs/full_av2_analysis/tables/cluster_metrics.csv
+outputs/full_av2_analysis/tables/error_summary.csv
+outputs/report_summary.md
 ```
 
 Evaluation command pattern with explicit checkpoints:
@@ -577,5 +640,6 @@ Do not run 5-epoch or long-run training in this goal unless Stage F3 passes
 and the user explicitly asks to continue.
 ```
 
-As of 2026-06-04, Stage F1-F3 have passed. The next recommended goal is Stage
-F4 only, or Phase 15 if the user wants to stop at the current pilot results.
+As of 2026-06-04, Stage F1-F6 and Phase 15 have passed. The next recommended
+goal is presentation/report preparation or an explicitly requested new
+experiment, not another automatic long run.

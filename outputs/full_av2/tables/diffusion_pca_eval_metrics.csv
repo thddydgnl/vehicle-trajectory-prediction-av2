@@ -1,0 +1,2 @@
+model,checkpoint,data,num_samples,num_prediction_samples,ADE,FDE,minADE,minFDE,Sample_Diversity,Miss Rate,Latency,Parameters
+diffusion_pca,D:\runs\vehicle_trajectory_project\full_long_final\checkpoints\best_diffusion_pca_full_long.pt,D:\data\vehicle_trajectory_project\processed\full\val_full.npz,23706,16,1.4339096546173096,3.6639866828918457,0.41746464371681213,0.8582534193992615,1.5408936738967896,0.6241458058357239,0.0009262928246013627,222988

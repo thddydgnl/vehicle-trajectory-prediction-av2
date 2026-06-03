@@ -1,0 +1,2 @@
+model,checkpoint,data,num_samples,ADE,FDE,Miss Rate,Latency,Parameters
+lstm,D:\runs\vehicle_trajectory_project\full_long_final\checkpoints\best_lstm_full_long.pt,D:\data\vehicle_trajectory_project\processed\full\val_full.npz,23706,0.7916645407676697,2.0570261478424072,0.38163334131240845,0.00019653608791035145,401666

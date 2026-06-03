@@ -1,0 +1,10 @@
+{
+  "ADE": 1.5324182510375977,
+  "FDE": 3.7973430156707764,
+  "Latency": 1.9195355606003288e-05,
+  "Miss Rate": 0.596304714679718,
+  "Parameters": 0,
+  "data": "D:\\data\\vehicle_trajectory_project\\processed\\full\\val_full.npz",
+  "model": "linear",
+  "num_samples": 23706
+}

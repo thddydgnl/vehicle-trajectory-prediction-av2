@@ -51,6 +51,11 @@ Full AV2 Stage F4 completed on HOME by 2026-06-04T00:46+09:00 using commit 8014e
 Full AV2 Stage F5A/F5B tooling has been prepared for diffusion tuning gates, all-model long runs, and Phase 15 final assets. Do not claim F5 long-run results until Windows outputs are verified and lightweight result artifacts are copied back to Mac.
 Current user-selected F5 gate: do not start all-model FULL RUN until PCA Diffusion reaches minADE < 4.8 and minFDE < 9.5, and Direct Diffusion reaches minADE < 8.0 and minFDE < 15.0 on real val_full evaluation outputs.
 F5A tuning tooling has been strengthened on Mac: skipped-step diffusion sampling now jumps to the actual next sampled timestep, PCA latent diffusion normalizes train-fitted latents, diffusion validation/checkpoint selection can use deterministic multi-sample minADE/minFDE, and the selector blocks final long-run config generation when the absolute target gates fail.
+Full AV2 Stage F5A tuning completed on HOME using real val_full outputs. Selected PCA Diffusion candidate pca_b reached minADE 0.45693081617355347 and minFDE 0.9440990686416626. Selected Direct Diffusion candidate direct_f reached minADE 0.7230075597763062 and minFDE 1.4557510614395142. Both target gates passed and selected_diffusion_configs.json reported full_run_ready=true.
+Full AV2 Stage F5B all-model long run completed on HOME at 2026-06-04T06:48:13+09:00 using repo commit 1e511e3. Windows status.json reports status=complete, exit_code=0, all required final artifacts present, and FULL_LONG_EXPERIMENTS_COMPLETE.txt exists.
+Final val_full comparison: Linear ADE 1.5324182510375977 / FDE 3.7973430156707764; LSTM ADE 0.7916645407676697 / FDE 2.0570261478424072; Transformer ADE 0.8514801263809204 / FDE 2.183514356613159; PCA Diffusion ADE 1.4339096546173096 / FDE 3.6639866828918457 / minADE 0.41746464371681213 / minFDE 0.8582534193992615; Direct Diffusion ADE 1.9281558990478516 / FDE 4.91142463684082 / minADE 0.5009313821792603 / minFDE 0.9845224618911743.
+Lightweight F5B metrics, tables, figures, tuning summaries, status.json, and complete marker were copied to outputs/full_av2 and outputs/full_av2_tuning. Full .npz files and prediction payloads were copied to ignored local paths only for Mac-side Phase 15 analysis and must not be committed.
+Phase 15 report assets were generated on Mac: outputs/report_summary.md, final model comparison tables, full AV2 PCA/K-means/error analysis tables, and presentation figures including best/worst overlays and diffusion sample interpretation.
 ```
 
 Verified Windows access:
@@ -86,21 +91,16 @@ Phase 11 Argoverse 2 Preprocessing                complete
 Phase 12 Visualization                            complete
 Phase 13 PCA and K-means Analysis                 complete
 Phase 14 Final Experiment Matrix                  complete
-Phase 15 Final Report Assets                      pending
+Phase 15 Final Report Assets                      complete
 ```
 
 ## Next Recommended Task
 
 ```text
-Phase 14 is complete on small AV2 smoke scope.
-Full AV2 Stage F1 preprocessing and Stage F2 schema validation are complete.
-Full AV2 Stage F3 1-epoch pilot is complete.
-Full AV2 Stage F4 5-epoch pilot is complete.
-User explicitly chose Stage F5 long training plus Phase 15.
-Next task: validate, commit, and push the strengthened F5A tuning code/configs; then run Stage F5A Diffusion Tuning Gate on Windows.
-Stage F5B all-model FULL RUN is allowed only if both absolute target gates pass: PCA Diffusion minADE < 4.8 / minFDE < 9.5 and Direct Diffusion minADE < 8.0 / minFDE < 15.0.
-After F5B completes, collect only lightweight tables/metrics/figures/log summaries and proceed to Phase 15 Final Report Assets.
-Do not start full AV2 preprocessing or full training in a foreground SSH session.
+Phase 15 is complete with final full AV2 long-run results and report assets.
+Next recommended task: use the repository for school presentation/report preparation, or optionally extend analysis with vehicle-vs-pedestrian breakdowns and map/lane context as future work.
+Do not run additional long Windows training unless the user explicitly asks for a new experiment.
+Keep raw AV2 data, processed .npz files, checkpoints, logs, and prediction payloads ignored and out of Git.
 ```
 
 ## Latest Verified Commands
@@ -204,6 +204,30 @@ scp thddy@192.168.35.17:'D:/runs/vehicle_trajectory_project/full_pilot_5epoch/ta
 scp thddy@192.168.35.17:'D:/runs/vehicle_trajectory_project/full_pilot_5epoch/tables/*_metrics.csv' outputs/full_av2_5epoch_pilot/tables/
 scp thddy@192.168.35.17:'D:/runs/vehicle_trajectory_project/full_pilot_5epoch/metrics/*_metrics.json' outputs/full_av2_5epoch_pilot/metrics/
 scp thddy@192.168.35.17:'D:/runs/vehicle_trajectory_project/full_pilot_5epoch/figures/*.png' outputs/full_av2_5epoch_pilot/figures/
+ssh -o ConnectTimeout=12 thddy@192.168.35.17 'hostname && whoami'
+ssh -o ConnectTimeout=12 thddy@192.168.35.17 'cmd /c "cd /d C:\Users\thddy\Documents\code\vehicle_trajectory_project && git status --short --branch && git rev-parse --short HEAD"'
+ssh -o ConnectTimeout=12 thddy@192.168.35.17 'powershell -NoProfile -ExecutionPolicy Bypass -Command "Get-Content D:\runs\vehicle_trajectory_project\full_long_goal\status.json | ConvertFrom-Json | ConvertTo-Json -Depth 8; if (Test-Path D:\runs\vehicle_trajectory_project\full_long_goal\FULL_LONG_EXPERIMENTS_COMPLETE.txt) { Get-Content D:\runs\vehicle_trajectory_project\full_long_goal\FULL_LONG_EXPERIMENTS_COMPLETE.txt } else { ''NO_COMPLETE_MARKER'' }"'
+ssh -o ConnectTimeout=12 thddy@192.168.35.17 'powershell -NoProfile -ExecutionPolicy Bypass -Command "Get-Content D:\runs\vehicle_trajectory_project\full_long_final\tables\model_comparison.csv"'
+scp -o ConnectTimeout=12 thddy@192.168.35.17:'D:/runs/vehicle_trajectory_project/full_long_final/tables/*' outputs/full_av2/tables/
+scp -o ConnectTimeout=12 thddy@192.168.35.17:'D:/runs/vehicle_trajectory_project/full_long_final/metrics/*' outputs/full_av2/metrics/
+scp -o ConnectTimeout=12 thddy@192.168.35.17:'D:/runs/vehicle_trajectory_project/full_long_final/figures/*.png' outputs/full_av2/figures/
+scp -o ConnectTimeout=12 thddy@192.168.35.17:'D:/runs/vehicle_trajectory_project/full_long_tuning/tables/*' outputs/full_av2_tuning/tables/
+scp -o ConnectTimeout=12 thddy@192.168.35.17:'D:/runs/vehicle_trajectory_project/full_long_goal/status.json' outputs/full_av2/metadata/
+scp -o ConnectTimeout=12 thddy@192.168.35.17:'D:/runs/vehicle_trajectory_project/full_long_goal/FULL_LONG_EXPERIMENTS_COMPLETE.txt' outputs/full_av2/metadata/
+scp -o ConnectTimeout=12 thddy@192.168.35.17:'D:/data/vehicle_trajectory_project/processed/full/train_full.npz' data/processed/train_full.npz
+scp -o ConnectTimeout=12 thddy@192.168.35.17:'D:/data/vehicle_trajectory_project/processed/full/val_full.npz' data/processed/val_full.npz
+scp -o ConnectTimeout=12 thddy@192.168.35.17:'D:/runs/vehicle_trajectory_project/full_long_final/predictions/full_long_final/*.pkl' outputs/predictions/full_long_final/
+python -m src.datasets.validate_processed --npz data/processed/train_full.npz
+python -m src.datasets.validate_processed --npz data/processed/val_full.npz
+python -m src.visualization.plot_trajectories --data data/processed/val_full.npz --predictions outputs/predictions/full_long_final --out_dir outputs/full_av2/figures --num_cases 12
+python -m src.visualization.plot_errors --data data/processed/val_full.npz --predictions outputs/predictions/full_long_final --out_dir outputs/full_av2/figures
+python -m src.visualization.plot_pca --data data/processed/val_full.npz --out_dir outputs/full_av2/figures --max_points 5000
+python -m src.visualization.plot_clusters --data data/processed/val_full.npz --out_dir outputs/full_av2/figures --n_clusters 5 --max_points 5000
+python -m src.visualization.plot_report_cases --data data/processed/val_full.npz --predictions outputs/predictions/full_long_final --out_dir outputs/full_av2/figures --reference_model lstm --diffusion_model diffusion_pca --num_cases 6
+python -m src.analysis.pca_analysis --train_data data/processed/train_full.npz --data data/processed/val_full.npz --out_dir outputs/full_av2_analysis --n_components 12 --max_export_rows 5000
+python -m src.analysis.kmeans_analysis --train_data data/processed/train_full.npz --data data/processed/val_full.npz --predictions outputs/predictions/full_long_final --out_dir outputs/full_av2_analysis --n_components 12 --n_clusters 5 --required_models linear lstm transformer diffusion_pca diffusion_direct
+python -m src.analysis.error_analysis --data data/processed/val_full.npz --predictions outputs/predictions/full_long_final --out_dir outputs/full_av2_analysis --top_k 20 --required_models linear lstm transformer diffusion_pca diffusion_direct
+python scripts/build_phase15_report.py --comparison outputs/full_av2/tables/model_comparison.csv --tuning_summary outputs/full_av2_tuning/tables/diffusion_tuning_summary.csv --out outputs/report_summary.md --analysis_dir outputs/full_av2_analysis --figures_dir outputs/full_av2/figures
 ```
 
 Result:
@@ -301,6 +325,10 @@ Full AV2 Stage F4 validation: Windows verification confirmed complete status, CU
 Full AV2 Stage F4 val_full metrics: Linear ADE 1.5324182510375977 / FDE 3.7973430156707764; LSTM ADE 1.0401222705841064 / FDE 2.6033456325531006; Transformer ADE 0.9415797591209412 / FDE 2.416048526763916; PCA Diffusion ADE 6.277219772338867 / FDE 12.322331428527832 / minADE 6.096756935119629 / minFDE 11.606433868408203; Direct Diffusion ADE 10.058550834655762 / FDE 19.448150634765625 / minADE 9.881662368774414 / minFDE 18.506914138793945
 Full AV2 Stage F4 result artifacts copied to Mac: outputs/full_av2_5epoch_pilot/tables/model_comparison.csv, outputs/full_av2_5epoch_pilot/tables/model_comparison.md, lightweight metrics CSV/JSON files, and PCA figures. Checkpoints, logs, prediction payloads, and full .npz files remain Windows-local or ignored.
 Full AV2 Stage F4 decision note: LSTM and Transformer improved versus Stage F3 and beat Linear on val_full after 5 epochs; Transformer is currently the strongest pilot model. Diffusion variants remain much worse than Linear and should be tuned before any expensive long Diffusion run.
+Full AV2 Stage F5A tuning gate: selected PCA Diffusion pca_b and Direct Diffusion direct_f; both passed the user target gates with full_run_ready=true.
+Full AV2 Stage F5B Windows run: HOME repo was clean on main at 1e511e3; status.json reported status=complete and exit_code=0; FULL_LONG_EXPERIMENTS_COMPLETE.txt exists.
+Full AV2 Stage F5B final comparison: LSTM is best single-trajectory ADE/FDE at ADE 0.7916645407676697 / FDE 2.0570261478424072. PCA Diffusion has the best best-of-K min metrics at minADE 0.41746464371681213 / minFDE 0.8582534193992615. Direct Diffusion final metrics are ADE 1.9281558990478516 / FDE 4.91142463684082 / minADE 0.5009313821792603 / minFDE 0.9845224618911743.
+Phase 15 Mac integration: train_full.npz and val_full.npz validated on Mac with 189,541 train samples and 23,706 val samples; final figures, analysis tables, and outputs/report_summary.md were generated from real full AV2 outputs.
 ```
 
 ## Open External Requirements
@@ -311,9 +339,9 @@ HOME DATA_READY_FOR_PHASE11.txt exists and split counts have been verified.
 HOME small processed AV2 data is available at D:\data\vehicle_trajectory_project\processed\small.
 Mac has ignored lightweight copies of train_small.npz and val_small.npz for visualization/analysis smoke checks.
 HOME needs s5cmd only for future direct AV2 download or resync; current archives were already downloaded manually under D:\datasets\argoverse.
-HOME Miniconda3 and the vehicle_traj CUDA PyTorch environment are available for GPU smoke training.
-Full AV2 preprocessing, schema validation, 1-epoch pilot, and 5-epoch pilot are complete. Larger/full long-run training remains optional external long-running work before or after Phase 15 if stronger final numbers are desired.
-F5 all-model FULL RUN is currently gated by diffusion target metrics and must not start until the F5A selector reports full_run_ready=true.
+HOME Miniconda3 and the vehicle_traj CUDA PyTorch environment are available for GPU training.
+Full AV2 preprocessing, schema validation, 1-epoch pilot, 5-epoch pilot, F5A tuning gate, F5B all-model long run, and Phase 15 report asset generation are complete.
+Mac currently has ignored local copies of train_full.npz, val_full.npz, and full_long_final prediction payloads only for analysis reproducibility; do not commit them.
 For full AV2 preprocessing, long AV2 download/extraction, or GPU training attempts, do not use a long foreground SSH command; use the safe remote execution rule in docs/windows_gpu_training_only_workflow.md.
 ```
 

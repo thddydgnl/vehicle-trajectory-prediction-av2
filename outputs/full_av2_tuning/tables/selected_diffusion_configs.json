@@ -1,0 +1,62 @@
+{
+  "selected": {
+    "diffusion_pca": {
+      "model": "diffusion_pca",
+      "candidate_id": "pca_b",
+      "config": "configs/full_tune_diffusion_pca_b.yaml",
+      "hard_gate": true,
+      "preferred_gate": true,
+      "target_gate": true,
+      "selected": true,
+      "latent_dim": 12,
+      "diffusion_steps": 1000,
+      "sampling_steps": 75,
+      "num_samples": 16,
+      "learning_rate": 0.0002,
+      "epochs_ran": 15,
+      "ADE": 1.542201042175293,
+      "FDE": 3.859459400177002,
+      "minADE": 0.45693081617355347,
+      "minFDE": 0.9440990686416626,
+      "Sample_Diversity": 1.6574305295944214,
+      "minADE_improvement_pct": 92.50534634993468,
+      "minFDE_improvement_pct": 91.86572655006955,
+      "reason": "passed",
+      "score": 0.6929555833339691
+    },
+    "diffusion_direct": {
+      "model": "diffusion_direct",
+      "candidate_id": "direct_f",
+      "config": "configs/full_tune_diffusion_direct_f.yaml",
+      "hard_gate": true,
+      "preferred_gate": true,
+      "target_gate": true,
+      "selected": true,
+      "latent_dim": 0,
+      "diffusion_steps": 1000,
+      "sampling_steps": 75,
+      "num_samples": 16,
+      "learning_rate": 0.0001,
+      "epochs_ran": 15,
+      "ADE": 4.18206262588501,
+      "FDE": 9.877952575683594,
+      "minADE": 0.7230075597763062,
+      "minFDE": 1.4557510614395142,
+      "Sample_Diversity": 5.534523963928223,
+      "minADE_improvement_pct": 92.68334079030087,
+      "minFDE_improvement_pct": 92.13401515497395,
+      "reason": "passed",
+      "score": 1.0869453251361847
+    }
+  },
+  "full_run_ready": true,
+  "require_target_gate_for_final": true,
+  "final_configs": {
+    "diffusion_pca": "D:\\runs\\vehicle_trajectory_project\\full_long_final\\generated_configs\\full_long_diffusion_pca.yaml",
+    "diffusion_direct": "D:\\runs\\vehicle_trajectory_project\\full_long_final\\generated_configs\\full_long_diffusion_direct.yaml"
+  },
+  "summary": {
+    "csv": "D:\\runs\\vehicle_trajectory_project\\full_long_tuning\\tables\\diffusion_tuning_summary.csv",
+    "markdown": "D:\\runs\\vehicle_trajectory_project\\full_long_tuning\\tables\\diffusion_tuning_summary.md"
+  }
+}

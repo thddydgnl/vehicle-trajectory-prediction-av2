@@ -1,0 +1,50 @@
+{
+  "ADE": 1.9213999509811401,
+  "FDE": 4.878911972045898,
+  "Sample_Diversity": 2.3389577865600586,
+  "best_epoch": 28,
+  "epochs_ran": 30,
+  "metadata": {
+    "config_path": "D:\\runs\\vehicle_trajectory_project\\full_long_final\\generated_configs\\full_long_diffusion_direct.yaml",
+    "device": "cuda",
+    "model": {
+      "architecture": "diffusion_direct",
+      "beta_end": 0.02,
+      "beta_start": 0.0001,
+      "cond_dim": 192,
+      "diffusion_steps": 1000,
+      "hidden_dim": 384,
+      "input_dim": 6,
+      "name": "diffusion_direct_full_long",
+      "num_samples": 16,
+      "pred_len": 30,
+      "sampling_steps": 75,
+      "trajectory_dim": 60
+    },
+    "seed": 42,
+    "train_data": "D:\\data\\vehicle_trajectory_project\\processed\\full\\train_full.npz",
+    "training": {
+      "batch_size": 16,
+      "device": "cuda",
+      "early_stopping_patience": 10,
+      "epochs": 30,
+      "gradient_clip": 1.0,
+      "learning_rate": 0.0001,
+      "loss": "noise_mse",
+      "num_workers": 0,
+      "out_dir": "D:/runs/vehicle_trajectory_project/full_long_final",
+      "seed": 42,
+      "selection_metric": "minADE",
+      "validation_num_samples": 8,
+      "validation_sampling_steps": 30,
+      "validation_seed": 1234,
+      "weight_decay": 0.0001
+    },
+    "val_data": "D:\\data\\vehicle_trajectory_project\\processed\\full\\val_full.npz"
+  },
+  "minADE": 0.6368764638900757,
+  "minFDE": 1.3830633163452148,
+  "model": "diffusion_direct_full_long",
+  "selection_metric": "minADE",
+  "selection_value": 0.6368764638900757
+}

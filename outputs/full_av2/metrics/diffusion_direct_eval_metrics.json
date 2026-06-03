@@ -1,0 +1,15 @@
+{
+  "ADE": 1.9281558990478516,
+  "FDE": 4.91142463684082,
+  "Latency": 0.0009705933350203719,
+  "Miss Rate": 0.7267358303070068,
+  "Parameters": 531132,
+  "Sample_Diversity": 2.31048321723938,
+  "checkpoint": "D:\\runs\\vehicle_trajectory_project\\full_long_final\\checkpoints\\best_diffusion_direct_full_long.pt",
+  "data": "D:\\data\\vehicle_trajectory_project\\processed\\full\\val_full.npz",
+  "minADE": 0.5009313821792603,
+  "minFDE": 0.9845224618911743,
+  "model": "diffusion_direct",
+  "num_prediction_samples": 16,
+  "num_samples": 23706
+}

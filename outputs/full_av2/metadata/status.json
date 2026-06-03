@@ -1,0 +1,33 @@
+﻿{
+    "status":  "complete",
+    "step":  "complete",
+    "updated_at":  "2026-06-04T06:48:13.0539380+09:00",
+    "exit_code":  0,
+    "message":  "Full long experiments complete",
+    "repo":  "C:\\Users\\thddy\\Documents\\code\\vehicle_trajectory_project",
+    "repo_head":  "1e511e3",
+    "train_data":  "D:\\data\\vehicle_trajectory_project\\processed\\full\\train_full.npz",
+    "val_data":  "D:\\data\\vehicle_trajectory_project\\processed\\full\\val_full.npz",
+    "tuning_run_dir":  "D:\\runs\\vehicle_trajectory_project\\full_long_tuning",
+    "final_run_dir":  "D:\\runs\\vehicle_trajectory_project\\full_long_final",
+    "run_root":  "D:\\runs\\vehicle_trajectory_project\\full_long_goal",
+    "log":  "D:\\runs\\vehicle_trajectory_project\\full_long_goal\\logs\\full_long_experiments_20260604_053005.log",
+    "resume_after_tuning":  true,
+    "skip_final_direct_diffusion":  false,
+    "artifacts":  {
+                      "tuning_pca_summary":  true,
+                      "tuning_selection":  true,
+                      "final_linear_metrics":  true,
+                      "final_lstm_best":  true,
+                      "final_lstm_metrics":  true,
+                      "final_transformer_best":  true,
+                      "final_transformer_metrics":  true,
+                      "final_pca_codec":  true,
+                      "final_diffusion_pca_best":  true,
+                      "final_diffusion_pca_metrics":  true,
+                      "final_diffusion_direct_best":  true,
+                      "final_diffusion_direct_metrics":  true,
+                      "final_model_comparison_csv":  true,
+                      "final_model_comparison_md":  true
+                  }
+}

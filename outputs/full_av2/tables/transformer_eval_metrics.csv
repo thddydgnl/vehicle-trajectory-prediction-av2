@@ -1,0 +1,2 @@
+model,checkpoint,data,num_samples,ADE,FDE,Miss Rate,Latency,Parameters
+transformer,D:\runs\vehicle_trajectory_project\full_long_final\checkpoints\best_transformer_full_long.pt,D:\data\vehicle_trajectory_project\processed\full\val_full.npz,23706,0.8514801263809204,2.183514356613159,0.4000675082206726,4.534688686365175e-05,406332

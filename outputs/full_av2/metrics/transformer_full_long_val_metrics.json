@@ -1,0 +1,40 @@
+{
+  "ADE": 0.8514801263809204,
+  "FDE": 2.1835145950317383,
+  "best_epoch": 26,
+  "epochs_ran": 30,
+  "metadata": {
+    "config_path": "configs\\full_long_transformer.yaml",
+    "device": "cuda",
+    "model": {
+      "architecture": "transformer",
+      "d_model": 128,
+      "dim_feedforward": 256,
+      "dropout": 0.1,
+      "input_dim": 6,
+      "name": "transformer_full_long",
+      "nhead": 4,
+      "num_layers": 3,
+      "pred_len": 30
+    },
+    "seed": 42,
+    "train_data": "D:\\data\\vehicle_trajectory_project\\processed\\full\\train_full.npz",
+    "training": {
+      "batch_size": 32,
+      "device": "cuda",
+      "early_stopping_patience": 8,
+      "epochs": 30,
+      "gradient_clip": 1.0,
+      "learning_rate": 0.0003,
+      "loss": "smooth_l1",
+      "num_workers": 0,
+      "out_dir": "D:/runs/vehicle_trajectory_project/full_long_final",
+      "seed": 42,
+      "weight_decay": 0.0001
+    },
+    "val_data": "D:\\data\\vehicle_trajectory_project\\processed\\full\\val_full.npz"
+  },
+  "model": "transformer_full_long",
+  "selection_metric": "ADE",
+  "selection_value": 0.8514801263809204
+}

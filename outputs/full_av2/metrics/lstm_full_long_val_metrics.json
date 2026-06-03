@@ -1,0 +1,38 @@
+{
+  "ADE": 0.7916645407676697,
+  "FDE": 2.0570261478424072,
+  "best_epoch": 29,
+  "epochs_ran": 30,
+  "metadata": {
+    "config_path": "configs\\full_long_lstm.yaml",
+    "device": "cuda",
+    "model": {
+      "architecture": "lstm",
+      "dropout": 0.1,
+      "hidden_dim": 128,
+      "input_dim": 6,
+      "name": "lstm_full_long",
+      "num_layers": 2,
+      "pred_len": 30
+    },
+    "seed": 42,
+    "train_data": "D:\\data\\vehicle_trajectory_project\\processed\\full\\train_full.npz",
+    "training": {
+      "batch_size": 64,
+      "device": "cuda",
+      "early_stopping_patience": 8,
+      "epochs": 30,
+      "gradient_clip": 1.0,
+      "learning_rate": 0.001,
+      "loss": "smooth_l1",
+      "num_workers": 0,
+      "out_dir": "D:/runs/vehicle_trajectory_project/full_long_final",
+      "seed": 42,
+      "weight_decay": 0.0001
+    },
+    "val_data": "D:\\data\\vehicle_trajectory_project\\processed\\full\\val_full.npz"
+  },
+  "model": "lstm_full_long",
+  "selection_metric": "ADE",
+  "selection_value": 0.7916645407676697
+}

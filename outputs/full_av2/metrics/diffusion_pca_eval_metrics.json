@@ -1,0 +1,15 @@
+{
+  "ADE": 1.4339096546173096,
+  "FDE": 3.6639866828918457,
+  "Latency": 0.0009262928246013627,
+  "Miss Rate": 0.6241458058357239,
+  "Parameters": 222988,
+  "Sample_Diversity": 1.5408936738967896,
+  "checkpoint": "D:\\runs\\vehicle_trajectory_project\\full_long_final\\checkpoints\\best_diffusion_pca_full_long.pt",
+  "data": "D:\\data\\vehicle_trajectory_project\\processed\\full\\val_full.npz",
+  "minADE": 0.41746464371681213,
+  "minFDE": 0.8582534193992615,
+  "model": "diffusion_pca",
+  "num_prediction_samples": 16,
+  "num_samples": 23706
+}
