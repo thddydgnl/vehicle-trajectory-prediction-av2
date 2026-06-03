@@ -18,9 +18,11 @@ Use HOME LAN first for Windows work; use HOME Tailscale only as fallback.
 HOME NVIDIA GPU is visible, but the dedicated vehicle_traj CUDA environment has not been created yet.
 HOME conda and s5cmd are not installed or not on PATH yet.
 The previous song AV2 download attempt was stopped; do not treat the song AV2 folder as complete.
-HOME D:\data contains AV2 Motion Forecasting tar archives and test annotation parquet files.
-HOME AV2 extraction/organization is running under the Windows scheduled task VehicleTrajectoryAV2Organize.
-Do not start Phase 11 until D:\data\av2\motion-forecasting\DATA_READY_FOR_PHASE11.txt exists.
+HOME AV2 Motion Forecasting archives are stored under D:\datasets\argoverse.
+HOME AV2 extraction/organization completed successfully.
+D:\data\av2\motion-forecasting\DATA_READY_FOR_PHASE11.txt exists.
+HOME Windows data/training folder layout is ready for Phase 11 preprocessing and later GPU training.
+Phase 11 can start next, but HOME vehicle_traj CUDA environment still must be created before long GPU training.
 ```
 
 Verified Windows access:
@@ -63,9 +65,9 @@ Phase 15 Final Report Assets                      pending
 ```text
 Phase 7 through Phase 10 are complete.
 Phase 11 remains pending.
-Before Phase 11, verify HOME AV2 data organization completed with DATA_READY_FOR_PHASE11.txt.
-If the marker exists, inspect its split counts and then start Phase 11 Argoverse 2 Preprocessing.
-If the marker does not exist, continue or troubleshoot the Windows data organization first.
+HOME AV2 raw data is ready at D:\data\av2\motion-forecasting.
+Start Phase 11 Argoverse 2 Preprocessing next.
+For Windows-local preprocessing, write and test the preprocessing code on Mac first, then run committed source on HOME against the Windows raw path.
 ```
 
 ## Latest Verified Commands
@@ -78,6 +80,8 @@ ssh thddy@192.168.35.17 'powershell -NoProfile -Command "conda --version; conda 
 ssh thddy@192.168.35.17 'powershell -NoProfile -Command "Get-ChildItem D:\data"'
 scp /tmp/organize_phase11_av2.ps1 thddy@192.168.35.17:'D:/data/av2/organize_phase11_av2.ps1'
 ssh thddy@192.168.35.17 'powershell -NoProfile -Command "schtasks /Create /TN VehicleTrajectoryAV2Organize /SC ONCE /ST <HH:mm> /TR \"powershell.exe -NoProfile -ExecutionPolicy Bypass -File D:\data\av2\organize_phase11_av2.ps1\" /F; schtasks /Run /TN VehicleTrajectoryAV2Organize"'
+ssh thddy@192.168.35.17 'powershell -NoProfile -ExecutionPolicy Bypass -File D:\datasets\argoverse\finalize_training_folder_structure.ps1'
+ssh thddy@192.168.35.17 'powershell -NoProfile -Command "Get-Content D:\data\av2\motion-forecasting\DATA_READY_FOR_PHASE11.txt; Get-ChildItem D:\data\vehicle_trajectory_project\processed; Get-ChildItem D:\runs\vehicle_trajectory_project"'
 pytest -q
 python -c "from src.utils.device import get_device; print(get_device())"
 python -m src.datasets.synthetic --out_dir data/processed --num_samples 1000
@@ -120,13 +124,21 @@ NVIDIA GeForce RTX 2070 SUPER, 591.86, 8192 MiB
 HOME C drive free space: about 192 GB
 HOME conda: not found on PATH
 HOME s5cmd: missing at C:\Users\thddy\bin\s5cmd\s5cmd.exe
-HOME D:\data inventory: train.tar, val.tar, test.tar, av2_mf_focal_test_annotations.parquet, av2_mf_multi_test_annotations.parquet
-HOME D drive free space before AV2 extraction: about 839.6 GB
+HOME AV2 archive inventory under D:\datasets\argoverse: train.tar, val.tar, test.tar, av2_mf_focal_test_annotations.parquet, av2_mf_multi_test_annotations.parquet
+HOME D drive free space before completed AV2 layout check: about 776 GB
 HOME AV2 raw standard path: D:\data\av2\motion-forecasting
 HOME AV2 organizer script: D:\data\av2\organize_phase11_av2.ps1
 HOME AV2 organizer scheduled task: VehicleTrajectoryAV2Organize
 HOME AV2 organizer background log: D:\data\av2\logs\phase11_data_organize_bg_20260602_221953.log
-HOME AV2 organizer status: running; train.tar extraction restarted under Windows Task Scheduler at 2026-06-02T22:19:54+09:00
+HOME AV2 organizer status: completed successfully on HOME.
+HOME AV2 Phase 11 marker: D:\data\av2\motion-forecasting\DATA_READY_FOR_PHASE11.txt exists.
+HOME AV2 ready marker completed timestamp: 2026-06-03T08:18:02.9223133+09:00
+HOME AV2 source archive path: D:\datasets\argoverse
+HOME AV2 split inventory: train scenario parquet files 199892, val scenario parquet files 24988, test scenario parquet files 24984
+HOME AV2 map inventory: train map json files 199892, val map json files 24988, test map json files 24984
+HOME standard processed path prepared: D:\data\vehicle_trajectory_project\processed with small, full, metadata, and cache subdirectories
+HOME standard runs path prepared: D:\runs\vehicle_trajectory_project with checkpoints, logs, metrics, predictions, figures, and remote_runs subdirectories
+HOME Windows code root prepared: C:\Users\thddy\Documents\code\vehicle_trajectory_project
 pytest: 5 passed
 get_device: mps
 song s5cmd: v2.3.0-991c9fb at C:\Users\thddy\bin\s5cmd\s5cmd.exe
@@ -153,9 +165,9 @@ Phase 10 PCA latent diffusion: tests/test_pca_latent.py passed 3 tests; PCA code
 ## Open External Requirements
 
 ```text
-AV2 raw archives are present on HOME D:\data, but extraction/organization must finish before Phase 11.
-Do not treat HOME AV2 data as complete until D:\data\av2\motion-forecasting\DATA_READY_FOR_PHASE11.txt exists.
-HOME needs s5cmd only for future direct AV2 download or resync; current archives were already downloaded manually.
+HOME AV2 raw data is complete and ready for Phase 11 at D:\data\av2\motion-forecasting.
+HOME DATA_READY_FOR_PHASE11.txt exists and split counts have been verified.
+HOME needs s5cmd only for future direct AV2 download or resync; current archives were already downloaded manually under D:\datasets\argoverse.
 HOME needs conda or another managed Python environment before long GPU training.
 HOME vehicle_traj CUDA PyTorch environment must be created before long model training.
 For long AV2 download or extraction attempts, do not use a long foreground SSH command; use the safe remote execution rule in docs/windows_gpu_training_only_workflow.md.
