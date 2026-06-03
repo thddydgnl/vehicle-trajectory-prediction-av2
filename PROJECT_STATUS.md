@@ -29,7 +29,9 @@ Phase 11 preprocessing code has been implemented, tested on Mac, committed, and 
 HOME Windows code root has been cloned from GitHub and updated to commit 9561eae.
 HOME small AV2 preprocessing completed successfully on 2026-06-03.
 D:\data\vehicle_trajectory_project\processed\small\train_small.npz and val_small.npz passed schema validation.
-Full AV2 preprocessing is technically unblocked, but should be run as a background Windows job after reviewing Phase 12 small-data visualizations or immediately before real training.
+Phase 12 visualization code has been implemented and tested on Mac.
+Synthetic and small AV2 trajectory/error/PCA/K-means smoke figures were generated successfully.
+Full AV2 preprocessing is technically unblocked after small-data visualization smoke checks, but should still be run as a background Windows job immediately before real training.
 HOME vehicle_traj CUDA environment still must be created before long GPU training.
 ```
 
@@ -63,7 +65,7 @@ Phase 8  Transformer Encoder                      complete
 Phase 9  Direct Diffusion Model                   complete
 Phase 10 PCA Latent Diffusion                     complete
 Phase 11 Argoverse 2 Preprocessing                complete
-Phase 12 Visualization                            pending
+Phase 12 Visualization                            complete
 Phase 13 PCA and K-means Analysis                 pending
 Phase 14 Final Experiment Matrix                  pending
 Phase 15 Final Report Assets                      pending
@@ -72,13 +74,12 @@ Phase 15 Final Report Assets                      pending
 ## Next Recommended Task
 
 ```text
-Phase 11 is complete.
-Start Phase 12 Visualization next.
-Use the Windows-generated small AV2 files for the first real-data visualization smoke check:
-D:\data\vehicle_trajectory_project\processed\small\train_small.npz
-D:\data\vehicle_trajectory_project\processed\small\val_small.npz
+Phase 12 is complete.
+Start Phase 13 PCA and K-means Analysis next.
+Use subagent review for leakage, metric definitions, shape contracts, and result-claim consistency.
+Use synthetic data first, then small AV2 data if practical.
 Do not start full AV2 preprocessing in a foreground SSH session.
-If full preprocessing is needed before model training, run it as a Windows background job and validate train_full.npz/val_full.npz before training.
+If full preprocessing is needed before Phase 14 model training, run it as a Windows background job and validate train_full.npz/val_full.npz before training.
 ```
 
 ## Latest Verified Commands
@@ -131,6 +132,19 @@ ssh thddy@192.168.35.17 'cmd /c "cd /d C:\Users\thddy\Documents\code\vehicle_tra
 ssh thddy@192.168.35.17 'cmd /c "cd /d C:\Users\thddy\Documents\code\vehicle_trajectory_project && python -m src.datasets.preprocess_av2 --config configs\preprocess_small.yaml"'
 ssh thddy@192.168.35.17 'cmd /c "cd /d C:\Users\thddy\Documents\code\vehicle_trajectory_project && python -m src.datasets.validate_processed --npz D:\data\vehicle_trajectory_project\processed\small\train_small.npz"'
 ssh thddy@192.168.35.17 'cmd /c "cd /d C:\Users\thddy\Documents\code\vehicle_trajectory_project && python -m src.datasets.validate_processed --npz D:\data\vehicle_trajectory_project\processed\small\val_small.npz"'
+pytest tests/test_visualization.py -q
+python -m src.visualization.plot_trajectories --data data/processed/val_smoke.npz --predictions outputs/predictions --out_dir outputs/figures --num_cases 10
+python -m src.visualization.plot_errors --data data/processed/val_smoke.npz --predictions outputs/predictions --out_dir outputs/figures
+python -m src.visualization.plot_pca --data data/processed/val_smoke.npz --out_dir outputs/figures
+python -m src.visualization.plot_clusters --data data/processed/val_smoke.npz --out_dir outputs/figures --n_clusters 5
+scp thddy@192.168.35.17:'D:/data/vehicle_trajectory_project/processed/small/train_small.npz' data/processed/train_small.npz
+scp thddy@192.168.35.17:'D:/data/vehicle_trajectory_project/processed/small/val_small.npz' data/processed/val_small.npz
+python -m src.datasets.validate_processed --npz data/processed/train_small.npz
+python -m src.datasets.validate_processed --npz data/processed/val_small.npz
+python -m src.visualization.plot_trajectories --data data/processed/val_small.npz --predictions outputs/predictions --out_dir outputs/figures/av2_small --num_cases 10
+python -m src.visualization.plot_errors --data data/processed/val_small.npz --predictions outputs/predictions --out_dir outputs/figures/av2_small
+python -m src.visualization.plot_pca --data data/processed/val_small.npz --out_dir outputs/figures/av2_small
+python -m src.visualization.plot_clusters --data data/processed/val_small.npz --out_dir outputs/figures/av2_small --n_clusters 5
 ```
 
 Result:
@@ -193,6 +207,11 @@ Phase 11 Windows small preprocessing: generated D:\data\vehicle_trajectory_proje
 Phase 11 schema validation: train_small.npz passed with 95 samples / 95 scenarios; val_small.npz passed with 95 samples / 95 scenarios
 Phase 11 output sizes: train_small.npz about 131,957 bytes; val_small.npz about 132,217 bytes; scaler.pkl about 445 bytes; metadata directory created
 Phase 11 full preprocessing decision: technically unblocked after small validation, but not started in this turn; run full as a Windows background job only after reviewing small visualizations or just before real AV2 training
+Phase 12 visualization implementation: added trajectory overlay, diffusion sample overlay, top-error case, ADE/FDE histogram, PCA trajectory space, and K-means cluster plotting scripts
+Phase 12 tests: tests/test_visualization.py passed; full pytest passed 59 tests
+Phase 12 synthetic smoke: generated trajectory_overlay_linear_lstm_transformer.png, trajectory_overlay_diffusion_samples.png, error_histogram_ade.png, error_histogram_fde.png, pca_trajectory_space.png, kmeans_clusters.png, and top_error_cases PNG files
+Phase 12 small AV2 smoke: copied ignored train_small.npz/val_small.npz to Mac, validated both files, and generated the same figure set under outputs/figures/av2_small
+Phase 12 visual QA: representative synthetic and small AV2 trajectory overlay PNGs were inspected and showed nonblank trajectory plots with readable layout
 ```
 
 ## Open External Requirements
@@ -201,6 +220,7 @@ Phase 11 full preprocessing decision: technically unblocked after small validati
 HOME AV2 raw data is complete at D:\data\av2\motion-forecasting.
 HOME DATA_READY_FOR_PHASE11.txt exists and split counts have been verified.
 HOME small processed AV2 data is available at D:\data\vehicle_trajectory_project\processed\small.
+Mac has ignored lightweight copies of train_small.npz and val_small.npz for visualization/analysis smoke checks.
 HOME needs s5cmd only for future direct AV2 download or resync; current archives were already downloaded manually under D:\datasets\argoverse.
 HOME needs conda or another managed Python environment before long GPU training.
 HOME vehicle_traj CUDA PyTorch environment must be created before long model training.
@@ -214,7 +234,7 @@ Repository: https://github.com/thddydgnl/vehicle-trajectory-prediction-av2
 Remote: origin
 Default branch: main
 Latest pushed branch: main
-Latest pushed commit: 9561eae
+Latest pushed commit: 65a37fb
 ```
 
 ## Update Rule
