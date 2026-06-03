@@ -108,6 +108,40 @@ def test_preprocess_av2_reads_yaml_config(tmp_path: Path, monkeypatch) -> None:
     assert validate_npz(paths["val"])["num_samples"] == 1
 
 
+def test_preprocess_av2_skips_permission_denied_parquet(tmp_path: Path, monkeypatch) -> None:
+    raw_dir = tmp_path / "raw"
+    _write_mock_scenario(raw_dir / "train", "blocked_scenario")
+    _write_mock_scenario(raw_dir / "train", "train_scenario")
+    _write_mock_scenario(raw_dir / "val", "val_scenario")
+    out_dir = tmp_path / "processed"
+    original_read_parquet = pd.read_parquet
+
+    def fake_read_parquet(path: str | Path, *args, **kwargs):
+        if "blocked_scenario" in str(path):
+            raise PermissionError("mock permission denied")
+        return original_read_parquet(path, *args, **kwargs)
+
+    monkeypatch.setattr(pd, "read_parquet", fake_read_parquet)
+
+    paths = preprocess_av2(
+        PreprocessConfig(
+            raw_dir=raw_dir,
+            out_dir=out_dir,
+            num_scenarios=None,
+            obs_len=50,
+            pred_len=30,
+            splits=("train", "val"),
+        )
+    )
+
+    assert validate_npz(paths["train"])["num_samples"] == 1
+    skipped = pd.read_csv(out_dir / "metadata" / "full_skipped_files.csv")
+    assert len(skipped) == 1
+    assert skipped.loc[0, "split"] == "train"
+    assert "blocked_scenario" in skipped.loc[0, "path"]
+    assert skipped.loc[0, "reason"] == "PermissionError"
+
+
 def test_preprocess_av2_rejects_observed_mismatch_and_truncated_future(tmp_path: Path) -> None:
     raw_dir = tmp_path / "raw"
     _write_mock_scenario(raw_dir / "train", "bad_observed", observed_mismatch=True)

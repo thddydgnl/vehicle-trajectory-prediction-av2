@@ -185,13 +185,28 @@ def _save_scaler(train_arrays: dict[str, np.ndarray], out_dir: Path) -> None:
     joblib.dump(scaler, out_dir / "scaler.pkl")
 
 
-def preprocess_split(config: PreprocessConfig, split: str) -> tuple[dict[str, np.ndarray], pd.DataFrame]:
+def preprocess_split(config: PreprocessConfig, split: str) -> tuple[dict[str, np.ndarray], pd.DataFrame, pd.DataFrame]:
     target_types = _normalize_target_types(config.target_types)
     samples: list[dict[str, np.ndarray | str | int | float]] = []
     records: list[dict[str, str | int]] = []
+    skipped_records: list[dict[str, str | int]] = []
     files = _scenario_files(config.raw_dir, split, config.num_scenarios)
-    for path in tqdm(files, desc=f"preprocess {split}"):
-        df = pd.read_parquet(path)
+    for file_index, path in enumerate(tqdm(files, desc=f"preprocess {split}"), start=1):
+        try:
+            df = pd.read_parquet(path)
+        except PermissionError as exc:
+            message = str(exc)
+            tqdm.write(f"skip unreadable parquet {split} {file_index}/{len(files)}: {path} ({message})")
+            skipped_records.append(
+                {
+                    "split": split,
+                    "file_index": file_index,
+                    "path": str(path),
+                    "reason": type(exc).__name__,
+                    "message": message,
+                }
+            )
+            continue
         missing = REQUIRED_COLUMNS.difference(df.columns)
         if missing:
             raise KeyError(f"{path} is missing required columns: {sorted(missing)}")
@@ -208,7 +223,7 @@ def preprocess_split(config: PreprocessConfig, split: str) -> tuple[dict[str, np
                     "object_type": int(sample["object_type"]),
                 }
             )
-    return _samples_to_arrays(samples, config.obs_len, config.pred_len), pd.DataFrame.from_records(records)
+    return _samples_to_arrays(samples, config.obs_len, config.pred_len), pd.DataFrame.from_records(records), pd.DataFrame.from_records(skipped_records)
 
 
 def preprocess_av2(config: PreprocessConfig) -> dict[str, Path]:
@@ -218,21 +233,27 @@ def preprocess_av2(config: PreprocessConfig) -> dict[str, Path]:
     suffix = "small" if config.num_scenarios is not None else "full"
     output_paths: dict[str, Path] = {}
     metadata_frames: list[pd.DataFrame] = []
+    skipped_frames: list[pd.DataFrame] = []
 
     for split in config.splits:
-        arrays, metadata = preprocess_split(config, split)
+        arrays, metadata, skipped = preprocess_split(config, split)
         if arrays["X"].shape[0] == 0:
             raise ValueError(f"No valid samples were produced for split {split}")
         path = config.out_dir / f"{split}_{suffix}.npz"
         np.savez_compressed(path, **arrays)
         output_paths[split] = path
         metadata_frames.append(metadata)
+        if not skipped.empty:
+            skipped_frames.append(skipped)
         metadata.to_csv(metadata_dir / f"{split}_{suffix}_metadata.csv", index=False)
+        skipped.to_csv(metadata_dir / f"{split}_{suffix}_skipped_files.csv", index=False)
         if split == "train":
             _save_scaler(arrays, config.out_dir)
 
     if metadata_frames:
         pd.concat(metadata_frames, ignore_index=True).to_csv(metadata_dir / f"{suffix}_metadata.csv", index=False)
+    if skipped_frames:
+        pd.concat(skipped_frames, ignore_index=True).to_csv(metadata_dir / f"{suffix}_skipped_files.csv", index=False)
     return output_paths
 
 
