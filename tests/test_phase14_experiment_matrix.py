@@ -56,6 +56,7 @@ def test_comparison_row_fills_single_prediction_min_metrics() -> None:
 
     assert row["minADE"] == 1.0
     assert row["minFDE"] == 2.0
+    assert row["Sample_Diversity"] == ""
     assert row["Latency_ms"] == 1.0
     assert "single prediction" in str(row["Notes"])
 
@@ -70,6 +71,7 @@ def test_write_model_comparison_outputs_csv_and_markdown(tmp_path: Path) -> None
             "FDE": 2.0,
             "minADE": 1.0,
             "minFDE": 2.0,
+            "Sample_Diversity": "",
             "Miss_Rate": 0.25,
             "Latency_ms": 1.0,
             "Params": 0,
@@ -82,7 +84,7 @@ def test_write_model_comparison_outputs_csv_and_markdown(tmp_path: Path) -> None
     assert paths["csv"].exists()
     assert paths["markdown"].exists()
     csv = pd.read_csv(paths["csv"])
-    assert list(csv.columns) == ["model", "data_split", "target_type", "ADE", "FDE", "minADE", "minFDE", "Miss_Rate", "Latency_ms", "Params", "Notes"]
+    assert list(csv.columns) == ["model", "data_split", "target_type", "ADE", "FDE", "minADE", "minFDE", "Sample_Diversity", "Miss_Rate", "Latency_ms", "Params", "Notes"]
     assert "linear" in paths["markdown"].read_text(encoding="utf-8")
 
 

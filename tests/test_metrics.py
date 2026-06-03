@@ -1,7 +1,7 @@
 import torch
 import pytest
 
-from src.evaluation.metrics import ade, count_parameters, fde, min_ade, min_fde, miss_rate
+from src.evaluation.metrics import ade, count_parameters, fde, min_ade, min_fde, miss_rate, sample_diversity
 
 
 def test_ade_matches_exact_value() -> None:
@@ -73,6 +73,26 @@ def test_min_fde_can_use_final_valid_masked_step() -> None:
     mask = torch.tensor([[True, False]])
 
     assert torch.isclose(min_fde(pred_samples, gt, mask), torch.tensor(2.0))
+
+
+def test_sample_diversity_zero_for_identical_samples() -> None:
+    pred_samples = torch.zeros((2, 3, 4, 2))
+
+    assert torch.isclose(sample_diversity(pred_samples), torch.tensor(0.0))
+
+
+def test_sample_diversity_uses_valid_mask_steps() -> None:
+    pred_samples = torch.tensor(
+        [
+            [
+                [[0.0, 0.0], [0.0, 0.0]],
+                [[3.0, 4.0], [6.0, 8.0]],
+            ]
+        ]
+    )
+    mask = torch.tensor([[True, False]])
+
+    assert torch.isclose(sample_diversity(pred_samples, mask), torch.tensor(5.0))
 
 
 def test_miss_rate_uses_final_displacement_threshold() -> None:

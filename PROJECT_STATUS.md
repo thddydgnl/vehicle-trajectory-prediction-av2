@@ -48,6 +48,7 @@ Full AV2 preprocessing was restarted on HOME at 2026-06-03T17:47+09:00 using com
 Full AV2 preprocessing completed on HOME by 2026-06-03T23:57+09:00. Outputs exist at D:\data\vehicle_trajectory_project\processed\full\train_full.npz and val_full.npz; schema validation passed with 189,541 train samples and 23,706 val samples. The run skipped 25 unreadable train parquet files.
 Full AV2 Stage F3 completed on HOME by 2026-06-04T00:16+09:00 using commit 8c70cf1. CUDA preflight passed, Linear/LSTM/Transformer/PCA Diffusion/Direct Diffusion all produced finite val_full metrics, checkpoints, and comparison tables. Full pilot comparison tables and metrics were copied to outputs/full_av2_pilot without raw data, processed .npz files, checkpoints, logs, or prediction payloads.
 Full AV2 Stage F4 completed on HOME by 2026-06-04T00:46+09:00 using commit 8014ed3. CUDA preflight passed, LSTM/Transformer/PCA Diffusion/Direct Diffusion each ran exactly 5 epochs with CUDA checkpoint metadata, and final comparison tables were generated from real val_full outputs. Lightweight F4 metrics, tables, and PCA figures were copied to outputs/full_av2_5epoch_pilot without raw data, processed .npz files, checkpoints, logs, or prediction payloads.
+Full AV2 Stage F5A/F5B tooling has been prepared for diffusion tuning gates, all-model long runs, and Phase 15 final assets. Do not claim F5 long-run results until Windows outputs are verified and lightweight result artifacts are copied back to Mac.
 ```
 
 Verified Windows access:
@@ -93,8 +94,9 @@ Phase 14 is complete on small AV2 smoke scope.
 Full AV2 Stage F1 preprocessing and Stage F2 schema validation are complete.
 Full AV2 Stage F3 1-epoch pilot is complete.
 Full AV2 Stage F4 5-epoch pilot is complete.
-Recommended next choice: start Phase 15 Final Report Assets using the full 5-epoch pilot results, with clear labels that these are pilot results rather than long-run final training.
-Optional next choice: run Stage F5 long training only if the user explicitly wants stronger final numbers. Prioritize LSTM and Transformer first; do not spend long-run time on Diffusion before tuning because both diffusion variants remain much worse than Linear after 5 epochs.
+User explicitly chose Stage F5 long training plus Phase 15.
+Next task: run Stage F5A Diffusion Tuning Gate, then Stage F5B all-model long run if the tuning hard gates pass.
+After F5B completes, collect only lightweight tables/metrics/figures/log summaries and proceed to Phase 15 Final Report Assets.
 Do not start full AV2 preprocessing or full training in a foreground SSH session.
 ```
 

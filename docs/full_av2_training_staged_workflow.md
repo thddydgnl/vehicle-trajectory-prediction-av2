@@ -323,10 +323,91 @@ normalization/scaler handling
 relative coordinate assumptions
 ```
 
-## 8. Stage F5 - Report-Ready Long Run
+## 8. Stage F5A - Diffusion Tuning Gate
 
 Only start after Stage F4 passes and the user explicitly asks for stronger
 final numbers beyond the pilot results.
+
+Purpose:
+
+```text
+Tune PCA Diffusion and Direct Diffusion enough to produce analysis-ready final
+results. They do not need to beat LSTM/Transformer, but they must be evaluated
+honestly with finite metrics, sample diversity, and clear failure/success notes.
+```
+
+Candidate policy:
+
+```text
+Run a small bounded matrix before any long Diffusion run:
+PCA Diffusion: 3 candidates, 10 epochs each
+Direct Diffusion: 3 candidates, 10 epochs each
+
+Vary one small set of risk-controlled parameters:
+learning rate
+hidden_dim / cond_dim
+diffusion_steps
+sampling_steps
+num_samples
+batch_size for OOM safety
+```
+
+Hard gate:
+
+```text
+checkpoint exists
+train metrics exist
+evaluation metrics exist
+epochs_ran >= 5
+ADE/FDE/minADE/minFDE are finite
+Sample_Diversity is finite and >= 0.001
+no NaN/OOM/checkpoint mismatch
+```
+
+Preferred gate:
+
+```text
+At least one of minADE or minFDE improves by 10% or more versus the Stage F4
+same-model diffusion baseline.
+```
+
+Selection rule:
+
+```text
+Prefer candidates that pass the preferred gate.
+If none pass the preferred gate but at least one passes the hard gate, select
+the best hard-gate candidate for analysis-ready final training and clearly
+label that it did not meet the improvement target.
+If no candidate passes the hard gate, stop long Diffusion training and inspect
+the failure before spending more GPU time.
+```
+
+Current committed tuning matrix:
+
+```text
+configs/full_diffusion_tuning_matrix.yaml
+configs/full_tune_diffusion_pca_a.yaml
+configs/full_tune_diffusion_pca_b.yaml
+configs/full_tune_diffusion_pca_c.yaml
+configs/full_tune_diffusion_direct_a.yaml
+configs/full_tune_diffusion_direct_b.yaml
+configs/full_tune_diffusion_direct_c.yaml
+```
+
+Automation:
+
+```text
+scripts/select_diffusion_tuning.py writes:
+D:\runs\vehicle_trajectory_project\full_long_tuning\tables\diffusion_tuning_summary.csv
+D:\runs\vehicle_trajectory_project\full_long_tuning\tables\diffusion_tuning_summary.md
+D:\runs\vehicle_trajectory_project\full_long_tuning\tables\selected_diffusion_configs.json
+D:\runs\vehicle_trajectory_project\full_long_final\generated_configs\full_long_diffusion_pca.yaml
+D:\runs\vehicle_trajectory_project\full_long_final\generated_configs\full_long_diffusion_direct.yaml
+```
+
+## 9. Stage F5B - Report-Ready Long Run
+
+Only start after Stage F5A selects analysis-ready Diffusion configs.
 
 Recommended priority:
 
@@ -354,7 +435,24 @@ After each model, validate checkpoint, metrics, and logs before starting the
 next expensive model.
 ```
 
-## 9. Stage F6 - Result Integration
+Current committed long-run configs/tooling:
+
+```text
+configs/full_long_lstm.yaml
+configs/full_long_transformer.yaml
+scripts/windows_full_long_experiments.ps1
+scripts/windows_full_long_status.ps1
+```
+
+Windows background execution:
+
+```text
+Run scripts/windows_full_long_experiments.ps1 only from a scheduled task or
+other background-safe launcher. Do not run it as a multi-hour foreground SSH
+command.
+```
+
+## 10. Stage F6 - Result Integration
 
 Preferred integration path:
 
@@ -395,7 +493,7 @@ Evaluation was run data-local on Windows using committed source at commit <hash>
 Mac performed reporting and committed only lightweight tables/metrics.
 ```
 
-## 10. Reporting Requirements
+## 11. Reporting Requirements
 
 After each full stage, update `PROJECT_STATUS.md` with:
 

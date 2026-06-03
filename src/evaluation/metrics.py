@@ -101,6 +101,40 @@ def min_fde(pred_samples: torch.Tensor, gt: torch.Tensor, mask: torch.Tensor | N
     return final_errors.min(dim=1).values.mean()
 
 
+def sample_diversity(pred_samples: torch.Tensor, mask: torch.Tensor | None = None) -> torch.Tensor:
+    """Average pairwise displacement between multi-sample predictions.
+
+    The score is zero when every sample is identical. Larger values indicate
+    more spread among sampled futures and help catch collapsed diffusion outputs.
+    """
+    if pred_samples.ndim != 4 or pred_samples.shape[-1] != 2:
+        raise ValueError(f"Expected pred_samples shape [B, K, T, 2], got {pred_samples.shape}")
+    if pred_samples.shape[0] == 0 or pred_samples.shape[1] == 0 or pred_samples.shape[2] == 0:
+        raise ValueError(f"Batch, sample, and time dimensions must be non-empty, got {pred_samples.shape}")
+    if pred_samples.shape[1] < 2:
+        return torch.zeros((), device=pred_samples.device, dtype=pred_samples.dtype)
+
+    pairwise = torch.linalg.norm(pred_samples[:, :, None, :, :] - pred_samples[:, None, :, :, :], dim=-1)
+    pair_mask = torch.triu(
+        torch.ones(pred_samples.shape[1], pred_samples.shape[1], device=pred_samples.device, dtype=torch.bool),
+        diagonal=1,
+    )
+    pairwise = pairwise[:, pair_mask, :]
+
+    if mask is not None:
+        expected_mask_shape = (pred_samples.shape[0], pred_samples.shape[2])
+        if tuple(mask.shape) != expected_mask_shape:
+            raise ValueError(f"mask shape must be [B, T], got {mask.shape}, expected {expected_mask_shape}")
+        mask_float = mask[:, None, :].to(device=pred_samples.device, dtype=pred_samples.dtype)
+        denominator = mask_float.sum(dim=(1, 2)) * pairwise.shape[1]
+        if torch.any(denominator <= 0):
+            raise ValueError("each batch item must contain at least one valid trajectory step")
+        per_batch = (pairwise * mask_float).sum(dim=(1, 2)) / denominator
+        return per_batch.mean()
+
+    return pairwise.mean()
+
+
 def miss_rate(
     pred: torch.Tensor,
     gt: torch.Tensor,

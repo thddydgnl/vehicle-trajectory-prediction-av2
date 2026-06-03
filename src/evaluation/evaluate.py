@@ -10,7 +10,7 @@ from typing import Any
 import torch
 
 from src.datasets.av2_dataset import create_dataloader
-from src.evaluation.metrics import ade, count_parameters, fde, min_ade, min_fde, miss_rate
+from src.evaluation.metrics import ade, count_parameters, fde, min_ade, min_fde, miss_rate, sample_diversity
 from src.models.diffusion import GaussianDiffusionTrajectory
 from src.models.linear import LinearExtrapolation
 from src.models.lstm import LSTMForecast
@@ -379,6 +379,7 @@ def evaluate_diffusion_direct(
         "FDE": float(fde(pred_tensor, gt_tensor, mask_tensor).item()),
         "minADE": float(min_ade(samples_tensor, gt_tensor, mask_tensor).item()),
         "minFDE": float(min_fde(samples_tensor, gt_tensor, mask_tensor).item()),
+        "Sample_Diversity": float(sample_diversity(samples_tensor, mask_tensor).item()),
         "Miss Rate": float(miss_rate(pred_tensor, gt_tensor, mask=mask_tensor).item()),
         "Latency": float(elapsed / max(int(pred_tensor.shape[0]), 1)),
         "Parameters": count_parameters(model),
@@ -447,6 +448,7 @@ def evaluate_diffusion_pca(
         "FDE": float(fde(pred_tensor, gt_tensor, mask_tensor).item()),
         "minADE": float(min_ade(samples_tensor, gt_tensor, mask_tensor).item()),
         "minFDE": float(min_fde(samples_tensor, gt_tensor, mask_tensor).item()),
+        "Sample_Diversity": float(sample_diversity(samples_tensor, mask_tensor).item()),
         "Miss Rate": float(miss_rate(pred_tensor, gt_tensor, mask=mask_tensor).item()),
         "Latency": float(elapsed / max(int(pred_tensor.shape[0]), 1)),
         "Parameters": count_parameters(model),

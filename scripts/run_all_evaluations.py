@@ -56,6 +56,7 @@ def comparison_row(metrics: MetricDict, data_split: str, target_type: str) -> di
         "FDE": _metric(metrics, "FDE"),
         "minADE": _metric(metrics, "minADE", fallback="ADE"),
         "minFDE": _metric(metrics, "minFDE", fallback="FDE"),
+        "Sample_Diversity": _metric(metrics, "Sample_Diversity"),
         "Miss_Rate": _metric(metrics, "Miss Rate"),
         "Latency_ms": latency * 1000.0,
         "Params": _metric(metrics, "Parameters"),
@@ -67,7 +68,7 @@ def write_model_comparison(rows: list[dict[str, float | int | str]], out_dir: st
     tables_dir = ensure_dir(Path(out_dir) / "tables")
     csv_path = tables_dir / "model_comparison.csv"
     md_path = tables_dir / "model_comparison.md"
-    columns = ["model", "data_split", "target_type", "ADE", "FDE", "minADE", "minFDE", "Miss_Rate", "Latency_ms", "Params", "Notes"]
+    columns = ["model", "data_split", "target_type", "ADE", "FDE", "minADE", "minFDE", "Sample_Diversity", "Miss_Rate", "Latency_ms", "Params", "Notes"]
     with csv_path.open("w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=columns)
         writer.writeheader()
