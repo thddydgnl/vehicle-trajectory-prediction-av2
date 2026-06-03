@@ -142,6 +142,75 @@ def test_preprocess_av2_skips_permission_denied_parquet(tmp_path: Path, monkeypa
     assert skipped.loc[0, "reason"] == "PermissionError"
 
 
+def test_preprocess_av2_skips_os_error_parquet(tmp_path: Path, monkeypatch) -> None:
+    raw_dir = tmp_path / "raw"
+    _write_mock_scenario(raw_dir / "train", "corrupt_scenario")
+    _write_mock_scenario(raw_dir / "train", "train_scenario")
+    _write_mock_scenario(raw_dir / "val", "val_scenario")
+    out_dir = tmp_path / "processed"
+    original_read_parquet = pd.read_parquet
+
+    def fake_read_parquet(path: str | Path, *args, **kwargs):
+        if "corrupt_scenario" in str(path):
+            raise OSError("mock corrupted parquet")
+        return original_read_parquet(path, *args, **kwargs)
+
+    monkeypatch.setattr(pd, "read_parquet", fake_read_parquet)
+
+    paths = preprocess_av2(
+        PreprocessConfig(
+            raw_dir=raw_dir,
+            out_dir=out_dir,
+            num_scenarios=None,
+            obs_len=50,
+            pred_len=30,
+            splits=("train", "val"),
+        )
+    )
+
+    assert validate_npz(paths["train"])["num_samples"] == 1
+    skipped = pd.read_csv(out_dir / "metadata" / "full_skipped_files.csv")
+    assert len(skipped) == 1
+    assert skipped.loc[0, "split"] == "train"
+    assert "corrupt_scenario" in skipped.loc[0, "path"]
+    assert skipped.loc[0, "reason"] == "OSError"
+
+
+def test_preprocess_av2_stops_when_read_error_limit_is_exceeded(tmp_path: Path, monkeypatch) -> None:
+    raw_dir = tmp_path / "raw"
+    _write_mock_scenario(raw_dir / "train", "bad_a")
+    _write_mock_scenario(raw_dir / "train", "bad_b")
+    _write_mock_scenario(raw_dir / "train", "train_scenario")
+    _write_mock_scenario(raw_dir / "val", "val_scenario")
+    out_dir = tmp_path / "processed"
+    original_read_parquet = pd.read_parquet
+
+    def fake_read_parquet(path: str | Path, *args, **kwargs):
+        if "bad_" in str(path):
+            raise OSError("mock repeated corrupted parquet")
+        return original_read_parquet(path, *args, **kwargs)
+
+    monkeypatch.setattr(pd, "read_parquet", fake_read_parquet)
+
+    try:
+        preprocess_av2(
+            PreprocessConfig(
+                raw_dir=raw_dir,
+                out_dir=out_dir,
+                num_scenarios=None,
+                obs_len=50,
+                pred_len=30,
+                splits=("train", "val"),
+                max_read_errors=1,
+            )
+        )
+    except RuntimeError as exc:
+        assert "Exceeded max_read_errors=1" in str(exc)
+        assert "bad_b" in str(exc)
+    else:
+        raise AssertionError("preprocess_av2 should stop after too many unreadable parquet files")
+
+
 def test_preprocess_av2_rejects_observed_mismatch_and_truncated_future(tmp_path: Path) -> None:
     raw_dir = tmp_path / "raw"
     _write_mock_scenario(raw_dir / "train", "bad_observed", observed_mismatch=True)

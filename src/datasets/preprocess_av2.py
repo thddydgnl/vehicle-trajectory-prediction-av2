@@ -7,6 +7,7 @@ from pathlib import Path
 import joblib
 import numpy as np
 import pandas as pd
+import pyarrow.lib as pa_lib
 from tqdm import tqdm
 
 from src.utils.config import load_yaml_config
@@ -33,6 +34,7 @@ REQUIRED_COLUMNS = {
     "focal_track_id",
     "observed",
 }
+READ_ERROR_TYPES = (PermissionError, OSError, pa_lib.ArrowException)
 
 
 @dataclass(frozen=True)
@@ -46,6 +48,7 @@ class PreprocessConfig:
     target_mode: str = "focal"
     seed: int = 42
     splits: tuple[str, ...] = ("train", "val")
+    max_read_errors: int | None = 1000
 
 
 def _scenario_files(raw_dir: Path, split: str, limit: int | None) -> list[Path]:
@@ -194,7 +197,7 @@ def preprocess_split(config: PreprocessConfig, split: str) -> tuple[dict[str, np
     for file_index, path in enumerate(tqdm(files, desc=f"preprocess {split}"), start=1):
         try:
             df = pd.read_parquet(path)
-        except PermissionError as exc:
+        except READ_ERROR_TYPES as exc:
             message = str(exc)
             tqdm.write(f"skip unreadable parquet {split} {file_index}/{len(files)}: {path} ({message})")
             skipped_records.append(
@@ -206,6 +209,11 @@ def preprocess_split(config: PreprocessConfig, split: str) -> tuple[dict[str, np
                     "message": message,
                 }
             )
+            if config.max_read_errors is not None and len(skipped_records) > config.max_read_errors:
+                raise RuntimeError(
+                    f"Exceeded max_read_errors={config.max_read_errors} for split {split}; "
+                    f"last unreadable parquet was {path}: {message}"
+                ) from exc
             continue
         missing = REQUIRED_COLUMNS.difference(df.columns)
         if missing:
@@ -270,6 +278,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--target_mode", choices=sorted(SUPPORTED_TARGET_MODES))
     parser.add_argument("--seed", type=int)
     parser.add_argument("--splits", nargs="+")
+    parser.add_argument(
+        "--max_read_errors",
+        type=int,
+        help="Maximum unreadable parquet files to skip per split. Use a negative value for no limit.",
+    )
     return parser.parse_args()
 
 
@@ -288,6 +301,8 @@ def config_from_args(args: argparse.Namespace) -> PreprocessConfig:
 
     target_types = args.target_types if args.target_types is not None else values.get("target_types", ["VEHICLE", "PEDESTRIAN"])
     splits = args.splits if args.splits is not None else values.get("splits", ["train", "val"])
+    max_read_errors = args.max_read_errors if args.max_read_errors is not None else values.get("max_read_errors", 1000)
+    max_read_errors = None if max_read_errors is None or int(max_read_errors) < 0 else int(max_read_errors)
     return PreprocessConfig(
         raw_dir=Path(raw_dir),
         out_dir=Path(out_dir),
@@ -298,6 +313,7 @@ def config_from_args(args: argparse.Namespace) -> PreprocessConfig:
         target_mode=str(args.target_mode if args.target_mode is not None else values.get("target_mode", "focal")),
         seed=int(args.seed if args.seed is not None else values.get("seed", 42)),
         splits=tuple(splits),
+        max_read_errors=max_read_errors,
     )
 
 

@@ -40,8 +40,10 @@ Phase 14 final experiment matrix tooling has been implemented, tested, committed
 Phase 14 Windows small AV2 GPU smoke training completed for LSTM, Transformer, Direct Diffusion, and PCA Diffusion.
 Phase 14 all-model evaluation was rerun on Windows with explicit checkpoint_dir/checkpoint_tag and prediction_tag, then regenerated on Mac from ignored copied small checkpoints to keep Mac as the evaluation source of truth.
 outputs/tables/model_comparison.csv and model_comparison.md now contain real val_small AV2 smoke results for Linear, LSTM, Transformer, Direct Diffusion, and PCA Diffusion.
-Full AV2 preprocessing/training has not been run; Phase 14 results are small AV2 smoke results, not full-data final performance.
+Full AV2 preprocessing/training has not completed; Phase 14 results are small AV2 smoke results, not full-data final performance.
 Full AV2 staged training workflow is documented in docs/full_av2_training_staged_workflow.md.
+Full AV2 preprocessing background retry on 2026-06-03 reached train file index 16609 and failed on a corrupted/unreadable parquet file with Windows WinError 1392.
+AV2 preprocessing now skips logged parquet read errors including PermissionError, OSError, and PyArrow read errors, with max_read_errors defaulting to 1000 per split to avoid silently dropping too much data.
 ```
 
 Verified Windows access:
@@ -136,6 +138,7 @@ print(ckpt['metadata']['model']['architecture'])
 PY
 pytest -q
 pytest tests/test_preprocess_av2.py -q
+pytest -q
 ssh thddy@192.168.35.17 'cmd /c "if not exist C:\Users\thddy\Documents\code\vehicle_trajectory_project\.git git clone https://github.com/thddydgnl/vehicle-trajectory-prediction-av2.git C:\Users\thddy\Documents\code\vehicle_trajectory_project && cd /d C:\Users\thddy\Documents\code\vehicle_trajectory_project && git checkout main && git pull --ff-only origin main && git rev-parse --short HEAD"'
 ssh thddy@192.168.35.17 'cmd /c "cd /d C:\Users\thddy\Documents\code\vehicle_trajectory_project && python -m pip install numpy pandas pyarrow joblib tqdm pyyaml"'
 ssh thddy@192.168.35.17 'cmd /c "cd /d C:\Users\thddy\Documents\code\vehicle_trajectory_project && python -m src.datasets.preprocess_av2 --config configs\preprocess_small.yaml"'
