@@ -44,6 +44,7 @@ Full AV2 preprocessing/training has not completed; Phase 14 results are small AV
 Full AV2 staged training workflow is documented in docs/full_av2_training_staged_workflow.md.
 Full AV2 preprocessing background retry on 2026-06-03 reached train file index 16609 and failed on a corrupted/unreadable parquet file with Windows WinError 1392.
 AV2 preprocessing now skips logged parquet read errors including PermissionError, OSError, and PyArrow read errors, with max_read_errors defaulting to 1000 per split to avoid silently dropping too much data.
+Full AV2 preprocessing was restarted on HOME at 2026-06-03T17:47+09:00 using commit f9a6a14; by 2026-06-03T18:18+09:00 it was still running at train 20617/199887, had skipped 3 unreadable parquet files, and had passed the previous failure at train 16609.
 ```
 
 Verified Windows access:
