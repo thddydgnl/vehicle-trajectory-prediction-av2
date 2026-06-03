@@ -81,8 +81,12 @@ def validate_npz(npz_path: str | Path, obs_len: int = 50, pred_len: int = 30) ->
         raise ValueError("object_type contains unsupported values")
     if not mask_x[:, -1].all():
         raise ValueError("final observed timestep must be valid for every sample")
-    if not mask_y.any(axis=1).all():
-        raise ValueError("every sample must have at least one valid future step")
+    if not mask_y.all(axis=1).all():
+        raise ValueError("every sample must have a full valid future horizon")
+    if not np.allclose(X[~mask_x], 0.0, atol=1e-6):
+        raise ValueError("masked X payload must be zero")
+    if not np.allclose(Y[~mask_y], 0.0, atol=1e-6):
+        raise ValueError("masked Y payload must be zero")
 
     return {"path": str(path), "num_samples": int(n), "num_scenarios": int(len(set(scenario_id.tolist())))}
 

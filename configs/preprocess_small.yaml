@@ -1,5 +1,5 @@
-raw_dir: data/raw/av2_motion_forecasting
-out_dir: data/processed
+raw_dir: D:/data/av2/motion-forecasting
+out_dir: D:/data/vehicle_trajectory_project/processed/small
 num_scenarios: 100
 target_types:
   - VEHICLE

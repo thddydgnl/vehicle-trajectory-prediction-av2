@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
+from src.utils.config import load_yaml_config
 from src.utils.geometry import rotation_matrix, to_relative_coords, wrap_angle
 from src.utils.paths import ensure_dir
 from src.utils.seed import set_seed
@@ -30,6 +31,7 @@ REQUIRED_COLUMNS = {
     "velocity_y",
     "scenario_id",
     "focal_track_id",
+    "observed",
 }
 
 
@@ -99,6 +101,8 @@ def _build_track_sample(
         row = by_timestep.loc[t]
         if isinstance(row, pd.DataFrame):
             row = row.iloc[0]
+        if bool(row["observed"]) != (t < obs_len):
+            return None
         positions[t] = np.array([row["position_x"], row["position_y"]], dtype=np.float32)
         velocities[t] = np.array([row["velocity_x"], row["velocity_y"]], dtype=np.float32)
         headings[t] = np.float32(row["heading"])
@@ -106,7 +110,7 @@ def _build_track_sample(
 
     mask_x = mask[:obs_len]
     mask_y = mask[obs_len:]
-    if not mask_x[-1] or not mask_x.any() or not mask_y.any():
+    if not mask_x[-1] or not mask_x.any() or not mask_y.all():
         return None
 
     origin = positions[obs_len - 1].copy()
@@ -234,33 +238,51 @@ def preprocess_av2(config: PreprocessConfig) -> dict[str, Path]:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Preprocess Argoverse 2 Motion Forecasting parquet files.")
-    parser.add_argument("--raw_dir", type=Path, required=True)
-    parser.add_argument("--out_dir", type=Path, required=True)
-    parser.add_argument("--num_scenarios", type=int, default=100)
-    parser.add_argument("--target_types", nargs="+", default=["VEHICLE", "PEDESTRIAN"])
-    parser.add_argument("--obs_len", type=int, default=50)
-    parser.add_argument("--pred_len", type=int, default=30)
-    parser.add_argument("--target_mode", choices=sorted(SUPPORTED_TARGET_MODES), default="focal")
-    parser.add_argument("--seed", type=int, default=42)
-    parser.add_argument("--splits", nargs="+", default=["train", "val"])
+    parser.add_argument("--config", type=Path, help="Optional YAML config with preprocessing arguments.")
+    parser.add_argument("--raw_dir", type=Path)
+    parser.add_argument("--out_dir", type=Path)
+    parser.add_argument("--num_scenarios", type=int)
+    parser.add_argument("--full", action="store_true", help="Process all scenarios and write *_full.npz files.")
+    parser.add_argument("--target_types", nargs="+")
+    parser.add_argument("--obs_len", type=int)
+    parser.add_argument("--pred_len", type=int)
+    parser.add_argument("--target_mode", choices=sorted(SUPPORTED_TARGET_MODES))
+    parser.add_argument("--seed", type=int)
+    parser.add_argument("--splits", nargs="+")
     return parser.parse_args()
+
+
+def config_from_args(args: argparse.Namespace) -> PreprocessConfig:
+    values = load_yaml_config(args.config) if args.config else {}
+    raw_dir = args.raw_dir if args.raw_dir is not None else values.get("raw_dir")
+    out_dir = args.out_dir if args.out_dir is not None else values.get("out_dir")
+    if raw_dir is None or out_dir is None:
+        raise ValueError("--raw_dir and --out_dir are required unless provided by --config")
+
+    num_scenarios = values.get("num_scenarios", 100)
+    if args.num_scenarios is not None:
+        num_scenarios = args.num_scenarios
+    if args.full:
+        num_scenarios = None
+
+    target_types = args.target_types if args.target_types is not None else values.get("target_types", ["VEHICLE", "PEDESTRIAN"])
+    splits = args.splits if args.splits is not None else values.get("splits", ["train", "val"])
+    return PreprocessConfig(
+        raw_dir=Path(raw_dir),
+        out_dir=Path(out_dir),
+        num_scenarios=num_scenarios,
+        target_types=tuple(target_types),
+        obs_len=int(args.obs_len if args.obs_len is not None else values.get("obs_len", 50)),
+        pred_len=int(args.pred_len if args.pred_len is not None else values.get("pred_len", 30)),
+        target_mode=str(args.target_mode if args.target_mode is not None else values.get("target_mode", "focal")),
+        seed=int(args.seed if args.seed is not None else values.get("seed", 42)),
+        splits=tuple(splits),
+    )
 
 
 def main() -> None:
     args = parse_args()
-    paths = preprocess_av2(
-        PreprocessConfig(
-            raw_dir=args.raw_dir,
-            out_dir=args.out_dir,
-            num_scenarios=args.num_scenarios,
-            target_types=tuple(args.target_types),
-            obs_len=args.obs_len,
-            pred_len=args.pred_len,
-            target_mode=args.target_mode,
-            seed=args.seed,
-            splits=tuple(args.splits),
-        )
-    )
+    paths = preprocess_av2(config_from_args(args))
     for split, path in paths.items():
         print(f"{split}: {path}")
 
