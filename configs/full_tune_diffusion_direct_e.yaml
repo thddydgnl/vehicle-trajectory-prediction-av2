@@ -1,5 +1,5 @@
 model:
-  name: diffusion_direct_tune_b
+  name: diffusion_direct_tune_e
   architecture: diffusion_direct
   input_dim: 6
   pred_len: 30
@@ -7,7 +7,7 @@ model:
   cond_dim: 128
   hidden_dim: 256
   diffusion_steps: 1000
-  sampling_steps: 75
+  sampling_steps: 100
   beta_start: 0.0001
   beta_end: 0.02
   num_samples: 16
@@ -15,14 +15,14 @@ model:
 training:
   batch_size: 32
   epochs: 15
-  learning_rate: 0.00015
+  learning_rate: 0.0001
   weight_decay: 0.0001
   loss: noise_mse
   gradient_clip: 1.0
   early_stopping_patience: 8
   selection_metric: minADE
   validation_num_samples: 8
-  validation_sampling_steps: 30
+  validation_sampling_steps: 40
   validation_seed: 1234
   seed: 42
   device: cuda

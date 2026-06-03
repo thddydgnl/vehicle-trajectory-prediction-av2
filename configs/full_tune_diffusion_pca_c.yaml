@@ -4,23 +4,27 @@ model:
   input_dim: 6
   pred_len: 30
   latent_dim: 12
-  codec_path: D:/runs/vehicle_trajectory_project/full_long_tuning/checkpoints/pca_codec.pkl
-  cond_dim: 64
-  hidden_dim: 128
-  diffusion_steps: 100
-  sampling_steps: 20
+  codec_path: D:/runs/vehicle_trajectory_project/full_long_tuning/checkpoints/pca_codec_12.pkl
+  cond_dim: 96
+  hidden_dim: 192
+  diffusion_steps: 1000
+  sampling_steps: 100
   beta_start: 0.0001
   beta_end: 0.02
-  num_samples: 8
+  num_samples: 16
 
 training:
   batch_size: 64
-  epochs: 10
+  epochs: 15
   learning_rate: 0.0001
   weight_decay: 0.0001
   loss: noise_mse
   gradient_clip: 1.0
-  early_stopping_patience: 6
+  early_stopping_patience: 8
+  selection_metric: minADE
+  validation_num_samples: 8
+  validation_sampling_steps: 40
+  validation_seed: 1234
   seed: 42
   device: cuda
   num_workers: 0

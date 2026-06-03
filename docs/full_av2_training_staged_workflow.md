@@ -336,12 +336,28 @@ results. They do not need to beat LSTM/Transformer, but they must be evaluated
 honestly with finite metrics, sample diversity, and clear failure/success notes.
 ```
 
+Current user-selected long-run entry targets as of 2026-06-04:
+
+```text
+PCA Diffusion:    minADE < 4.8 and minFDE < 9.5
+Direct Diffusion: minADE < 8.0 and minFDE < 15.0
+```
+
+Run policy:
+
+```text
+Do not start the all-model FULL RUN until both target gates pass on real
+val_full evaluation outputs.
+If either target gate fails, stop at F5A, copy back lightweight tuning tables,
+and document the failed attempts instead of running F5B.
+```
+
 Candidate policy:
 
 ```text
-Run a small bounded matrix before any long Diffusion run:
-PCA Diffusion: 3 candidates, 10 epochs each
-Direct Diffusion: 3 candidates, 10 epochs each
+Run a bounded matrix before any long Diffusion run:
+PCA Diffusion: expanded candidates with latent_dim 12/16/24
+Direct Diffusion: expanded candidates with small/medium model sizes
 
 Vary one small set of risk-controlled parameters:
 learning rate
@@ -350,6 +366,17 @@ diffusion_steps
 sampling_steps
 num_samples
 batch_size for OOM safety
+```
+
+Current F5A tuning improvements:
+
+```text
+diffusion_steps: 1000 so terminal alpha_bar is close to zero before sampling
+num_samples: 16 for final candidate evaluation
+training selection_metric: minADE
+validation_num_samples: 8
+validation_seed: 1234
+PCA codecs: fit on train_full only, separately for latent_dim 12, 16, and 24
 ```
 
 Hard gate:
@@ -371,13 +398,22 @@ At least one of minADE or minFDE improves by 10% or more versus the Stage F4
 same-model diffusion baseline.
 ```
 
+Target gate:
+
+```text
+PCA Diffusion selected candidate must satisfy minADE < 4.8 and minFDE < 9.5.
+Direct Diffusion selected candidate must satisfy minADE < 8.0 and minFDE < 15.0.
+Both target gates are required for F5B all-model FULL RUN.
+```
+
 Selection rule:
 
 ```text
 Prefer candidates that pass the preferred gate.
-If none pass the preferred gate but at least one passes the hard gate, select
-the best hard-gate candidate for analysis-ready final training and clearly
-label that it did not meet the improvement target.
+For the current user-selected goal, prefer candidates that pass the target gate.
+If none pass the target gate but at least one passes the hard gate, select the
+best candidate only for analysis, write full_run_ready=false, and do not
+generate final long-run configs.
 If no candidate passes the hard gate, stop long Diffusion training and inspect
 the failure before spending more GPU time.
 ```

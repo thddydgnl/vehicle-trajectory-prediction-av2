@@ -144,6 +144,24 @@ function Invoke-DiffusionCandidate {
   }
 }
 
+function Invoke-PcaCodecFit {
+  param([int]$Components)
+  Invoke-CondaPython "tuning_pca_codec_fit_$Components" @(
+    "-m", "src.analysis.pca_analysis",
+    "--train_data", $TrainData,
+    "--data", $ValData,
+    "--out_dir", $TuningRunDir,
+    "--n_components", "$Components",
+    "--max_export_rows", "5000"
+  )
+  $DefaultCodec = Join-Path $TuningRunDir "checkpoints\pca_codec.pkl"
+  $NamedCodec = Join-Path $TuningRunDir "checkpoints\pca_codec_$Components.pkl"
+  if (-not (Test-Path $DefaultCodec)) {
+    throw "PCA codec fit did not create expected codec: $DefaultCodec"
+  }
+  Copy-Item -Force $DefaultCodec $NamedCodec
+}
+
 try {
   Write-Status -Status "running" -Step "preflight" -Message "Full long experiments started"
   Add-Content -Path $Log -Value "[$(Get-Date -Format o)] Starting full long experiments"
@@ -170,21 +188,22 @@ try {
   if ($ResumeAfterTuning) {
     Add-Content -Path $Log -Value "[$(Get-Date -Format o)] SKIP tuning candidates because -ResumeAfterTuning was set"
   } else {
-    Invoke-CondaPython "tuning_pca_codec_fit" @(
-      "-m", "src.analysis.pca_analysis",
-      "--train_data", $TrainData,
-      "--data", $ValData,
-      "--out_dir", $TuningRunDir,
-      "--n_components", "12",
-      "--max_export_rows", "5000"
-    )
+    Invoke-PcaCodecFit 12
+    Invoke-PcaCodecFit 16
+    Invoke-PcaCodecFit 24
 
     Invoke-DiffusionCandidate "diffusion_pca" "pca_a" "configs/full_tune_diffusion_pca_a.yaml" (Join-Path $TuningRunDir "checkpoints\best_diffusion_pca_tune_a.pt")
     Invoke-DiffusionCandidate "diffusion_pca" "pca_b" "configs/full_tune_diffusion_pca_b.yaml" (Join-Path $TuningRunDir "checkpoints\best_diffusion_pca_tune_b.pt")
     Invoke-DiffusionCandidate "diffusion_pca" "pca_c" "configs/full_tune_diffusion_pca_c.yaml" (Join-Path $TuningRunDir "checkpoints\best_diffusion_pca_tune_c.pt")
+    Invoke-DiffusionCandidate "diffusion_pca" "pca_d" "configs/full_tune_diffusion_pca_d.yaml" (Join-Path $TuningRunDir "checkpoints\best_diffusion_pca_tune_d.pt")
+    Invoke-DiffusionCandidate "diffusion_pca" "pca_e" "configs/full_tune_diffusion_pca_e.yaml" (Join-Path $TuningRunDir "checkpoints\best_diffusion_pca_tune_e.pt")
+    Invoke-DiffusionCandidate "diffusion_pca" "pca_f" "configs/full_tune_diffusion_pca_f.yaml" (Join-Path $TuningRunDir "checkpoints\best_diffusion_pca_tune_f.pt")
     Invoke-DiffusionCandidate "diffusion_direct" "direct_a" "configs/full_tune_diffusion_direct_a.yaml" (Join-Path $TuningRunDir "checkpoints\best_diffusion_direct_tune_a.pt")
     Invoke-DiffusionCandidate "diffusion_direct" "direct_b" "configs/full_tune_diffusion_direct_b.yaml" (Join-Path $TuningRunDir "checkpoints\best_diffusion_direct_tune_b.pt")
     Invoke-DiffusionCandidate "diffusion_direct" "direct_c" "configs/full_tune_diffusion_direct_c.yaml" (Join-Path $TuningRunDir "checkpoints\best_diffusion_direct_tune_c.pt")
+    Invoke-DiffusionCandidate "diffusion_direct" "direct_d" "configs/full_tune_diffusion_direct_d.yaml" (Join-Path $TuningRunDir "checkpoints\best_diffusion_direct_tune_d.pt")
+    Invoke-DiffusionCandidate "diffusion_direct" "direct_e" "configs/full_tune_diffusion_direct_e.yaml" (Join-Path $TuningRunDir "checkpoints\best_diffusion_direct_tune_e.pt")
+    Invoke-DiffusionCandidate "diffusion_direct" "direct_f" "configs/full_tune_diffusion_direct_f.yaml" (Join-Path $TuningRunDir "checkpoints\best_diffusion_direct_tune_f.pt")
   }
 
   Invoke-CondaPython "select_diffusion_tuning" @(
@@ -192,6 +211,15 @@ try {
     "--matrix", "configs/full_diffusion_tuning_matrix.yaml",
     "--repo_root", $Repo
   )
+
+  $SelectionPath = Join-Path $TuningRunDir "tables\selected_diffusion_configs.json"
+  if (-not (Test-Path $SelectionPath)) {
+    throw "Missing diffusion tuning selection file: $SelectionPath"
+  }
+  $Selection = Get-Content $SelectionPath -Raw | ConvertFrom-Json
+  if ($Selection.require_target_gate_for_final -and -not $Selection.full_run_ready) {
+    throw "Diffusion target gates did not pass; FULL RUN is intentionally blocked. See $SelectionPath"
+  }
 
   Invoke-CondaPython "final_linear_evaluation" @(
     "scripts/run_all_evaluations.py",
@@ -218,12 +246,17 @@ try {
     "--val_data", $ValData
   )
 
+  $FinalPcaComponents = 12
+  if ($Selection.selected.diffusion_pca.latent_dim) {
+    $FinalPcaComponents = [int]$Selection.selected.diffusion_pca.latent_dim
+  }
+
   Invoke-CondaPython "final_pca_codec_fit" @(
     "-m", "src.analysis.pca_analysis",
     "--train_data", $TrainData,
     "--data", $ValData,
     "--out_dir", $FinalRunDir,
-    "--n_components", "12",
+    "--n_components", "$FinalPcaComponents",
     "--max_export_rows", "5000"
   )
 

@@ -9,36 +9,57 @@ import torch.nn.functional as F
 from sklearn.decomposition import PCA
 
 from src.models.diffusion import DiffusionDenoiser, TrajectoryConditionEncoder
+from src.models.diffusion import reverse_diffusion_timesteps
 
 
 class PCATrajectoryCodec:
     """PCA codec for flattening future trajectories into a low-dimensional latent space."""
 
-    def __init__(self, n_components: int = 12):
+    def __init__(self, n_components: int = 12, normalize_latent: bool = True):
         if n_components <= 0:
             raise ValueError("n_components must be positive")
         self.n_components = n_components
+        self.normalize_latent = normalize_latent
         self.pca = PCA(n_components=n_components)
         self.pred_len: int | None = None
+        self.latent_mean_: np.ndarray | None = None
+        self.latent_std_: np.ndarray | None = None
 
     def fit(self, Y_train: np.ndarray) -> None:
         if Y_train.ndim != 3 or Y_train.shape[-1] != 2:
             raise ValueError(f"Expected Y_train shape [N, T, 2], got {Y_train.shape}")
         self.pred_len = int(Y_train.shape[1])
-        self.pca.fit(Y_train.reshape(Y_train.shape[0], -1))
+        z = self.pca.fit_transform(Y_train.reshape(Y_train.shape[0], -1)).astype(np.float32)
+        self.latent_mean_ = z.mean(axis=0).astype(np.float32)
+        self.latent_std_ = np.maximum(z.std(axis=0), 1e-6).astype(np.float32)
 
     def transform(self, Y: np.ndarray) -> np.ndarray:
         if self.pred_len is None:
             raise RuntimeError("PCATrajectoryCodec must be fit before transform")
         if Y.ndim != 3 or Y.shape[-1] != 2 or Y.shape[1] != self.pred_len:
             raise ValueError(f"Expected Y shape [N, {self.pred_len}, 2], got {Y.shape}")
-        return self.pca.transform(Y.reshape(Y.shape[0], -1)).astype(np.float32)
+        z = self.pca.transform(Y.reshape(Y.shape[0], -1)).astype(np.float32)
+        if self.normalize_latent:
+            z = (z - self._latent_mean()) / self._latent_std()
+        return z.astype(np.float32)
 
     def inverse_transform(self, z: np.ndarray) -> np.ndarray:
         if self.pred_len is None:
             raise RuntimeError("PCATrajectoryCodec must be fit before inverse_transform")
+        if self.normalize_latent:
+            z = z * self._latent_std() + self._latent_mean()
         Y_flat = self.pca.inverse_transform(z)
         return Y_flat.reshape(z.shape[0], self.pred_len, 2).astype(np.float32)
+
+    def _latent_mean(self) -> np.ndarray:
+        if self.latent_mean_ is None:
+            return np.zeros((self.n_components,), dtype=np.float32)
+        return self.latent_mean_.astype(np.float32)
+
+    def _latent_std(self) -> np.ndarray:
+        if self.latent_std_ is None:
+            return np.ones((self.n_components,), dtype=np.float32)
+        return np.maximum(self.latent_std_.astype(np.float32), 1e-6)
 
     def save(self, path: str | Path) -> None:
         joblib.dump(self, path)
@@ -48,6 +69,12 @@ class PCATrajectoryCodec:
         codec = joblib.load(path)
         if not isinstance(codec, cls):
             raise TypeError(f"Expected PCATrajectoryCodec at {path}, got {type(codec)}")
+        if not hasattr(codec, "normalize_latent"):
+            codec.normalize_latent = False
+        if not hasattr(codec, "latent_mean_"):
+            codec.latent_mean_ = None
+        if not hasattr(codec, "latent_std_"):
+            codec.latent_std_ = None
         return codec
 
 
@@ -85,6 +112,10 @@ class PCALatentDiffusionTrajectory(torch.nn.Module):
 
         self.register_buffer("pca_mean", torch.as_tensor(codec.pca.mean_, dtype=torch.float32))
         self.register_buffer("pca_components", torch.as_tensor(codec.pca.components_, dtype=torch.float32))
+        latent_mean = codec._latent_mean() if codec.normalize_latent else np.zeros((latent_dim,), dtype=np.float32)
+        latent_std = codec._latent_std() if codec.normalize_latent else np.ones((latent_dim,), dtype=np.float32)
+        self.register_buffer("latent_mean", torch.as_tensor(latent_mean, dtype=torch.float32), persistent=False)
+        self.register_buffer("latent_std", torch.as_tensor(latent_std, dtype=torch.float32), persistent=False)
         betas = torch.linspace(beta_start, beta_end, diffusion_steps, dtype=torch.float32)
         alphas = 1.0 - betas
         alpha_bars = torch.cumprod(alphas, dim=0)
@@ -94,9 +125,11 @@ class PCALatentDiffusionTrajectory(torch.nn.Module):
 
     def encode_y(self, Y: torch.Tensor) -> torch.Tensor:
         y_flat = Y.reshape(Y.shape[0], -1)
-        return (y_flat - self.pca_mean) @ self.pca_components.T
+        z = (y_flat - self.pca_mean) @ self.pca_components.T
+        return (z - self.latent_mean) / self.latent_std.clamp_min(1e-6)
 
     def decode_z(self, z: torch.Tensor) -> torch.Tensor:
+        z = z * self.latent_std + self.latent_mean
         y_flat = z @ self.pca_components + self.pca_mean
         return y_flat.view(z.shape[0], self.pred_len, 2)
 
@@ -121,15 +154,16 @@ class PCALatentDiffusionTrajectory(torch.nn.Module):
         cond = self.condition_encoder(X)
         cond = cond[:, None, :].expand(batch_size, sample_count, -1).reshape(batch_size * sample_count, -1)
         zt = torch.randn(batch_size * sample_count, self.latent_dim, device=X.device)
-        timesteps = torch.linspace(self.diffusion_steps - 1, 0, step_count, device=X.device).long()
+        timesteps = reverse_diffusion_timesteps(self.diffusion_steps, step_count, device=X.device)
 
-        for t_value in timesteps:
+        for step_index, t_value in enumerate(timesteps):
             t = torch.full((zt.shape[0],), int(t_value.item()), device=X.device, dtype=torch.long)
             noise_hat = self.denoiser(zt, t, cond)
             alpha_bar = self.alpha_bars[t].view(-1, 1)
             z0 = (zt - self.sqrt_one_minus_alpha_bars[t].view(-1, 1) * noise_hat) / torch.sqrt(alpha_bar).clamp_min(1e-6)
-            if int(t_value.item()) > 0:
-                prev_alpha_bar = self.alpha_bars[t - 1].view(-1, 1)
+            if step_index + 1 < len(timesteps):
+                prev_t = int(timesteps[step_index + 1].item())
+                prev_alpha_bar = self.alpha_bars[prev_t].view(1, 1)
                 zt = torch.sqrt(prev_alpha_bar) * z0 + torch.sqrt(1.0 - prev_alpha_bar) * noise_hat
             else:
                 zt = z0

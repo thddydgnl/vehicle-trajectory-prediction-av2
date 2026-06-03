@@ -7,6 +7,7 @@ run:
   target_type: av2_focal_mixed
   final_epochs: 30
   final_early_stopping_patience: 10
+  require_target_gate_for_final: true
 
 baselines:
   linear:
@@ -28,6 +29,14 @@ gates:
   min_sample_diversity: 0.001
   preferred_min_metric_improvement_pct: 10.0
 
+target_gates:
+  diffusion_pca:
+    max_minADE: 4.8
+    max_minFDE: 9.5
+  diffusion_direct:
+    max_minADE: 8.0
+    max_minFDE: 15.0
+
 candidates:
   diffusion_pca:
     - id: pca_a
@@ -48,6 +57,24 @@ candidates:
       checkpoint: D:/runs/vehicle_trajectory_project/full_long_tuning/checkpoints/best_diffusion_pca_tune_c.pt
       train_metrics: D:/runs/vehicle_trajectory_project/full_long_tuning/metrics/diffusion_pca_tune_c_val_metrics.json
       eval_metrics: D:/runs/vehicle_trajectory_project/full_long_tuning/evaluations/pca_c/metrics/diffusion_pca_eval_metrics.json
+    - id: pca_d
+      model_name: diffusion_pca_tune_d
+      config: configs/full_tune_diffusion_pca_d.yaml
+      checkpoint: D:/runs/vehicle_trajectory_project/full_long_tuning/checkpoints/best_diffusion_pca_tune_d.pt
+      train_metrics: D:/runs/vehicle_trajectory_project/full_long_tuning/metrics/diffusion_pca_tune_d_val_metrics.json
+      eval_metrics: D:/runs/vehicle_trajectory_project/full_long_tuning/evaluations/pca_d/metrics/diffusion_pca_eval_metrics.json
+    - id: pca_e
+      model_name: diffusion_pca_tune_e
+      config: configs/full_tune_diffusion_pca_e.yaml
+      checkpoint: D:/runs/vehicle_trajectory_project/full_long_tuning/checkpoints/best_diffusion_pca_tune_e.pt
+      train_metrics: D:/runs/vehicle_trajectory_project/full_long_tuning/metrics/diffusion_pca_tune_e_val_metrics.json
+      eval_metrics: D:/runs/vehicle_trajectory_project/full_long_tuning/evaluations/pca_e/metrics/diffusion_pca_eval_metrics.json
+    - id: pca_f
+      model_name: diffusion_pca_tune_f
+      config: configs/full_tune_diffusion_pca_f.yaml
+      checkpoint: D:/runs/vehicle_trajectory_project/full_long_tuning/checkpoints/best_diffusion_pca_tune_f.pt
+      train_metrics: D:/runs/vehicle_trajectory_project/full_long_tuning/metrics/diffusion_pca_tune_f_val_metrics.json
+      eval_metrics: D:/runs/vehicle_trajectory_project/full_long_tuning/evaluations/pca_f/metrics/diffusion_pca_eval_metrics.json
   diffusion_direct:
     - id: direct_a
       model_name: diffusion_direct_tune_a
@@ -67,3 +94,21 @@ candidates:
       checkpoint: D:/runs/vehicle_trajectory_project/full_long_tuning/checkpoints/best_diffusion_direct_tune_c.pt
       train_metrics: D:/runs/vehicle_trajectory_project/full_long_tuning/metrics/diffusion_direct_tune_c_val_metrics.json
       eval_metrics: D:/runs/vehicle_trajectory_project/full_long_tuning/evaluations/direct_c/metrics/diffusion_direct_eval_metrics.json
+    - id: direct_d
+      model_name: diffusion_direct_tune_d
+      config: configs/full_tune_diffusion_direct_d.yaml
+      checkpoint: D:/runs/vehicle_trajectory_project/full_long_tuning/checkpoints/best_diffusion_direct_tune_d.pt
+      train_metrics: D:/runs/vehicle_trajectory_project/full_long_tuning/metrics/diffusion_direct_tune_d_val_metrics.json
+      eval_metrics: D:/runs/vehicle_trajectory_project/full_long_tuning/evaluations/direct_d/metrics/diffusion_direct_eval_metrics.json
+    - id: direct_e
+      model_name: diffusion_direct_tune_e
+      config: configs/full_tune_diffusion_direct_e.yaml
+      checkpoint: D:/runs/vehicle_trajectory_project/full_long_tuning/checkpoints/best_diffusion_direct_tune_e.pt
+      train_metrics: D:/runs/vehicle_trajectory_project/full_long_tuning/metrics/diffusion_direct_tune_e_val_metrics.json
+      eval_metrics: D:/runs/vehicle_trajectory_project/full_long_tuning/evaluations/direct_e/metrics/diffusion_direct_eval_metrics.json
+    - id: direct_f
+      model_name: diffusion_direct_tune_f
+      config: configs/full_tune_diffusion_direct_f.yaml
+      checkpoint: D:/runs/vehicle_trajectory_project/full_long_tuning/checkpoints/best_diffusion_direct_tune_f.pt
+      train_metrics: D:/runs/vehicle_trajectory_project/full_long_tuning/metrics/diffusion_direct_tune_f_val_metrics.json
+      eval_metrics: D:/runs/vehicle_trajectory_project/full_long_tuning/evaluations/direct_f/metrics/diffusion_direct_eval_metrics.json

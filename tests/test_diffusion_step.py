@@ -5,6 +5,7 @@ from src.models.diffusion import (
     GaussianDiffusionTrajectory,
     SinusoidalTimeEmbedding,
     TrajectoryConditionEncoder,
+    reverse_diffusion_timesteps,
 )
 
 
@@ -67,3 +68,9 @@ def test_gaussian_diffusion_sample_shape() -> None:
     samples = model.sample(X)
 
     assert samples.shape == (2, 3, 30, 2)
+
+
+def test_reverse_diffusion_timesteps_use_actual_skipped_steps() -> None:
+    timesteps = reverse_diffusion_timesteps(diffusion_steps=10, sampling_steps=4)
+
+    assert timesteps.tolist() == [9, 6, 3, 0]

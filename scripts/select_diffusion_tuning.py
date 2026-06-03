@@ -98,7 +98,13 @@ def _write_summary(rows: list[dict[str, Any]], output_dir: Path) -> dict[str, Pa
         "config",
         "hard_gate",
         "preferred_gate",
+        "target_gate",
         "selected",
+        "latent_dim",
+        "diffusion_steps",
+        "sampling_steps",
+        "num_samples",
+        "learning_rate",
         "epochs_ran",
         "ADE",
         "FDE",
@@ -126,10 +132,16 @@ def _write_summary(rows: list[dict[str, Any]], output_dir: Path) -> dict[str, Pa
 def _candidate_row(model_key: str, candidate: dict[str, Any], matrix: dict[str, Any], repo_root: Path) -> dict[str, Any]:
     baselines = matrix["baselines"]
     gates = matrix["gates"]
+    target_gates = matrix.get("target_gates", {})
     baseline = baselines[MODEL_BASELINES[model_key]]
     train_metrics_path = _resolve(candidate["train_metrics"], repo_root)
     eval_metrics_path = _resolve(candidate["eval_metrics"], repo_root)
     checkpoint_path = _resolve(candidate["checkpoint"], repo_root)
+    config = _load_yaml(_resolve(candidate["config"], repo_root))
+    model_config = config.get("model", {})
+    training_config = config.get("training", {})
+    if not isinstance(model_config, dict) or not isinstance(training_config, dict):
+        raise ValueError(f"Candidate config must contain model/training mappings: {candidate['config']}")
     train_metrics = _load_json_if_exists(train_metrics_path)
     eval_metrics = _load_json_if_exists(eval_metrics_path)
 
@@ -159,13 +171,25 @@ def _candidate_row(model_key: str, candidate: dict[str, Any], matrix: dict[str, 
     hard_gate = len(reasons) == 0
     preferred_improvement = float(gates["preferred_min_metric_improvement_pct"])
     preferred_gate = hard_gate and max(min_ade_improvement, min_fde_improvement) >= preferred_improvement
+    target_gate_config = target_gates.get(model_key) if isinstance(target_gates, dict) else None
+    target_gate = None
+    if isinstance(target_gate_config, dict):
+        max_min_ade = float(target_gate_config["max_minADE"])
+        max_min_fde = float(target_gate_config["max_minFDE"])
+        target_gate = hard_gate and min_ade < max_min_ade and min_fde < max_min_fde
     row: dict[str, Any] = {
         "model": model_key,
         "candidate_id": candidate["id"],
         "config": candidate["config"],
         "hard_gate": hard_gate,
         "preferred_gate": preferred_gate,
+        "target_gate": target_gate,
         "selected": False,
+        "latent_dim": int(model_config.get("latent_dim", 0)),
+        "diffusion_steps": int(model_config.get("diffusion_steps", 0)),
+        "sampling_steps": int(model_config.get("sampling_steps", 0)),
+        "num_samples": int(model_config.get("num_samples", 0)),
+        "learning_rate": float(training_config.get("learning_rate", float("nan"))),
         "epochs_ran": epochs_ran,
         "ADE": ade,
         "FDE": fde,
@@ -184,11 +208,14 @@ def _select_candidate(rows: list[dict[str, Any]], model_key: str) -> dict[str, A
     eligible = [row for row in rows if row["model"] == model_key and row["hard_gate"]]
     if not eligible:
         raise RuntimeError(f"No {model_key} candidates passed hard gates")
+    target = [row for row in eligible if row.get("target_gate") is True]
     preferred = [row for row in eligible if row["preferred_gate"]]
-    pool = preferred or eligible
+    pool = target or preferred or eligible
     selected = min(pool, key=lambda row: float(row["score"]))
     selected["selected"] = True
-    if not preferred:
+    if not target and any(row.get("target_gate") is not None for row in eligible):
+        selected["reason"] = selected["reason"] + "; selected as best candidate but target gate failed"
+    elif not preferred:
         selected["reason"] = selected["reason"] + "; selected as best hard-gate fallback"
     return selected
 
@@ -226,6 +253,7 @@ def _write_final_config(
 def select_and_write(matrix_path: Path, repo_root: Path) -> dict[str, Any]:
     matrix = _load_yaml(matrix_path)
     tuning_dir = Path(str(matrix["run"]["tuning_dir"]))
+    require_target_gate = bool(matrix.get("run", {}).get("require_target_gate_for_final", False))
     rows: list[dict[str, Any]] = []
     for model_key, candidates in matrix["candidates"].items():
         for candidate in candidates:
@@ -235,13 +263,18 @@ def select_and_write(matrix_path: Path, repo_root: Path) -> dict[str, Any]:
         "diffusion_pca": _select_candidate(rows, "diffusion_pca"),
         "diffusion_direct": _select_candidate(rows, "diffusion_direct"),
     }
-    final_configs = {
-        model_key: str(_write_final_config(matrix, model_key, row, repo_root))
-        for model_key, row in selected.items()
-    }
+    full_run_ready = all(row.get("target_gate") is True for row in selected.values()) if require_target_gate else True
+    final_configs = {}
+    if full_run_ready:
+        final_configs = {
+            model_key: str(_write_final_config(matrix, model_key, row, repo_root))
+            for model_key, row in selected.items()
+        }
     summary_paths = _write_summary(rows, tuning_dir)
     selection = {
         "selected": selected,
+        "full_run_ready": full_run_ready,
+        "require_target_gate_for_final": require_target_gate,
         "final_configs": final_configs,
         "summary": {key: str(path) for key, path in summary_paths.items()},
     }

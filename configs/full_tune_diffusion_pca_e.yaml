@@ -1,9 +1,10 @@
 model:
-  name: diffusion_direct_tune_b
-  architecture: diffusion_direct
+  name: diffusion_pca_tune_e
+  architecture: diffusion_pca
   input_dim: 6
   pred_len: 30
-  trajectory_dim: 60
+  latent_dim: 24
+  codec_path: D:/runs/vehicle_trajectory_project/full_long_tuning/checkpoints/pca_codec_24.pkl
   cond_dim: 128
   hidden_dim: 256
   diffusion_steps: 1000
@@ -13,9 +14,9 @@ model:
   num_samples: 16
 
 training:
-  batch_size: 32
+  batch_size: 64
   epochs: 15
-  learning_rate: 0.00015
+  learning_rate: 0.0002
   weight_decay: 0.0001
   loss: noise_mse
   gradient_clip: 1.0

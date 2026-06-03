@@ -134,6 +134,18 @@ def train_from_config(config_path: Path, data_path: Path, val_data_path: Path, m
         early_stopping_patience=int(training_config.get("early_stopping_patience", 5)),
         loss=str(training_config.get("loss", "smooth_l1")),
         endpoint_weight=float(training_config.get("endpoint_weight", 0.0)),
+        selection_metric=str(training_config.get("selection_metric", "ADE")),
+        validation_num_samples=int(training_config.get("validation_num_samples", 1)),
+        validation_sampling_steps=(
+            int(training_config["validation_sampling_steps"])
+            if training_config.get("validation_sampling_steps") is not None
+            else None
+        ),
+        validation_seed=(
+            int(training_config["validation_seed"])
+            if training_config.get("validation_seed") is not None
+            else None
+        ),
         out_dir=Path(training_config.get("out_dir", "outputs")),
         metadata={
             "config_path": str(config_path),

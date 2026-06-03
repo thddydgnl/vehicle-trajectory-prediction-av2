@@ -19,6 +19,7 @@ from src.evaluation.evaluate import (
     evaluate_transformer,
 )
 from src.utils.paths import ensure_dir
+from src.utils.seed import set_seed
 
 
 MetricDict = dict[str, float | int | str]
@@ -151,6 +152,7 @@ def run_all_evaluations(args: argparse.Namespace) -> tuple[list[dict[str, float 
     checkpoints, skipped = resolve_requested_checkpoints(args)
 
     for model in args.models:
+        set_seed(args.seed)
         if model == "linear":
             metrics = evaluate_linear(args.data, args.linear_config, args.out_dir)
         else:
@@ -183,6 +185,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--data_split", default="val")
     parser.add_argument("--target_type", default="mixed")
     parser.add_argument("--prediction_tag", default=None)
+    parser.add_argument("--seed", type=int, default=1234)
     parser.add_argument("--allow_missing_models", action="store_true")
     parser.add_argument("--strict_models", action="store_true", help="Deprecated: strict checkpoint checking is now the default.")
     return parser.parse_args()

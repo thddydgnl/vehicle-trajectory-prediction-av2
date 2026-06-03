@@ -6,6 +6,16 @@ import torch
 import torch.nn.functional as F
 
 
+def reverse_diffusion_timesteps(diffusion_steps: int, sampling_steps: int, device: torch.device | None = None) -> torch.Tensor:
+    """Timesteps for deterministic skipped-step reverse diffusion sampling."""
+    if diffusion_steps <= 0:
+        raise ValueError("diffusion_steps must be positive")
+    if sampling_steps <= 0:
+        raise ValueError("sampling_steps must be positive")
+    step_count = max(1, min(int(sampling_steps), int(diffusion_steps)))
+    return torch.linspace(diffusion_steps - 1, 0, step_count, device=device).long()
+
+
 class SinusoidalTimeEmbedding(torch.nn.Module):
     """Sinusoidal timestep embedding."""
 
@@ -127,15 +137,18 @@ class GaussianDiffusionTrajectory(torch.nn.Module):
         cond = cond[:, None, :].expand(batch_size, sample_count, -1).reshape(batch_size * sample_count, -1)
         xt = torch.randn(batch_size * sample_count, self.trajectory_dim, device=X.device)
 
-        timesteps = torch.linspace(self.diffusion_steps - 1, 0, step_count, device=X.device).long()
-        for t_value in timesteps:
+        timesteps = reverse_diffusion_timesteps(self.diffusion_steps, step_count, device=X.device)
+        for step_index, t_value in enumerate(timesteps):
             t = torch.full((xt.shape[0],), int(t_value.item()), device=X.device, dtype=torch.long)
             noise_hat = self.predict_noise(xt, t, cond)
             alpha_bar = self.alpha_bars[t].view(-1, 1)
-            xt = (xt - self.sqrt_one_minus_alpha_bars[t].view(-1, 1) * noise_hat) / torch.sqrt(alpha_bar).clamp_min(1e-6)
-            if int(t_value.item()) > 0:
-                prev_alpha_bar = self.alpha_bars[t - 1].view(-1, 1)
-                xt = torch.sqrt(prev_alpha_bar) * xt + torch.sqrt(1.0 - prev_alpha_bar) * noise_hat
+            x0 = (xt - self.sqrt_one_minus_alpha_bars[t].view(-1, 1) * noise_hat) / torch.sqrt(alpha_bar).clamp_min(1e-6)
+            if step_index + 1 < len(timesteps):
+                prev_t = int(timesteps[step_index + 1].item())
+                prev_alpha_bar = self.alpha_bars[prev_t].view(1, 1)
+                xt = torch.sqrt(prev_alpha_bar) * x0 + torch.sqrt(1.0 - prev_alpha_bar) * noise_hat
+            else:
+                xt = x0
 
         return xt.view(batch_size, sample_count, self.pred_len, 2)
 

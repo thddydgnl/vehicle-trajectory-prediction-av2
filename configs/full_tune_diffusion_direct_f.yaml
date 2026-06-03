@@ -1,11 +1,11 @@
 model:
-  name: diffusion_direct_tune_b
+  name: diffusion_direct_tune_f
   architecture: diffusion_direct
   input_dim: 6
   pred_len: 30
   trajectory_dim: 60
-  cond_dim: 128
-  hidden_dim: 256
+  cond_dim: 192
+  hidden_dim: 384
   diffusion_steps: 1000
   sampling_steps: 75
   beta_start: 0.0001
@@ -13,9 +13,9 @@ model:
   num_samples: 16
 
 training:
-  batch_size: 32
+  batch_size: 16
   epochs: 15
-  learning_rate: 0.00015
+  learning_rate: 0.0001
   weight_decay: 0.0001
   loss: noise_mse
   gradient_clip: 1.0

@@ -49,6 +49,8 @@ Full AV2 preprocessing completed on HOME by 2026-06-03T23:57+09:00. Outputs exis
 Full AV2 Stage F3 completed on HOME by 2026-06-04T00:16+09:00 using commit 8c70cf1. CUDA preflight passed, Linear/LSTM/Transformer/PCA Diffusion/Direct Diffusion all produced finite val_full metrics, checkpoints, and comparison tables. Full pilot comparison tables and metrics were copied to outputs/full_av2_pilot without raw data, processed .npz files, checkpoints, logs, or prediction payloads.
 Full AV2 Stage F4 completed on HOME by 2026-06-04T00:46+09:00 using commit 8014ed3. CUDA preflight passed, LSTM/Transformer/PCA Diffusion/Direct Diffusion each ran exactly 5 epochs with CUDA checkpoint metadata, and final comparison tables were generated from real val_full outputs. Lightweight F4 metrics, tables, and PCA figures were copied to outputs/full_av2_5epoch_pilot without raw data, processed .npz files, checkpoints, logs, or prediction payloads.
 Full AV2 Stage F5A/F5B tooling has been prepared for diffusion tuning gates, all-model long runs, and Phase 15 final assets. Do not claim F5 long-run results until Windows outputs are verified and lightweight result artifacts are copied back to Mac.
+Current user-selected F5 gate: do not start all-model FULL RUN until PCA Diffusion reaches minADE < 4.8 and minFDE < 9.5, and Direct Diffusion reaches minADE < 8.0 and minFDE < 15.0 on real val_full evaluation outputs.
+F5A tuning tooling has been strengthened on Mac: skipped-step diffusion sampling now jumps to the actual next sampled timestep, PCA latent diffusion normalizes train-fitted latents, diffusion validation/checkpoint selection can use deterministic multi-sample minADE/minFDE, and the selector blocks final long-run config generation when the absolute target gates fail.
 ```
 
 Verified Windows access:
@@ -95,7 +97,8 @@ Full AV2 Stage F1 preprocessing and Stage F2 schema validation are complete.
 Full AV2 Stage F3 1-epoch pilot is complete.
 Full AV2 Stage F4 5-epoch pilot is complete.
 User explicitly chose Stage F5 long training plus Phase 15.
-Next task: run Stage F5A Diffusion Tuning Gate, then Stage F5B all-model long run if the tuning hard gates pass.
+Next task: validate, commit, and push the strengthened F5A tuning code/configs; then run Stage F5A Diffusion Tuning Gate on Windows.
+Stage F5B all-model FULL RUN is allowed only if both absolute target gates pass: PCA Diffusion minADE < 4.8 / minFDE < 9.5 and Direct Diffusion minADE < 8.0 / minFDE < 15.0.
 After F5B completes, collect only lightweight tables/metrics/figures/log summaries and proceed to Phase 15 Final Report Assets.
 Do not start full AV2 preprocessing or full training in a foreground SSH session.
 ```
@@ -310,6 +313,7 @@ Mac has ignored lightweight copies of train_small.npz and val_small.npz for visu
 HOME needs s5cmd only for future direct AV2 download or resync; current archives were already downloaded manually under D:\datasets\argoverse.
 HOME Miniconda3 and the vehicle_traj CUDA PyTorch environment are available for GPU smoke training.
 Full AV2 preprocessing, schema validation, 1-epoch pilot, and 5-epoch pilot are complete. Larger/full long-run training remains optional external long-running work before or after Phase 15 if stronger final numbers are desired.
+F5 all-model FULL RUN is currently gated by diffusion target metrics and must not start until the F5A selector reports full_run_ready=true.
 For full AV2 preprocessing, long AV2 download/extraction, or GPU training attempts, do not use a long foreground SSH command; use the safe remote execution rule in docs/windows_gpu_training_only_workflow.md.
 ```
 

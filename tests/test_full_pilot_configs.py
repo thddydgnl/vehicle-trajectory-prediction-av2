@@ -81,24 +81,42 @@ def test_diffusion_tuning_configs_are_cuda_windows_configs() -> None:
         "full_tune_diffusion_pca_a.yaml": ("diffusion_pca_tune_a", "diffusion_pca", 64),
         "full_tune_diffusion_pca_b.yaml": ("diffusion_pca_tune_b", "diffusion_pca", 64),
         "full_tune_diffusion_pca_c.yaml": ("diffusion_pca_tune_c", "diffusion_pca", 64),
+        "full_tune_diffusion_pca_d.yaml": ("diffusion_pca_tune_d", "diffusion_pca", 64),
+        "full_tune_diffusion_pca_e.yaml": ("diffusion_pca_tune_e", "diffusion_pca", 64),
+        "full_tune_diffusion_pca_f.yaml": ("diffusion_pca_tune_f", "diffusion_pca", 32),
         "full_tune_diffusion_direct_a.yaml": ("diffusion_direct_tune_a", "diffusion_direct", 64),
         "full_tune_diffusion_direct_b.yaml": ("diffusion_direct_tune_b", "diffusion_direct", 32),
         "full_tune_diffusion_direct_c.yaml": ("diffusion_direct_tune_c", "diffusion_direct", 32),
+        "full_tune_diffusion_direct_d.yaml": ("diffusion_direct_tune_d", "diffusion_direct", 32),
+        "full_tune_diffusion_direct_e.yaml": ("diffusion_direct_tune_e", "diffusion_direct", 32),
+        "full_tune_diffusion_direct_f.yaml": ("diffusion_direct_tune_f", "diffusion_direct", 16),
     }
 
     for filename, (model_name, architecture, batch_size) in expected.items():
         config = load_yaml_config(ROOT / "configs" / filename)
         assert config["model"]["name"] == model_name
         assert config["model"]["architecture"] == architecture
-        assert config["training"]["epochs"] == 10
+        assert config["model"]["diffusion_steps"] == 1000
+        assert config["training"]["epochs"] == 15
         assert config["training"]["batch_size"] == batch_size
         assert config["training"]["device"] == "cuda"
         assert config["training"]["num_workers"] == 0
         assert config["training"]["out_dir"] == RUN_DIR_TUNING
-        assert config["model"]["num_samples"] == 8
+        assert config["model"]["num_samples"] == 16
+        assert config["training"]["selection_metric"] == "minADE"
+        assert config["training"]["validation_num_samples"] == 8
+        assert config["training"]["validation_seed"] == 1234
 
 
 def test_diffusion_tuning_pca_configs_use_tuning_codec() -> None:
-    for suffix in ("a", "b", "c"):
+    expected = {
+        "a": "pca_codec_12.pkl",
+        "b": "pca_codec_12.pkl",
+        "c": "pca_codec_12.pkl",
+        "d": "pca_codec_16.pkl",
+        "e": "pca_codec_24.pkl",
+        "f": "pca_codec_24.pkl",
+    }
+    for suffix, codec_name in expected.items():
         config = load_yaml_config(ROOT / "configs" / f"full_tune_diffusion_pca_{suffix}.yaml")
-        assert config["model"]["codec_path"] == f"{RUN_DIR_TUNING}/checkpoints/pca_codec.pkl"
+        assert config["model"]["codec_path"] == f"{RUN_DIR_TUNING}/checkpoints/{codec_name}"
