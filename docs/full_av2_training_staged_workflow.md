@@ -450,6 +450,9 @@ Windows background execution:
 Run scripts/windows_full_long_experiments.ps1 only from a scheduled task or
 other background-safe launcher. Do not run it as a multi-hour foreground SSH
 command.
+If the tuning candidates have already completed and only selection/final long
+run needs to resume, use scripts/windows_full_long_experiments.ps1
+-ResumeAfterTuning from a background-safe launcher.
 ```
 
 ## 10. Stage F6 - Result Integration

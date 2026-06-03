@@ -1,4 +1,5 @@
 param(
+  [switch]$ResumeAfterTuning,
   [switch]$SkipFinalDirectDiffusion
 )
 
@@ -77,6 +78,7 @@ function Write-Status {
     final_run_dir = $FinalRunDir
     run_root = $RunRoot
     log = $Log
+    resume_after_tuning = [bool]$ResumeAfterTuning
     skip_final_direct_diffusion = [bool]$SkipFinalDirectDiffusion
     artifacts = $Artifacts
   }
@@ -165,21 +167,25 @@ try {
     "import torch; print(torch.__version__); print(torch.cuda.is_available()); print(torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'no cuda'); raise SystemExit(0 if torch.cuda.is_available() else 1)"
   )
 
-  Invoke-CondaPython "tuning_pca_codec_fit" @(
-    "-m", "src.analysis.pca_analysis",
-    "--train_data", $TrainData,
-    "--data", $ValData,
-    "--out_dir", $TuningRunDir,
-    "--n_components", "12",
-    "--max_export_rows", "5000"
-  )
+  if ($ResumeAfterTuning) {
+    Add-Content -Path $Log -Value "[$(Get-Date -Format o)] SKIP tuning candidates because -ResumeAfterTuning was set"
+  } else {
+    Invoke-CondaPython "tuning_pca_codec_fit" @(
+      "-m", "src.analysis.pca_analysis",
+      "--train_data", $TrainData,
+      "--data", $ValData,
+      "--out_dir", $TuningRunDir,
+      "--n_components", "12",
+      "--max_export_rows", "5000"
+    )
 
-  Invoke-DiffusionCandidate "diffusion_pca" "pca_a" "configs/full_tune_diffusion_pca_a.yaml" (Join-Path $TuningRunDir "checkpoints\best_diffusion_pca_tune_a.pt")
-  Invoke-DiffusionCandidate "diffusion_pca" "pca_b" "configs/full_tune_diffusion_pca_b.yaml" (Join-Path $TuningRunDir "checkpoints\best_diffusion_pca_tune_b.pt")
-  Invoke-DiffusionCandidate "diffusion_pca" "pca_c" "configs/full_tune_diffusion_pca_c.yaml" (Join-Path $TuningRunDir "checkpoints\best_diffusion_pca_tune_c.pt")
-  Invoke-DiffusionCandidate "diffusion_direct" "direct_a" "configs/full_tune_diffusion_direct_a.yaml" (Join-Path $TuningRunDir "checkpoints\best_diffusion_direct_tune_a.pt")
-  Invoke-DiffusionCandidate "diffusion_direct" "direct_b" "configs/full_tune_diffusion_direct_b.yaml" (Join-Path $TuningRunDir "checkpoints\best_diffusion_direct_tune_b.pt")
-  Invoke-DiffusionCandidate "diffusion_direct" "direct_c" "configs/full_tune_diffusion_direct_c.yaml" (Join-Path $TuningRunDir "checkpoints\best_diffusion_direct_tune_c.pt")
+    Invoke-DiffusionCandidate "diffusion_pca" "pca_a" "configs/full_tune_diffusion_pca_a.yaml" (Join-Path $TuningRunDir "checkpoints\best_diffusion_pca_tune_a.pt")
+    Invoke-DiffusionCandidate "diffusion_pca" "pca_b" "configs/full_tune_diffusion_pca_b.yaml" (Join-Path $TuningRunDir "checkpoints\best_diffusion_pca_tune_b.pt")
+    Invoke-DiffusionCandidate "diffusion_pca" "pca_c" "configs/full_tune_diffusion_pca_c.yaml" (Join-Path $TuningRunDir "checkpoints\best_diffusion_pca_tune_c.pt")
+    Invoke-DiffusionCandidate "diffusion_direct" "direct_a" "configs/full_tune_diffusion_direct_a.yaml" (Join-Path $TuningRunDir "checkpoints\best_diffusion_direct_tune_a.pt")
+    Invoke-DiffusionCandidate "diffusion_direct" "direct_b" "configs/full_tune_diffusion_direct_b.yaml" (Join-Path $TuningRunDir "checkpoints\best_diffusion_direct_tune_b.pt")
+    Invoke-DiffusionCandidate "diffusion_direct" "direct_c" "configs/full_tune_diffusion_direct_c.yaml" (Join-Path $TuningRunDir "checkpoints\best_diffusion_direct_tune_c.pt")
+  }
 
   Invoke-CondaPython "select_diffusion_tuning" @(
     "scripts/select_diffusion_tuning.py",
