@@ -26,7 +26,7 @@ HOME D:\data was re-verified on 2026-06-03 over LAN SSH.
 Legacy song@100.87.219.58 is not the AV2 data host; it currently exposes only C: over SSH.
 HOME Windows data/training folder layout is ready for Phase 11 preprocessing and later GPU training.
 Phase 11 preprocessing code has been implemented, tested on Mac, committed, and pushed.
-HOME Windows code root has been cloned from GitHub and updated to commit 143dd6b.
+HOME Windows code root has been cloned from GitHub and updated to commit 9561eae.
 HOME small AV2 preprocessing completed successfully on 2026-06-03.
 D:\data\vehicle_trajectory_project\processed\small\train_small.npz and val_small.npz passed schema validation.
 Full AV2 preprocessing is technically unblocked, but should be run as a background Windows job after reviewing Phase 12 small-data visualizations or immediately before real training.
@@ -187,7 +187,7 @@ Phase 9 direct diffusion: tests/test_diffusion_step.py passed 5 tests; 1-epoch s
 Phase 10 PCA latent diffusion: tests/test_pca_latent.py passed 3 tests; PCA codec fit on train_smoke and wrote ignored outputs/checkpoints/pca_codec.pkl; PCA explained variance figure generated; diffusion_pca 1-epoch synthetic smoke training completed on CPU; full pytest passed 53 tests
 Phase 11 AV2 preprocessing implementation: tests/test_preprocess_av2.py passed 5 tests; full pytest passed 58 tests
 Phase 11 subagent review: config loading, fixed future horizon, observed flag handling, and masked payload validation findings were fixed before Windows execution
-Phase 11 GitHub source sync: Mac pushed commit 143dd6b; HOME cloned/pulled main at 143dd6b
+Phase 11 GitHub source sync: Mac pushed commit 143dd6b, then pushed status commit 9561eae; HOME cloned/pulled main at 9561eae
 Phase 11 Windows dependency check: numpy, pandas, pyarrow, joblib, tqdm, and pyyaml available on HOME global Python 3.12 after installing pyarrow
 Phase 11 Windows small preprocessing: generated D:\data\vehicle_trajectory_project\processed\small\train_small.npz and val_small.npz
 Phase 11 schema validation: train_small.npz passed with 95 samples / 95 scenarios; val_small.npz passed with 95 samples / 95 scenarios
@@ -214,7 +214,7 @@ Repository: https://github.com/thddydgnl/vehicle-trajectory-prediction-av2
 Remote: origin
 Default branch: main
 Latest pushed branch: main
-Latest pushed commit: 143dd6b
+Latest pushed commit: 9561eae
 ```
 
 ## Update Rule
