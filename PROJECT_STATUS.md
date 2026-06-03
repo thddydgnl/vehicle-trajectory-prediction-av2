@@ -212,6 +212,7 @@ Phase 12 tests: tests/test_visualization.py passed; full pytest passed 59 tests
 Phase 12 synthetic smoke: generated trajectory_overlay_linear_lstm_transformer.png, trajectory_overlay_diffusion_samples.png, error_histogram_ade.png, error_histogram_fde.png, pca_trajectory_space.png, kmeans_clusters.png, and top_error_cases PNG files
 Phase 12 small AV2 smoke: copied ignored train_small.npz/val_small.npz to Mac, validated both files, and generated the same figure set under outputs/figures/av2_small
 Phase 12 visual QA: representative synthetic and small AV2 trajectory overlay PNGs were inspected and showed nonblank trajectory plots with readable layout
+Phase 12 GitHub: visualization work pushed on main; use git log --oneline for the authoritative latest commit hash
 ```
 
 ## Open External Requirements
@@ -234,7 +235,7 @@ Repository: https://github.com/thddydgnl/vehicle-trajectory-prediction-av2
 Remote: origin
 Default branch: main
 Latest pushed branch: main
-Latest pushed commit: 65a37fb
+Latest pushed commit: use git log --oneline -1 for the authoritative current commit
 ```
 
 ## Update Rule
